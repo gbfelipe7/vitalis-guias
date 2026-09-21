@@ -1,0 +1,26 @@
+{
+  "_para_que_serve": "O regras_convenio.json traz parte das regras em texto livre, no campo observacao de cada convênio. Aqui essas frases viram regra estruturada, para o motor decidir sem depender de IA. Cada item cita a frase de origem.",
+  "registro_por_procedimento": {
+    "_origem": "Dicionário de dados: CREFITO para fisioterapeuta, CRM para médico.",
+    "50000470": "CREFITO",
+    "50000560": "CREFITO",
+    "50000012": "CREFITO",
+    "20103301": "CRM",
+    "40201015": "CRM"
+  },
+  "convenios": {
+    "Vitalcard": {
+      "_origem": "Reavaliação médica obrigatória a cada 10 sessões; nova autorização a cada reavaliação.",
+      "ao_passar_do_limite": "Pedir reavaliação médica e nova autorização antes de enviar."
+    },
+    "Saúde Interior": {
+      "_origem": "Aceita autorização verbal com protocolo por até 5 dias úteis, desde que o número seja lançado antes do envio.",
+      "autorizacao_verbal_dias_uteis": 5
+    },
+    "Plano Bem": {
+      "_origem": "Não cobre consulta médica; consulta é faturada como particular.",
+      "nao_coberto_vira_particular": ["20103301"]
+    }
+  },
+  "dias_de_alerta_para_prazo_de_envio": 5
+}

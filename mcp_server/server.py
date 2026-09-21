@@ -1,0 +1,128 @@
+"""MCP da Clínica Vitalis: regras dos convênios e conferência de guias.
+
+Quatro ferramentas, todas em cima do mesmo motor que a página usa (pasta motor/):
+  consultar_regra      o que um convênio exige e cobre para um procedimento
+  verificar_guia       confere uma guia (do lote ou nova) e devolve decisão, motivo e o que corrigir
+  listar_pendentes     as guias do lote que não podem ser enviadas ainda
+  relatorio_de_terca   o resumo que o Dr. Renato vê toda terça
+
+Os dados vêm de dados/regras_convenio.json e dados/guias.csv, lidos direto do disco.
+Rodar:  python mcp_server/server.py   (fala MCP por stdin e stdout)
+"""
+
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:                                   # SDK 2.x: a classe se chama MCPServer
+    from mcp.server.mcpserver import MCPServer as ServidorMCP
+except ImportError:                    # SDK 1.x: a mesma classe se chamava FastMCP
+    from mcp.server.fastmcp import FastMCP as ServidorMCP
+
+from motor import (carregar_guias, carregar_regras, montar_relatorio, relatorio_em_texto,
+                   verificar_lote, verificar_nova)
+from motor import consultar_regra as consultar_regra_no_motor
+
+mcp = ServidorMCP("vitalis-guias")
+
+REGRAS = carregar_regras()
+GUIAS = carregar_guias()
+
+
+def _enxuto(resultado):
+    """O que interessa para quem está conversando: decisão, motivo e o que corrigir."""
+    return {
+        "id_guia": resultado["id_guia"],
+        "decisao": resultado["decisao"],
+        "gravidade": resultado["gravidade"],
+        "pendencias": [{"motivo": p["motivo"], "corrigir": p["corrigir"], "gravidade": p["gravidade"]}
+                       for p in resultado["pendencias"]],
+        "alertas": resultado["alertas"],
+        "valor_em_risco": resultado["valor_em_risco"],
+        "enviar_ate": resultado["enviar_ate"],
+    }
+
+
+@mcp.tool()
+def consultar_regra(convenio: str, procedimento: str) -> dict:
+    """Consulta a regra de um convênio para um procedimento: se cobre, valor de referência,
+    campos obrigatórios, limite de sessões por autorização e prazo de envio.
+
+    convenio: Vitalcard, Saúde Interior ou Plano Bem (acento e maiúscula não importam).
+    procedimento: o código (ex.: 50000470) ou um pedaço do nome (ex.: neurofuncional, consulta).
+    """
+    return consultar_regra_no_motor(REGRAS, convenio, procedimento)
+
+
+@mcp.tool()
+def verificar_guia(
+    id_guia: str = "",
+    convenio: str = "",
+    procedimento_codigo: str = "",
+    procedimento_descricao: str = "",
+    data_atendimento: str = "",
+    numero_autorizacao: str = "",
+    autorizacao_validade: str = "",
+    sessao_numero_na_autorizacao: str = "",
+    autorizacao_sessoes_limite: str = "",
+    carteirinha: str = "",
+    cid: str = "",
+    profissional: str = "",
+    profissional_registro: str = "",
+    valor: str = "",
+    paciente: str = "",
+    unidade: str = "",
+    observacao_recepcao: str = "",
+    data_lancamento: str = "",
+) -> dict:
+    """Verifica uma guia e devolve a decisão (OK ou PENDENTE), o motivo e o que corrigir.
+
+    Dois jeitos de usar:
+    1. Guia que já está no lote de agosto: passe só o id_guia (ex.: G-2608-0041).
+    2. Guia nova: passe os campos que tiver. Datas podem vir como 03/09/2026 ou 2026-09-03,
+       valor como 62,00 ou 62.00. Copie a observação da recepção como ela escreveu, em
+       observacao_recepcao: ela pode mudar a decisão.
+
+    Campo que não estiver no texto fica vazio. Não invente valor para preencher.
+    """
+    campos = {k: v for k, v in locals().items() if v}
+    apenas_id = set(campos) == {"id_guia"}
+
+    if apenas_id:
+        do_lote = [g for g in GUIAS if g["id_guia"].strip().upper() == id_guia.strip().upper()]
+        if not do_lote:
+            return {"encontrada": False, "motivo": "A guia %s não está no lote de agosto." % id_guia}
+        resultado = [r for r in verificar_lote(GUIAS, REGRAS) if r["id_guia"] == do_lote[0]["id_guia"]][0]
+        return _enxuto(resultado)
+
+    return _enxuto(verificar_nova(campos, GUIAS, REGRAS, usar_ia=False))
+
+
+@mcp.tool()
+def listar_pendentes(convenio: str = "", unidade: str = "") -> list:
+    """Lista as guias do lote de agosto que estão PENDENTES, com o motivo principal.
+    Filtros opcionais: convenio e unidade (Centro, Norte ou Sul)."""
+    pendentes = []
+    for r in verificar_lote(GUIAS, REGRAS):
+        if r["decisao"] != "PENDENTE":
+            continue
+        if convenio and convenio.strip().lower() not in r["guia"]["convenio"].lower():
+            continue
+        if unidade and unidade.strip().lower() != r["guia"]["unidade"].lower():
+            continue
+        pendentes.append({"id_guia": r["id_guia"], "unidade": r["guia"]["unidade"],
+                          "convenio": r["guia"]["convenio"], "valor": r["valor"],
+                          "gravidade": r["gravidade"], "motivo": r["pendencias"][0]["motivo"],
+                          "corrigir": r["pendencias"][0]["corrigir"]})
+    return pendentes
+
+
+@mcp.tool()
+def relatorio_de_terca() -> str:
+    """O relatório de terça do Dr. Renato: guias verificadas, com problema, por tipo e dinheiro em risco."""
+    return relatorio_em_texto(montar_relatorio(verificar_lote(GUIAS, REGRAS)))
+
+
+if __name__ == "__main__":
+    mcp.run()

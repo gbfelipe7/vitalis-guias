@@ -1,0 +1,8 @@
+.venv
+.env
+.env.*
+__pycache__
+tests
+skills
+mcp_server
+*.md
