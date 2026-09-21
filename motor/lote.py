@@ -2,7 +2,7 @@
 
 import csv
 import os
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from .normalizar import normalizar_guia
 from .regras import PASTA_DADOS
@@ -31,7 +31,7 @@ def registros_conhecidos(guias_brutas):
 
 
 def mapear_duplicidades(guias_brutas, chegou_agora=None):
-    """Devolve uma lista do tamanho do lote: None, ou {"tipo": "exata" | "suspeita", "outra": id}.
+    """Devolve uma lista do tamanho do lote: None, ou {"tipo": "exata" | "mesma_sessao" | "suspeita", "outra": id}.
 
     Exata:    mesmo paciente, data, procedimento, autorização e sessão de uma guia anterior.
               A anterior segue normal; a repetida não deve ser enviada.
@@ -49,7 +49,21 @@ def mapear_duplicidades(guias_brutas, chegou_agora=None):
         if all(chave):
             grupos.setdefault(chave, []).append(posicao)
 
+    # Mesma autorização e mesmo número de sessão é a mesma sessão cobrada duas vezes, ainda que
+    # a cópia venha com outra data, sem o código do procedimento ou com o paciente digitado errado.
+    por_sessao = {}
+    for posicao, guia in enumerate(guias):
+        if guia["numero_autorizacao"] and guia["_sessao"]:
+            por_sessao.setdefault((guia["numero_autorizacao"].upper(), guia["_sessao"]), []).append(posicao)
+
     mapa = [None] * len(guias)
+    for posicoes in por_sessao.values():
+        if len(posicoes) > 1:
+            posicoes.sort(key=lambda p: (p == chegou_agora,
+                                         guias[p]["_lancamento"] or guias[p]["_atendimento"] or date.min, guias[p]["id_guia"]))
+            for atual in posicoes[1:]:
+                mapa[atual] = {"tipo": "mesma_sessao", "outra": guias[posicoes[0]]["id_guia"]}
+
     for posicoes in grupos.values():
         if len(posicoes) < 2:
             continue
@@ -62,7 +76,7 @@ def mapear_duplicidades(guias_brutas, chegou_agora=None):
                         (guias[atual]["numero_autorizacao"].upper(), guias[atual]["_sessao"])]
             if gemea:
                 mapa[atual] = {"tipo": "exata", "outra": guias[gemea[0]]["id_guia"]}
-            else:
+            elif mapa[atual] is None:
                 mapa[atual] = {"tipo": "suspeita", "outra": guias[anteriores[0]]["id_guia"]}
                 if mapa[anteriores[0]] is None:
                     mapa[anteriores[0]] = {"tipo": "suspeita", "outra": guias[atual]["id_guia"]}
@@ -85,7 +99,7 @@ def verificar_nova(bruta, guias_do_lote, regras, usar_ia=True, referencia=None):
     bruta = dict(bruta) if isinstance(bruta, dict) else {}
     bruta["id_guia"] = str(bruta.get("id_guia") or "").strip() or "NOVA"
     # mesma guia conferida de novo (mesmo id) não é duplicata de si mesma
-    outras = [g for g in guias_do_lote if (g.get("id_guia") or "").strip() != bruta["id_guia"]]
+    outras = [g for g in guias_do_lote if (g.get("id_guia") or "").strip().upper() != bruta["id_guia"].upper()]
     duplicidades = mapear_duplicidades(outras + [bruta], chegou_agora=len(outras))
     return verificar_guia(bruta, regras, referencia=referencia or hoje(), duplicidade=duplicidades[-1],
                           registros_conhecidos=registros_conhecidos(guias_do_lote), usar_ia=usar_ia,

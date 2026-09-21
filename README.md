@@ -15,17 +15,17 @@ Etapa técnica do processo da Expert Integrado. Caso fictício da Clínica Vital
 | `public/index.html` | A página: guias conferidas, conferir guia nova, relatório de terça. |
 | `mcp_server/` | O MCP, com quatro ferramentas. |
 | `skills/conferir-guia/` | A Skill para quem opera a clínica. |
-| `tests/` | 53 testes do motor. |
+| `tests/` | 67 testes do motor. |
 
 ## Como uma guia entra e como a decisão sai
 
 1. **Entra** por um de três caminhos, todos no mesmo motor:
-   - a página, colando a guia do jeito que a recepção escreveu (linha do sistema, um campo por linha ou texto corrido);
-   - `POST /api/verificar`, que é o que o sistema de gestão ou um fluxo no n8n chama a cada guia lançada. É isso que faz a conferência não depender de alguém lembrar;
+   - `POST /api/verificar` com os campos da guia, que é o que o sistema de gestão ou um fluxo no n8n chama a cada guia lançada. É isso que faz a conferência não depender de alguém lembrar;
+   - a página, colando a guia do jeito que a recepção escreveu. Linha do sistema e "campo: valor" são lidos direto. Texto corrido é leitura, não é dado: a página mostra os campos que leu, a pessoa confere e só então a guia é conferida;
    - o MCP, pela Skill, dentro do Claude.
-2. O motor **lê** a guia como ela veio: data em dia/mês/ano, valor com vírgula, convênio sem acento.
-3. A **observação da recepção vira fatos** (quer particular, autorização por telefone, código errado). Primeiro por palavras-chave, trecho a trecho. Se sobrar texto desconhecido e houver chave de IA, a IA lê e pode acrescentar fatos. Se ninguém entender, a guia fica retida para uma pessoa ler. A IA nunca libera guia e nunca decide.
-4. As **regras decidem**: campo obrigatório por convênio, paciente, sessão e valor preenchidos, validade da autorização contra a data do atendimento, limite de sessões, cobertura do procedimento, registro do profissional, prazo de envio contado do atendimento e duplicidade dentro do lote.
+2. O motor **lê** a guia como ela veio: data em dia/mês/ano, valor com vírgula, convênio sem acento. "Aguardando", "-" e "N/A" contam como campo vazio. Número que não é claramente um número ("1 1", "11 ou 12") não é adivinhado: a guia fica retida.
+3. A **observação da recepção vira fatos** (quer particular, autorização por telefone, código errado), por palavras-chave, trecho a trecho. Um trecho só é dado como entendido se for exatamente uma frase comum ("chegou 10 min atrasado") ou se virar um fato, e todo fato vira pendência. O que sobrar segura a guia para uma pessoa ler. Com chave de IA, o modelo lê a observação e pode acrescentar fatos que geram pendência. Ele nunca consegue liberar uma guia.
+4. As **regras decidem**: campo obrigatório por convênio, paciente, sessão e valor preenchidos, validade da autorização contra a data do atendimento, limite de sessões, cobertura do procedimento, registro do profissional, prazo de envio contado do atendimento e duplicidade dentro do lote (mesma guia repetida, ou mesma autorização com o mesmo número de sessão).
 5. **Sai** `OK` ou `PENDENTE`, com motivo e o que corrigir. Pendente tem três níveis:
    - `vai_glosar`: fere regra escrita do convênio;
    - `corrigir`: falta ou está errado um dado que a recepção resolve;
@@ -82,7 +82,7 @@ Fica em `skills/conferir-guia/SKILL.md`. Para usar, copie a pasta `conferir-guia
 
 ```bash
 python3 servidor_local.py      # página e API em http://localhost:8000, sem instalar nada
-python3 -m unittest            # os 53 testes do motor
+python3 -m unittest            # os 67 testes do motor
 ```
 
 A chave de IA é opcional. Sem ela tudo funciona: a observação é lida por palavras-chave e o texto corrido por expressão regular. Com `GEMINI_API_KEY` no ambiente (veja `.env.example`), o que eles não alcançam é lido pelo Gemini no nível gratuito. Na Vercel a chave fica nas variáveis de ambiente do projeto. Não existe chave nem senha neste repositório.
@@ -101,7 +101,7 @@ A chave de IA é opcional. Sem ela tudo funciona: a observação é lida por pal
 
 O código foi escrito com o Claude Code. Eu li os dados antes, defini a arquitetura e os critérios, e revisei o que saiu. As decisões abaixo são minhas e eu sei defender cada uma.
 
-1. **Regra decide, IA só lê texto.** Conferir guia é comparar data, limite e cobertura: tem resposta certa e ela precisa ser a mesma toda vez. Então a decisão é um motor de regras, sem IA. A IA entra só para ler texto livre, em dois pontos: separar os campos de uma guia colada em texto corrido e ler a observação da recepção. Nos dois ela devolve dados ("protocolo 771203", "quer particular") que o motor usa. Três travas que eu coloquei: o silêncio da IA nunca libera guia (texto que ninguém entendeu segura a guia para uma pessoa ler); no texto corrido vale o que está escrito, e se a IA devolver outra validade ou outra sessão a página avisa e fica com o escrito; e o lote de agosto roda sem IA, para dar sempre o mesmo resultado.
+1. **Regra decide, IA só lê texto.** Conferir guia é comparar data, limite e cobertura: tem resposta certa e ela precisa ser a mesma toda vez. Então a decisão é um motor de regras, sem IA. A IA entra só para ler texto livre, em dois pontos: separar os campos de uma guia colada em texto corrido e ler a observação da recepção. As travas que eu coloquei: na observação a IA só pode endurecer (acrescenta fato que gera pendência, e não consegue apagar o "texto que ninguém entendeu" nem devolver fato que amolece a decisão); no texto corrido todo valor que a IA devolve tem que existir no texto colado, senão é descartado, e a pessoa confirma os campos antes de a guia ser conferida; e o lote de agosto roda sem IA, para dar sempre o mesmo resultado.
 2. **Na dúvida, segura.** Segurar uma guia boa custa um dia. Enviar uma ruim custa 60 dias e o valor da guia. Por isso existe o nível `conferir`: reavaliação de fisioterapia lançada por médico no Plano Bem, mesmo paciente em duas unidades no mesmo dia, sessão remarcada com autorização da data original. A regra escrita não proíbe, mas eu não enviaria sem alguém olhar. O relatório separa isso do que é glosa certa, para o Dr. Renato não achar que tudo é perdido.
 3. **As frases dos convênios viraram regra estruturada.** O `regras_convenio.json` traz parte das regras em texto livre ("aceita autorização verbal com protocolo por até 5 dias úteis"). Em vez de pedir para uma IA interpretar isso a cada guia, eu li uma vez e escrevi em `dados/regras_extras.json`, citando a frase de origem. O arquivo da Carla fica intacto.
 4. **A guia nova entra por página e por endereço de API.** A página serve para a recepção e para a demonstração. O endereço é o que resolve o problema de verdade: o sistema de gestão chama a cada lançamento e ninguém precisa lembrar de conferir.
@@ -112,7 +112,7 @@ O código foi escrito com o Claude Code. Eu li os dados antes, defini a arquitet
 
 ### O que ficou de fora e por quê
 
-- **Validade máxima da autorização** (30, 45 e 60 dias): o CSV só tem a data final, não a de concessão. Não dá para conferir sem inventar dado. A ferramenta `consultar_regra` mostra o número, o motor não usa.
+- **Validade máxima da autorização** (30, 45 e 60 dias): o CSV só tem a data final, não a de concessão. Não dá para conferir sem inventar dado. A ferramenta `consultar_regra` mostra o número. O motor usa num caso só, como aviso e não como pendência: quando a recepção anota a validade de uma autorização nova e ela passa do máximo do convênio contado do atendimento (acontece na G-2608-0030).
 - **Banco de dados.** As guias novas conferidas na página ficam só na sessão do navegador. Em produção eu gravaria cada conferência no Postgres, e o relatório de terça sairia de lá com histórico semana a semana.
 - **Feriados** na conta de dias úteis da autorização verbal. A prova não traz calendário.
 - **Proteção do endereço da API.** Está aberto, porque a banca precisa testar sem senha. Em produção ele ficaria atrás de um token do sistema de gestão. O custo de IA é zero de qualquer forma: a chave é do nível gratuito, sem cartão, e o texto mandado ao modelo é cortado em 2.000 caracteres.
@@ -122,9 +122,9 @@ O código foi escrito com o Claude Code. Eu li os dados antes, defini a arquitet
 
 ### Como testei
 
-- 53 testes automáticos em `tests/test_motor.py`. Três grupos: as guias do lote que têm pegadinha, uma a uma; guias novas chegando tortas (vazia, com lixo nos campos, data em outro formato, convênio que não existe, repetida do lote); e um teste para cada furo que a auditoria abaixo encontrou.
+- 67 testes automáticos em `tests/test_motor.py`. Quatro grupos: as guias do lote que têm pegadinha, uma a uma; guias novas chegando tortas (vazia, com lixo nos campos, data em outro formato, convênio que não existe, repetida do lote); e um teste para cada furo que as duas rodadas de auditoria abaixo encontraram.
 - **Auditoria cega.** Pedi para cinco agentes de IA julgarem as 80 guias só com o CSV e as regras, sem ver o meu motor, e comparei. Deu 15 divergências em 80. Em nenhuma o motor tinha decidido errado: 12 eram diferença de vocabulário e 3 eram julgamento, como o recibo para reembolso.
-- **Ataque à guia nova.** Outros agentes tentaram quebrar a entrada: campo com lista, `NaN`, sessão "11ª", data 31/02, observação com instrução escondida para a IA, texto corrido com uma "correção" embutida. Acharam furos reais, que eu corrigi: guia repetida sem data de lançamento passava, uma frase comum escondia o resto da observação, sessão ilegível pulava a checagem de limite e a IA conseguia liberar uma guia ficando calada.
+- **Ataque à guia nova, em duas rodadas.** Outros agentes tentaram fazer uma guia errada sair como OK: campo com lista, `NaN`, sessão "11ª", data 31/02, observação com instrução escondida para a IA, texto corrido com uma "correção" embutida. A primeira rodada achou furos reais: guia repetida sem data de lançamento passava, uma frase comum escondia o resto da observação, sessão ilegível pulava a checagem de limite e a IA conseguia liberar uma guia ficando calada. Corrigi e mandei atacar de novo. A segunda rodada mostrou que a minha primeira correção era frouxa: bastava o trecho CONTER "atrasado" para ser ignorado, e a IA ainda conseguia amolecer uma decisão. Daí saíram as regras de hoje: o trecho tem que SER a frase comum, todo fato vira pendência, a IA só endurece e texto corrido passa por confirmação.
 - `mcp_server/conferir_servidor.py` sobe o MCP de verdade e chama as quatro ferramentas como um cliente faria.
 - A página e os quatro endereços testados no ar, com guia certa, guia com problema, texto corrido e corpo inválido.
 - Conferi na mão as cinco guias que só se entendem pela observação da recepção: G-2608-0030, 0034, 0039, 0041 e 0069.

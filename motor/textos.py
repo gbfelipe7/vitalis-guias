@@ -58,8 +58,11 @@ MOTIVO = {
     "remarcada": "A sessão foi remarcada e a autorização era da data original.",
     "autorizacao_nova_solta": "A recepção anotou que o paciente trouxe autorização nova, ainda não lançada.",
     "observacao_nao_reconhecida": "A observação não foi reconhecida: '{texto}'.",
+    "verbal_com_numero": "A recepção anotou autorização por telefone, mas a guia já tem o número {numero}.",
+    "observacao_cortada": "A observação passa de 1.000 caracteres e foi lida só até ali.",
     "duplicata_exata": "É a mesma guia já lançada como {outra}: mesmo paciente, data, procedimento, autorização e sessão.",
     "duplicata_suspeita": "O mesmo paciente tem o mesmo procedimento no mesmo dia na guia {outra}.",
+    "mesma_sessao": "A guia {outra} já usa esta mesma autorização com este mesmo número de sessão.",
 }
 
 CORRIGIR = {
@@ -94,8 +97,11 @@ CORRIGIR = {
     "remarcada": "Confirmar com o convênio se a autorização vale para {atendimento}.",
     "autorizacao_nova_solta": "Conferir se o número lançado é o da autorização nova.",
     "observacao_nao_reconhecida": "Ler a observação antes de enviar.",
+    "verbal_com_numero": "Conferir se o número lançado é o definitivo do convênio, e não o protocolo.",
+    "observacao_cortada": "Ler a observação inteira no sistema antes de enviar.",
     "duplicata_exata": "Não enviar esta. Manter só a {outra}.",
     "duplicata_suspeita": "Conferir paciente, data e unidade nas duas guias.",
+    "mesma_sessao": "Conferir se é a mesma sessão lançada duas vezes ou se o número da sessão está errado.",
 }
 
 NOMES_DOS_CAMPOS = {
@@ -112,6 +118,7 @@ ALERTA = {
     "prazo_perto": "Enviar até {limite}: faltam {dias} dia(s) para o prazo do {convenio}.",
     "ultima_sessao": "É a última sessão desta autorização. A próxima precisa de autorização nova.",
     "limite_diferente": "A guia diz que a autorização cobre {declarado} sessões; a regra do {convenio} diz {limite}.",
+    "limite_ilegivel": "O limite de sessões da autorização veio como '{valor}' e não foi lido. Vale o limite do convênio.",
     "recibo_reembolso": "A recepção anotou pedido de recibo para reembolso do plano. Se o paciente pagou a sessão como particular, não enviar ao convênio.",
     "nova_validade_longa": "A validade anotada para a autorização nova ({nova}) passa dos {maximo} dias que o {convenio} costuma dar. Conferir a data no documento.",
 }

@@ -65,7 +65,7 @@ def montar_relatorio(resultados, gerado_em=None):
         "percentual_em_risco": round(100.0 * em_risco / total_valor, 1) if total_valor else 0.0,
         "por_tipo": sorted(por_tipo.values(), key=lambda t: -t["em_risco"]),
         "por_gravidade": por_gravidade,
-        "por_unidade": _agrupar(resultados, lambda r: r["guia"]["unidade"] or "sem unidade"),
+        "por_unidade": _agrupar(resultados, lambda r: r["guia"]["unidade"].strip().title() or "sem unidade"),
         "por_convenio": _agrupar(resultados, lambda r: r["guia"]["convenio"] or "sem convênio"),
         "guias_pendentes": [
             {"id_guia": r["id_guia"], "unidade": r["guia"]["unidade"], "convenio": r["guia"]["convenio"],

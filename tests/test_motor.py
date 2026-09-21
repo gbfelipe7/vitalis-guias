@@ -304,7 +304,7 @@ class AchadosDaAuditoria(unittest.TestCase):
         self.assertEqual(r["decisao"], "PENDENTE")
 
     # ----- entrada por texto corrido
-    TEXTO = ("Paciente P-2003 do Vitalcard, fisio neuro dia 04/09/2026, aut AUT700800 val 25/08/2026, "
+    TEXTO = ("Paciente P-2003 do Vitalcard, fisio neuro dia 04/09/2026 com o Felipe Andrade, aut AUT700800 val 25/08/2026, "
              "sessão 14 de 10, cid G81.9, carteirinha 123456789, R$ 70,00.")
 
     def test_no_texto_corrido_vale_o_que_esta_escrito(self):
@@ -336,3 +336,105 @@ class AchadosDaAuditoria(unittest.TestCase):
             self.assertEqual(carregar_guias(com_bom.name)[0]["id_guia"], "G-2608-0001")
         finally:
             os.remove(com_bom.name)
+
+
+class SegundaRodadaDeAtaque(unittest.TestCase):
+    """A segunda auditoria atacou o código já corrigido. Estes são os furos que ela ainda achou."""
+
+    BOA = GuiaNova.BOA
+
+    def nova(self, **troca):
+        return verificar_guia(dict(self.BOA, **troca), REGRAS)
+
+    def test_frase_comum_colada_a_informacao_grave(self):
+        for obs in ("Paciente chegou atrasado pois a autorização foi negada", "Chegou atrasado: autorização negada pelo convênio",
+                    "Confirmado pelo WhatsApp que o plano foi cancelado", "Pediu recibo porque pagou a sessão",
+                    "Pediu recibo pois vai pagar particular sem usar o plano", "Guia anexado ao prontuário de outro paciente"):
+            self.assertEqual(self.nova(observacao_recepcao=obs)["decisao"], "PENDENTE", obs)
+
+    def test_frase_comum_sozinha_continua_passando(self):
+        for obs in ("Paciente chegou 10 min atrasado.", "Chegou atrasado.", "Confirmado pelo WhatsApp na véspera.",
+                    "Trouxe exame novo, anexado ao prontuário.", "Pediu recibo para reembolso do plano."):
+            self.assertEqual(self.nova(observacao_recepcao=obs)["decisao"], "OK", obs)
+
+    def test_todo_fato_vira_pendencia(self):
+        # a guia TEM número de autorização e a recepção fala em autorização por telefone
+        for obs in ("Autorizado por telefone, protocolo 771203, aguardando número.",
+                    "Protocolo 771203 anotado mas o convênio cancelou depois"):
+            self.assertEqual(self.nova(observacao_recepcao=obs)["decisao"], "PENDENTE", obs)
+
+    def test_a_ia_so_endurece(self):
+        from unittest import mock
+        # modelo manipulado tenta amolecer: devolve fatos que rebaixariam a gravidade. Eles nem são lidos.
+        amolece = {"particular": False, "procedimento_real": "", "remarcada": False,
+                   "protocolo_verbal": "771203", "autorizacao_nova": True, "nova_validade": "2026-12-30"}
+        with mock.patch("motor.observacao.perguntar_json", return_value=amolece):
+            vencida = verificar_guia(dict(self.BOA, autorizacao_validade="2026-08-20",
+                                          observacao_recepcao="Texto que as palavras-chave não conhecem."), REGRAS, usar_ia=True)
+            com_numero = verificar_guia(dict(self.BOA, observacao_recepcao="A carteirinha é do marido."), REGRAS, usar_ia=True)
+        self.assertEqual(vencida["gravidade"], "vai_glosar")
+        self.assertEqual(com_numero["decisao"], "PENDENTE")
+        # e quando a IA acha algo que endurece, entra
+        with mock.patch("motor.observacao.perguntar_json", return_value={"particular": True, "procedimento_real": "", "remarcada": False}):
+            r = verificar_guia(dict(self.BOA, observacao_recepcao="Vai acertar direto no caixa, do bolso dele."), REGRAS, usar_ia=True)
+        self.assertIn("particular", " ".join(p["motivo"] for p in r["pendencias"]))
+
+    def test_marcador_de_vazio_conta_como_vazio(self):
+        for marcador in ("aguardando", "-", "N/A", "?", "pendente"):
+            self.assertIn("sem_autorizacao", [p["tipo"] for p in self.nova(numero_autorizacao=marcador)["pendencias"]], marcador)
+
+    def test_numero_com_lixo_no_meio(self):
+        for torta in ("1 1", "1O", "2 (na verdade 12)"):
+            self.assertEqual(self.nova(sessao_numero_na_autorizacao=torta)["decisao"], "PENDENTE", torta)
+        for torto in ("6_2", "1e308", "62.000"):
+            self.assertEqual(self.nova(valor=torto)["decisao"], "PENDENTE", torto)
+
+    def test_validade_sem_ano_usa_o_ano_do_atendimento(self):
+        r = verificar_guia(dict(self.BOA, data_atendimento="2025-12-20", autorizacao_validade="15/12",
+                                data_lancamento="2025-12-21"), REGRAS)
+        self.assertIn("autorizacao_vencida", [p["tipo"] for p in r["pendencias"]])
+
+    def test_validade_29_02_na_observacao_nao_derruba(self):
+        r = self.nova(autorizacao_validade="2026-08-20", observacao_recepcao="Paciente trouxe autorização nova, validade 29/02.")
+        self.assertEqual(r["decisao"], "PENDENTE")
+
+    def test_mesma_autorizacao_e_mesma_sessao_em_outra_data(self):
+        copia = dict(GUIAS[0], id_guia="C-1", data_atendimento="2026-08-29", procedimento_codigo="")
+        r = verificar_nova(copia, GUIAS, REGRAS, usar_ia=False)
+        self.assertIn("duplicidade", [p["tipo"] for p in r["pendencias"]])
+
+    def test_guia_reconferida_nao_conta_duas_vezes(self):
+        from web.rotas import rota_relatorio
+        _, corpo = rota_relatorio([dict(GUIAS[3], id_guia="g-2608-0004")])
+        self.assertEqual(corpo["relatorio"]["verificadas"], 80)
+
+    def test_comentario_sem_rotulo_nao_e_jogado_fora(self):
+        lido = interpretar_texto("Convênio: Vitalcard\nData: 02/09/2026\nCódigo: 50000470\nSessão: 1 de 10\n"
+                                 "Paciente disse que o plano foi cancelado", REGRAS, usar_ia=False)
+        self.assertIn("plano foi cancelado", lido["campos"]["observacao_recepcao"])
+        corrido = interpretar_texto("P-1 do Vitalcard, fisio neuro dia 04/09/2026, aut AUT700800 val 25/09/2026, "
+                                    "sessão 4 de 10. A mãe avisou que ele quer faturar como particular.", REGRAS, usar_ia=False)
+        self.assertIn("particular", corrido["campos"]["observacao_recepcao"])
+
+    def test_texto_corrido_pede_confirmacao(self):
+        from web.rotas import rota_verificar
+        status, corpo = rota_verificar({"texto": "P-1 do Vitalcard, fisio neuro dia 04/09/2026, aut AUT700800 "
+                                                 "val 25/09/2026, sessão 4 de 10, cid G81.9"})
+        self.assertEqual(status, 200)
+        self.assertTrue(corpo["confirmar"])
+        self.assertNotIn("resultado", corpo)
+
+    def test_ia_nao_inventa_campo(self):
+        from unittest import mock
+        inventa = {"numero_autorizacao": "AUT999999", "convenio": "Saúde Interior", "cid": "M54.5", "profissional": "Dr. Fulano"}
+        with mock.patch("motor.entrada.perguntar_json", return_value=inventa):
+            lido = interpretar_texto("P-1 do Vitalcard, fisio neuro dia 04/09/2026, sessão 4 de 10", REGRAS)
+        self.assertNotIn("numero_autorizacao", lido["campos"])
+        self.assertEqual(lido["campos"]["convenio"], "Vitalcard")
+        self.assertNotIn("profissional", lido["campos"])
+
+    def test_a_ordem_das_pendencias_e_fixa(self):
+        # G-0006 tem dois problemas de mesma gravidade: o relatório conta a guia no primeiro
+        self.assertEqual(RESULTADOS["G-2608-0006"]["tipo_principal"], "sessao_acima_do_limite")
+        self.assertEqual(RESULTADOS["G-2608-0056"]["tipo_principal"], "sessao_acima_do_limite")
+

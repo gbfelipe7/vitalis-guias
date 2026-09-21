@@ -23,6 +23,7 @@ except ImportError:                    # SDK 1.x: a mesma classe se chamava Fast
 from motor import (carregar_guias, carregar_regras, montar_relatorio, relatorio_em_texto,
                    verificar_lote, verificar_nova)
 from motor import consultar_regra as consultar_regra_no_motor
+from motor.normalizar import sem_acento
 
 mcp = ServidorMCP("vitalis-guias")
 
@@ -43,6 +44,7 @@ def _enxuto(resultado):
         "alertas": resultado["alertas"],
         "valor_em_risco": resultado["valor_em_risco"],
         "enviar_ate": resultado["enviar_ate"],
+        "conferida_em": resultado["conferida_em"],
     }
 
 
@@ -81,8 +83,9 @@ def verificar_guia(
     """Verifica uma guia e devolve a decisão (OK ou PENDENTE), o motivo e o que corrigir.
 
     Dois jeitos de usar:
-    1. Guia que já está no lote de agosto: passe só o id_guia (ex.: G-2608-0041).
-    2. Guia nova: passe os campos que tiver. Datas podem vir como 03/09/2026 ou 2026-09-03,
+    1. Guia que já está no lote de agosto: passe só o id_guia (ex.: G-2608-0041). O lote é conferido na
+       data de lançamento de cada guia (campo conferida_em), como se ela ainda não tivesse sido enviada.
+    2. Guia nova: passe os campos que tiver. Ela é conferida com a data de hoje. Datas podem vir como 03/09/2026 ou 2026-09-03,
        valor como 62,00 ou 62.00. Copie a observação da recepção como ela escreveu, em
        observacao_recepcao: ela pode mudar a decisão.
 
@@ -112,22 +115,25 @@ def verificar_guia(
 
 
 @mcp.tool()
-def listar_pendentes(convenio: str = "", unidade: str = "") -> list:
+def listar_pendentes(convenio: str = "", unidade: str = "") -> dict:
     """Lista as guias do lote de agosto que estão PENDENTES, com o motivo principal.
-    Filtros opcionais: convenio e unidade (Centro, Norte ou Sul)."""
-    pendentes = []
-    for r in LOTE_CONFERIDO.values():
-        if r["decisao"] != "PENDENTE":
-            continue
-        if convenio and convenio.strip().lower() not in r["guia"]["convenio"].lower():
-            continue
-        if unidade and unidade.strip().lower() != r["guia"]["unidade"].lower():
-            continue
-        pendentes.append({"id_guia": r["id_guia"], "unidade": r["guia"]["unidade"],
-                          "convenio": r["guia"]["convenio"], "valor": r["valor"],
-                          "gravidade": r["gravidade"], "motivo": r["pendencias"][0]["motivo"],
-                          "corrigir": r["pendencias"][0]["corrigir"]})
-    return pendentes
+    Filtros opcionais: convenio (Vitalcard, Saúde Interior, Plano Bem) e unidade (Centro, Norte, Sul).
+    Acento e maiúscula não importam. Filtro que não existe devolve erro, não lista vazia."""
+    convenios = sorted({r["guia"]["convenio"] for r in LOTE_CONFERIDO.values()})
+    unidades = sorted({r["guia"]["unidade"] for r in LOTE_CONFERIDO.values()})
+    if convenio and not any(sem_acento(convenio) == sem_acento(c) for c in convenios):
+        return {"erro": "Convênio '%s' não existe no lote." % convenio, "convenios": convenios}
+    if unidade and not any(sem_acento(unidade) == sem_acento(u) for u in unidades):
+        return {"erro": "Unidade '%s' não existe no lote." % unidade, "unidades": unidades}
+
+    pendentes = [{"id_guia": r["id_guia"], "unidade": r["guia"]["unidade"], "convenio": r["guia"]["convenio"],
+                  "valor": r["valor"], "gravidade": r["gravidade"], "motivo": r["pendencias"][0]["motivo"],
+                  "corrigir": r["pendencias"][0]["corrigir"]}
+                 for r in LOTE_CONFERIDO.values()
+                 if r["decisao"] == "PENDENTE"
+                 and (not convenio or sem_acento(convenio) == sem_acento(r["guia"]["convenio"]))
+                 and (not unidade or sem_acento(unidade) == sem_acento(r["guia"]["unidade"]))]
+    return {"total": len(pendentes), "em_risco": round(sum(p["valor"] for p in pendentes), 2), "guias": pendentes}
 
 
 @mcp.tool()

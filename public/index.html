@@ -53,6 +53,9 @@ button:disabled{opacity:.5;cursor:default}
 pre{background:#f7f6f1;border:1px solid var(--linha);border-radius:8px;padding:10px;overflow-x:auto;font-size:12.5px;white-space:pre-wrap;margin:8px 0 0}
 code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
 .erro{color:var(--glosa)}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin-top:10px}
+.campo{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--tinta2)}
+.campo input,.campo textarea{width:100%}.campo.largo{grid-column:1/-1}
 ol,ul{margin:6px 0 0;padding-left:18px}li{margin:3px 0}
 </style>
 </head>
@@ -135,9 +138,9 @@ ol,ul{margin:6px 0 0;padding-left:18px}li{margin:3px 0}
     <div class="card">
       <h2>O caminho de uma guia</h2>
       <ol>
-        <li>A guia entra por esta página, pelo endereço <code>POST /api/verificar</code> ou pelo MCP. É o mesmo motor nos três.</li>
+        <li>A guia entra por esta página, pelo endereço <code>POST /api/verificar</code> ou pelo MCP. É o mesmo motor nos três. Linha do sistema e "campo: valor" são lidos direto. Texto corrido é leitura: a página mostra o que leu e pede confirmação antes de conferir.</li>
         <li>O motor lê a guia como ela veio: data em dia/mês/ano, valor com vírgula, convênio sem acento.</li>
-        <li>A observação da recepção vira fatos: quer particular, autorização por telefone, código errado. Primeiro por palavras-chave, trecho a trecho. Se sobrar texto desconhecido e houver chave de IA, a IA lê e pode acrescentar fatos. Se ninguém entender, a guia fica para uma pessoa ler. A IA nunca libera guia e nunca decide.</li>
+        <li>A observação da recepção vira fatos: quer particular, autorização por telefone, código errado. Primeiro por palavras-chave, trecho a trecho. Um trecho só é dado como entendido se for exatamente uma frase comum ("chegou 10 min atrasado") ou se virar um fato, e todo fato vira pendência. O que sobrar segura a guia para uma pessoa ler. A IA só pode endurecer: ela acrescenta fatos que geram pendência e nunca consegue liberar uma guia.</li>
         <li>As regras decidem: campo obrigatório, validade contra a data do atendimento, limite de sessões, cobertura, registro do profissional, prazo de envio contado do atendimento, duplicidade no lote.</li>
         <li>Sai OK ou PENDENTE, com motivo e o que corrigir. Pendente tem três níveis: vai glosar, recepção corrige, alguém precisa olhar.</li>
       </ol>
@@ -227,13 +230,16 @@ ol,ul{margin:6px 0 0;padding-left:18px}li{margin:3px 0}
   }).catch(() => { $('estado').innerHTML = '<span class="erro">Não consegui carregar as guias. Recarregue a página.</span>'; });
 
   // ---------- guia nova
+  // Datas dos exemplos são sempre recentes, para o prazo de envio não vencer com o tempo.
+  const dia = (atras) => { const d = new Date(Date.now() - atras * 86400000); return {iso: d.toISOString().slice(0, 10), br: d.toLocaleDateString('pt-BR')}; };
+  const d3 = dia(3), d2 = dia(2), mais20 = dia(-20);
   const EXEMPLOS = [
-    'G-2609-0001,Centro,2026-09-02,P-2001,Saúde Interior,445566778,,50000470,Sessão de fisioterapia musculoesquelética,AUT900100,2026-09-30,20,3,Heitor Salles,CREFITO-3 156740-F,62.00,,2026-09-02',
-    'Convênio: Plano Bem\nUnidade: Norte\nPaciente: P-2002\nData: 03/09/2026\nProcedimento: Consulta ortopédica\nCódigo: 20103301\nAutorização: AUT555111\nValidade: 30/09/2026\nSessão: 1 de 12\nCarteirinha: 998877665\nProfissional: Dra. Marina Lopes\nCRM: CRM-SP 112390\nValor: 90,00\nLançamento: 03/09/2026',
-    'Paciente P-2003 do Vitalcard, unidade Sul, fisio neurofuncional dia 04/09/2026 com o Felipe Andrade CREFITO-3 198302-F, aut AUT700800 val 25/09/2026, sessão 4 de 10, carteirinha 123456789, cid G81.9, R$ 70,00. Obs: a mãe avisou que ele quer faturar como particular, não quer usar o convênio.',
-    'G-2609-0004,Sul,28/08/2026,P-1036,Vitalcard,884410270,M79.7,50000470,Sessão de fisioterapia musculoesquelética,AUT887507,2026-08-28,10,7,Bruno Castanho,CREFITO-3 204411-F,62.00,,2026-09-01',
+    `G-NOVA-0001,Centro,${d3.iso},P-2001,Saúde Interior,445566778,,50000470,Sessão de fisioterapia musculoesquelética,AUT900100,${mais20.iso},20,3,Heitor Salles,CREFITO-3 156740-F,62.00,,${d2.iso}`,
+    `Convênio: Plano Bem\nUnidade: Norte\nPaciente: P-2002\nData: ${d3.br}\nProcedimento: Consulta ortopédica\nCódigo: 20103301\nAutorização: AUT555111\nValidade: ${mais20.br}\nSessão: 1 de 12\nCarteirinha: 998877665\nCID: M54.5\nProfissional: Dra. Marina Lopes\nCRM: CRM-SP 112390\nValor: 90,00`,
+    `Paciente P-2003 do Vitalcard, unidade Sul, fisio neurofuncional dia ${d3.br} com o Felipe Andrade CREFITO-3 198302-F, aut AUT700800 val ${mais20.br}, sessão 4 de 10, carteirinha 123456789, cid G81.9, R$ 70,00. A mãe avisou que ele quer faturar como particular, não quer usar o convênio.`,
+    'G-NOVA-0004,Sul,28/08/2026,P-1036,Vitalcard,884410270,M79.7,50000470,Sessão de fisioterapia musculoesquelética,AUT887507,2026-08-28,10,7,Bruno Castanho,CREFITO-3 204411-F,62.00,,',
   ];
-  document.querySelectorAll('[data-ex]').forEach((b) => b.addEventListener('click', () => { $('texto').value = EXEMPLOS[+b.dataset.ex]; }));
+  document.querySelectorAll('[data-ex]').forEach((b) => b.addEventListener('click', () => { $('texto').value = EXEMPLOS[+b.dataset.ex]; $('resultado').innerHTML = ''; }));
 
   function desenharNovas() {
     $('novas').innerHTML = novas.length ? novas.map((n) => `<div style="margin:4px 0"><span class="sel ${n.gravidade}">${NOME_GRAVIDADE[n.gravidade]}</span> ${esc(n.resumo)}</div>`).join('') + '<div class="linha"><button class="leve" id="limpar">Limpar</button></div>' : 'Nenhuma ainda. As que você conferir entram aqui e no relatório de terça.';
@@ -242,19 +248,48 @@ ol,ul{margin:6px 0 0;padding-left:18px}li{margin:3px 0}
   const salvarNovas = () => { try { sessionStorage.setItem('vitalis-novas', JSON.stringify(novas)); } catch (_) {} };
   desenharNovas();
 
+  const ROTULOS = {id_guia: 'Guia', unidade: 'Unidade', data_atendimento: 'Data do atendimento', paciente: 'Paciente', convenio: 'Convênio', carteirinha: 'Carteirinha', cid: 'CID', procedimento_codigo: 'Código do procedimento', procedimento_descricao: 'Procedimento', numero_autorizacao: 'Número da autorização', autorizacao_validade: 'Validade da autorização', autorizacao_sessoes_limite: 'Sessões autorizadas', sessao_numero_na_autorizacao: 'Número da sessão', profissional: 'Profissional', profissional_registro: 'Registro (CREFITO ou CRM)', valor: 'Valor', observacao_recepcao: 'Observação da recepção'};
+
+  async function pedir(corpo) {
+    const resp = await fetch('/api/verificar', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(corpo)});
+    return {ok: resp.ok, d: await resp.json()};
+  }
+
+  function mostrarResultado(d) {
+    const r = d.resultado, campos = Object.entries(d.entrada.campos).map(([k, v]) => `${k}: ${v}`).join('\n');
+    $('resultado').innerHTML = `<div style="margin-top:12px"><span class="sel ${r.gravidade}">${r.decisao === 'OK' ? 'OK, pode enviar' : 'PENDENTE · ' + NOME_GRAVIDADE[r.gravidade]}</span> <span class="mini">${r.valor_em_risco ? reais(r.valor_em_risco) + ' em risco' : ''}</span></div>${detalhe(r)}
+      <details style="margin-top:8px"><summary class="mini">Como a guia foi lida (${esc(d.entrada.lido_por)})</summary><pre>${esc(campos)}</pre></details>`;
+    novas.unshift({campos: d.entrada.campos, gravidade: r.gravidade, resumo: `${r.id_guia} · ${r.guia.convenio || 'sem convênio'} · ${reais(r.valor)} · ${r.pendencias[0] ? r.pendencias[0].motivo : 'pode enviar'}`});
+    novas = novas.slice(0, 20); salvarNovas(); desenharNovas();
+  }
+
+  // Texto corrido é leitura, não é dado: a pessoa confere os campos antes de a guia ser conferida.
+  function pedirConfirmacao(d) {
+    const avisos = (d.entrada.avisos || []).map((a) => `<div class="alerta erro">${esc(a)}</div>`).join('');
+    const faltando = d.entrada.faltando.length ? `<div class="alerta erro">Não achei no texto: ${d.entrada.faltando.map((c) => ROTULOS[c] || c).join(', ')}.</div>` : '';
+    const campos = Object.keys(ROTULOS).map((c) => c === 'observacao_recepcao'
+      ? `<label class="campo largo"><span>${ROTULOS[c]}</span><textarea data-campo="${c}" style="min-height:60px">${esc(d.entrada.campos[c] || '')}</textarea></label>`
+      : `<label class="campo"><span>${ROTULOS[c]}</span><input type="text" data-campo="${c}" value="${esc(d.entrada.campos[c] || '')}"></label>`).join('');
+    $('resultado').innerHTML = `<div class="card" style="background:#faf9f5"><h2>Confira o que eu li do texto (${esc(d.entrada.lido_por)})</h2>
+      <div class="mini">Texto corrido é leitura, não é dado. Corrija o que estiver errado e confirme. Só então a guia é conferida.</div>
+      ${avisos}${faltando}<div class="form">${campos}</div>
+      <div class="linha"><button class="acao" id="confirmar">Confirmar e conferir</button></div></div>`;
+    $('confirmar').addEventListener('click', async () => {
+      const guia = {}; document.querySelectorAll('[data-campo]').forEach((el) => { if (el.value.trim()) guia[el.dataset.campo] = el.value.trim(); });
+      $('confirmar').disabled = true;
+      try { const {ok, d: r} = await pedir({guia}); if (ok) mostrarResultado(r); else $('resultado').insertAdjacentHTML('beforeend', `<div class="alerta erro">${esc(r.erro || 'Erro ao conferir.')}</div>`); }
+      catch (_) { $('resultado').insertAdjacentHTML('beforeend', '<div class="alerta erro">Sem resposta do servidor. A guia não foi conferida: não envie ainda.</div>'); }
+    });
+  }
+
   $('conferir').addEventListener('click', async () => {
     const texto = $('texto').value.trim(); if (!texto) return;
-    $('conferir').disabled = true; $('resultado').innerHTML = '<div class="alerta">conferindo…</div>';
+    $('conferir').disabled = true; $('resultado').innerHTML = '<div class="alerta">lendo…</div>';
     try {
-      const resp = await fetch('/api/verificar', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({texto})});
-      const d = await resp.json();
-      if (!resp.ok) { $('resultado').innerHTML = `<div class="alerta erro">${esc(d.erro || 'Erro ao conferir.')} ${esc(d.dica || '')}</div>`; return; }
-      const r = d.resultado, campos = Object.entries(d.entrada.campos).map(([k, v]) => `${k}: ${v}`).join('\n');
-      $('resultado').innerHTML = `<div style="margin-top:12px"><span class="sel ${r.gravidade}">${r.decisao === 'OK' ? 'OK, pode enviar' : 'PENDENTE · ' + NOME_GRAVIDADE[r.gravidade]}</span> <span class="mini">${r.valor_em_risco ? reais(r.valor_em_risco) + ' em risco' : ''}</span></div>${detalhe(r)}
-        ${d.entrada.faltando.length ? `<div class="alerta erro">Não achei no texto: ${d.entrada.faltando.join(', ')}.</div>` : ''}
-        <details style="margin-top:8px"><summary class="mini">Como a guia foi lida (${esc(d.entrada.lido_por)})</summary><pre>${esc(campos)}</pre></details>`;
-      novas.unshift({campos: d.entrada.campos, gravidade: r.gravidade, resumo: `${r.id_guia} · ${r.guia.convenio || 'sem convênio'} · ${reais(r.valor)} · ${r.pendencias[0] ? r.pendencias[0].motivo : 'pode enviar'}`});
-      novas = novas.slice(0, 20); salvarNovas(); desenharNovas();
+      const {ok, d} = await pedir({texto});
+      if (!ok) $('resultado').innerHTML = `<div class="alerta erro">${esc(d.erro || 'Erro ao conferir.')} ${esc(d.dica || '')}</div>`;
+      else if (d.confirmar) pedirConfirmacao(d);
+      else mostrarResultado(d);
     } catch (_) {
       $('resultado').innerHTML = '<div class="alerta erro">Sem resposta do servidor. A guia não foi conferida: não envie ainda.</div>';
     } finally { $('conferir').disabled = false; }

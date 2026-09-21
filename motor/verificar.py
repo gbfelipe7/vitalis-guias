@@ -68,7 +68,7 @@ def _campos_obrigatorios(guia, regra, extra, fatos, referencia, registros_conhec
 
 def _sem_autorizacao(guia, regra, extra, fatos, referencia):
     protocolo = fatos["protocolo_verbal"]
-    if not protocolo:
+    if not protocolo:                      # inclui "autorizado por telefone" sem o número do protocolo
         return _pendencia("sem_autorizacao", "corrigir", "sem_autorizacao")
 
     dias_uteis = extra.get("autorizacao_verbal_dias_uteis", 0)
@@ -233,6 +233,13 @@ def _observacao(guia, fatos, regras, ja_tratou_autorizacao_nova):
         pendencias.append(_pendencia("observacao_recepcao", "conferir", "remarcada",
                                      atendimento=_br(guia["_atendimento"])))
 
+    if fatos["por_telefone"] and guia["numero_autorizacao"]:
+        pendencias.append(_pendencia("observacao_recepcao", "conferir", "verbal_com_numero",
+                                     numero=guia["numero_autorizacao"]))
+
+    if guia["_observacao_cortada"]:
+        pendencias.append(_pendencia("observacao_recepcao", "conferir", "observacao_cortada"))
+
     if fatos["autorizacao_nova"] and not ja_tratou_autorizacao_nova:
         pendencias.append(_pendencia("observacao_recepcao", "conferir", "autorizacao_nova_solta"))
 
@@ -247,6 +254,8 @@ def _duplicidade(contexto):
         return []
     if contexto["tipo"] == "exata":
         return [_pendencia("duplicidade", "vai_glosar", "duplicata_exata", outra=contexto["outra"])]
+    if contexto["tipo"] == "mesma_sessao":
+        return [_pendencia("duplicidade", "conferir", "mesma_sessao", outra=contexto["outra"])]
     return [_pendencia("duplicidade", "conferir", "duplicata_suspeita", outra=contexto["outra"])]
 
 
@@ -268,10 +277,7 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
     guia = normalizar_guia(bruta)
     referencia = referencia or guia["_lancamento"] or date.today()
     ano = (guia["_atendimento"] or referencia).year
-    fatos = ler_observacao(guia["observacao_recepcao"], ano=ano, usar_ia=usar_ia)
-    # "validade 15/01" anotada numa guia de dezembro é do ano seguinte
-    if fatos["nova_validade"] and guia["_atendimento"] and (guia["_atendimento"] - fatos["nova_validade"]).days > 180:
-        fatos["nova_validade"] = fatos["nova_validade"].replace(year=fatos["nova_validade"].year + 1)
+    fatos = ler_observacao(guia["observacao_recepcao"], ano=ano, depois_de=guia["_atendimento"], usar_ia=usar_ia)
 
     pendencias, alertas, enviar_ate = [], (list(guia["avisos_de_leitura"]) if veio_do_sistema else []), None
     regra = achar_convenio(regras, guia["convenio"])
@@ -287,6 +293,7 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
         pendencias.append(_pendencia("dado_invalido", "corrigir", "convenio_desconhecido",
                                      convenio=guia["convenio"]))
     else:
+        guia["convenio"] = regra["nome"]             # 'vitalcard ' e 'VITALCARD' viram o nome oficial
         extra = regras["extras_convenio"].get(sem_acento(regra["nome"]), {})
         pendencias += _campos_obrigatorios(guia, regra, extra, fatos, referencia, registros_conhecidos or {})
         pendencias += _dados_minimos(guia)
@@ -308,6 +315,8 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
         if guia["_limite_declarado"] and guia["_limite_declarado"] != limite:
             alertas.append(ALERTA["limite_diferente"].format(declarado=guia["_limite_declarado"],
                                                          convenio=regra["nome"], limite=limite))
+        if guia["autorizacao_sessoes_limite"] and guia["_limite_declarado"] is None:
+            alertas.append(ALERTA["limite_ilegivel"].format(valor=guia["autorizacao_sessoes_limite"]))
         if fatos["recibo_reembolso"]:
             alertas.append(ALERTA["recibo_reembolso"])
         nova = fatos["nova_validade"]

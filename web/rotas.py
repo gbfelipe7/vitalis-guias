@@ -37,6 +37,11 @@ def rota_verificar(dados):
     elif isinstance(dados.get("texto"), str) and dados["texto"].strip():
         entrada = interpretar_texto(dados["texto"], regras, usar_ia=True)
         campos = _so_texto(entrada["campos"])
+        if entrada["precisa_confirmar"] and campos:
+            # Texto corrido é leitura, não é dado: devolve os campos lidos para a pessoa conferir.
+            # A conferência de verdade acontece quando eles voltarem em "guia".
+            return 200, {"confirmar": True, "entrada": {"lido_por": entrada["lido_por"], "campos": campos,
+                                                        "faltando": entrada["faltando"], "avisos": entrada["avisos"]}}
     else:
         return 400, {"erro": "Mande 'guia' (os campos) ou 'texto' (o que a recepção escreveu)."}
 
@@ -63,8 +68,10 @@ def rota_relatorio(novas=None):
         if isinstance(nova, dict):
             campos = _so_texto(nova)
             campos.setdefault("id_guia", "NOVA-%d" % (i + 1))
-            resultados.append(verificar_nova(campos, ja_vistas, regras, usar_ia=False))
-            ja_vistas.append(campos)
+            conferida = verificar_nova(campos, ja_vistas, regras, usar_ia=False)
+            # guia corrigida e conferida de novo (mesmo número) entra no lugar da antiga, não conta duas vezes
+            resultados = [r for r in resultados if r["id_guia"].upper() != conferida["id_guia"].upper()] + [conferida]
+            ja_vistas = [g for g in ja_vistas if (g.get("id_guia") or "").strip().upper() != conferida["id_guia"].upper()] + [campos]
     relatorio = montar_relatorio(resultados)
     return 200, {"relatorio": relatorio, "texto": relatorio_em_texto(relatorio)}
 

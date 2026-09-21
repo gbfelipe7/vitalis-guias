@@ -30,6 +30,11 @@ NOME_DA_DATA = {
 FORMATOS_DE_DATA = ("%Y-%m-%d", "%d/%m/%Y", "%d/%m/%y", "%d-%m-%Y", "%d.%m.%Y")
 TAMANHO_MAXIMO = {"observacao_recepcao": 1000}      # os outros campos: 200 caracteres
 
+# O que a recepção digita para dizer "ainda não tenho". Conta como campo vazio.
+MARCADORES_DE_VAZIO = {"-", "--", "---", "?", "??", "x", "xx", "xxx", "n/a", "na", "nt", "nd", "0", "00",
+                       "aguardando", "pendente", "a confirmar", "confirmar", "sem", "nao tem", "nao informado",
+                       "nao consta", "vazio", "null", "none"}
+
 
 def sem_acento(texto):
     """'Saúde Interior' vira 'saude interior'. Serve para comparar nomes sem depender de digitação."""
@@ -47,14 +52,7 @@ def limpar_texto(valor, limite=200):
     return texto.strip()[:limite]
 
 
-def ler_data(texto, ano_padrao=None):
-    """Aceita 2026-08-03, 03/08/2026 e também 03/08 (sem ano, vale o ano_padrao).
-    Devolve None quando não dá para entender ou quando o ano é absurdo."""
-    if isinstance(texto, date):
-        return texto
-    texto = str(texto or "").strip()
-    if re.match(r"^\d{1,2}/\d{1,2}$", texto):
-        texto = "%s/%d" % (texto, ano_padrao or date.today().year)
+def _interpretar_data(texto):
     for formato in FORMATOS_DE_DATA:
         try:
             lida = datetime.strptime(texto, formato).date()
@@ -64,24 +62,41 @@ def ler_data(texto, ano_padrao=None):
     return None
 
 
+def ler_data(texto, ano_padrao=None, depois_de=None):
+    """Aceita 2026-08-03, 03/08/2026 e também 03/08, sem ano.
+
+    Data sem ano: vale o ano_padrao. Se ainda assim ela cair mais de 6 meses ANTES de
+    depois_de, é do ano seguinte ("validade 15/01" numa guia de dezembro). Data com o ano
+    escrito nunca é mexida. Devolve None quando não dá para entender ou o ano é absurdo."""
+    if isinstance(texto, date):
+        return texto
+    texto = str(texto or "").strip()
+    if not re.match(r"^\d{1,2}/\d{1,2}$", texto):
+        return _interpretar_data(texto)
+    ano = ano_padrao or (depois_de.year if depois_de else date.today().year)
+    lida = _interpretar_data("%s/%d" % (texto, ano))
+    if lida and depois_de and (depois_de - lida).days > 180:
+        lida = _interpretar_data("%s/%d" % (texto, ano + 1)) or lida
+    return lida
+
+
 def ler_inteiro(texto):
-    """Vale o número inteiro do começo: '11', '11ª' e '11 de 10' viram 11.
-    '-3', 'sétima', '1e999' e '7,5' viram None."""
-    achado = re.match(r"^(\d{1,6})(?![\d.,eE])", str(texto or "").strip())
+    """Só aceita o que é claramente um número de sessão: '11', '11ª', '11 de 10' e '11/10' viram 11.
+    Qualquer outra coisa ('1 1', '1O', '-3', 'sétima', '2 (na verdade 12)', '1e999') vira None,
+    e o motor segura a guia em vez de adivinhar."""
+    achado = re.match(r"^(\d{1,4})\s*[ªºa]?(\s*(/|de)\s*\d{1,4})?$", str(texto or "").strip(), flags=re.IGNORECASE)
     return int(achado.group(1)) if achado else None
 
 
 def ler_valor(texto):
-    """Aceita 62.00, 62,00 e R$ 62,00. Negativo, 'nan', 'inf' e texto viram None."""
+    """Aceita 62, 62.00, 62,00, R$ 62,00 e 1.300,00. Negativo, 'nan', '6_2', '1e308' e texto viram None."""
     texto = str(texto or "").replace("R$", "").strip()
-    if "," in texto and "." in texto:      # 1.300,00
+    if re.match(r"^\d{1,3}(\.\d{3})+(,\d{1,2})?$", texto):       # 1.300,00 ou 62.000: ponto é milhar
         texto = texto.replace(".", "")
-    texto = texto.replace(",", ".")
-    try:
-        valor = float(texto)
-    except (ValueError, OverflowError):
+    if not re.match(r"^\d{1,7}([.,]\d{1,2})?$", texto):
         return None
-    return valor if math.isfinite(valor) and valor >= 0 else None
+    valor = float(texto.replace(",", "."))
+    return valor if math.isfinite(valor) else None
 
 
 def normalizar_guia(bruta):
@@ -95,10 +110,19 @@ def normalizar_guia(bruta):
     guia = {campo: limpar_texto(bruta.get(campo), TAMANHO_MAXIMO.get(campo, 200)) for campo in CAMPOS}
     avisos = []
 
+    for campo in CAMPOS:                     # "aguardando", "-" e "N/A" são jeitos de deixar vazio
+        if campo != "observacao_recepcao" and sem_acento(guia[campo]) in MARCADORES_DE_VAZIO:
+            guia[campo] = ""
+    # observação cortada: o que ficou de fora pode ser justamente o que segura a guia
+    guia["_observacao_cortada"] = len(limpar_texto(bruta.get("observacao_recepcao"), 100000)) > TAMANHO_MAXIMO["observacao_recepcao"]
+
+    guia["_atendimento"] = ler_data(guia["data_atendimento"])
     for campo, chave in (("data_atendimento", "_atendimento"),
                          ("autorizacao_validade", "_validade"),
                          ("data_lancamento", "_lancamento")):
-        guia[chave] = ler_data(guia[campo])
+        # validade e lançamento sem ano são do ano do atendimento, não do ano de hoje
+        guia[chave] = ler_data(guia[campo], depois_de=guia["_atendimento"] if campo == "autorizacao_validade" else None,
+                               ano_padrao=guia["_atendimento"].year if guia["_atendimento"] and campo != "data_atendimento" else None)
         digitado = guia[campo]
         if digitado and guia[chave] and digitado != guia[chave].isoformat():
             avisos.append("%s foi digitada como '%s', fora do padrão do sistema. Foi lida como %s." % (

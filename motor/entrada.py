@@ -7,9 +7,13 @@ A recepção não escreve em JSON. A entrada aceita, nesta ordem:
    sessão "7 de 10", CID, registro) são pegos por expressão regular. Com chave de IA, o
    modelo completa o que a expressão regular não alcança, como o nome do profissional.
 
-Regra de segurança do texto corrido: onde a expressão regular e a IA discordam, vale o que
-está ESCRITO no texto, e a divergência aparece como aviso. A IA só separa campos. Ela não
-corrige valor, não completa ano e não decide nada.
+Texto corrido é LEITURA, não é dado. Três travas:
+- a IA só separa campos: todo valor que ela devolve tem que existir no texto colado, senão é
+  descartado com aviso. Ela não corrige, não completa ano e não decide nada;
+- onde a expressão regular e a IA discordam, vale o que está escrito, com aviso;
+- o resultado volta com precisa_confirmar=True. A página mostra os campos lidos para a pessoa
+  conferir e só então a guia é conferida. Nada que veio de texto corrido vira OK sem esse olhar.
+Linha do sistema e 'campo: valor' são leitura exata e não precisam de confirmação.
 """
 
 import csv
@@ -57,7 +61,7 @@ PADROES = {
     "valor":                 r"R\$\s?(\d+(?:[.,]\d{2})?)|(\d+(?:[.,]\d{2})?)\s?reais", # R$ 62,00 ou 70 reais
 }
 SESSAO = r"sess[aã]o\s*(\d+)\s*(?:/|de)\s*(\d+)"                                       # sessão 7 de 10
-VALIDADE = r"val(?:idade)?\.?\s*(?:at[eé]\s*)?(%s)" % _DATA                            # val 25/09/2026
+VALIDADE = r"\bval(?:idade)?\.?\s*(?:at[eé]\s*)?(%s)" % _DATA                         # val 25/09/2026 (e não 'aval. 30/09')
 
 
 def _de_csv(texto):
@@ -76,23 +80,31 @@ def _de_csv(texto):
 
 def _de_campos(texto):
     """Linhas 'campo: valor'. Precisa de pelo menos 4 campos para valer."""
-    campos = {}
+    campos, soltas, avisos = {}, [], []
     for linha in texto.splitlines():
-        if ":" not in linha and "=" not in linha:
+        if not linha.strip():
             continue
-        nome, valor = re.split(r"[:=]", linha, maxsplit=1)
-        campo = _POR_APELIDO.get(sem_acento(nome.strip(" -*\t")))
-        if campo and valor.strip():
+        nome, _, valor = linha.partition(":") if ":" in linha else linha.partition("=")
+        campo = _POR_APELIDO.get(sem_acento(nome.strip(" -*\t"))) if valor.strip() else None
+        if campo is None:
+            soltas.append(linha.strip())             # linha sem rótulo conhecido: é comentário da recepção
+        elif campo in campos and campos[campo] != valor.strip():
+            avisos.append("O campo %s veio duas vezes ('%s' e '%s'). Fiquei com o primeiro." % (campo, campos[campo], valor.strip()))
+        else:
             campos[campo] = valor.strip()
+    if len(campos) < 4:
+        return None, []
+    if soltas:
+        campos["observacao_recepcao"] = " ".join([campos.get("observacao_recepcao", "")] + soltas).strip()
     sessao = re.match(r"^(\d+)\s*(?:/|de)\s*(\d+)", campos.get("sessao_numero_na_autorizacao", ""))
     if sessao:
         campos["sessao_numero_na_autorizacao"], campos["autorizacao_sessoes_limite"] = sessao.groups()
-    return campos if len(campos) >= 4 else None
+    return campos, avisos
 
 
 def _de_regex(texto, regras):
-    """Melhor esforço, sem IA. Pega só o que tem formato inconfundível."""
-    campos = {}
+    """Melhor esforço, sem IA. Pega só o que tem formato inconfundível. Devolve (campos, avisos)."""
+    campos, avisos = {}, []
     for regra in regras["convenios"].values():
         if sem_acento(regra["nome"]) in sem_acento(texto):
             campos["convenio"] = regra["nome"]
@@ -102,30 +114,54 @@ def _de_regex(texto, regras):
     if proc:
         campos["procedimento_codigo"], campos["procedimento_descricao"] = proc["codigo"], proc["descricao"]
 
-    for campo, padrao in PADROES.items():
-        achado = re.search(padrao, texto, flags=re.IGNORECASE)
-        if achado:
-            campos[campo] = next(g for g in achado.groups() if g).strip()
-    if "numero_autorizacao" in campos:
-        campos["numero_autorizacao"] = campos["numero_autorizacao"].replace(" ", "").upper()
+    def unico(campo, achados):
+        """Um valor só: usa. Dois valores diferentes: fica com o primeiro e avisa, porque pode ser outra guia."""
+        distintos = list(dict.fromkeys(a for a in achados if a))
+        if len(distintos) > 1:
+            avisos.append("O texto traz mais de um valor para %s: %s. Fiquei com o primeiro. Confira se não são duas guias." % (
+                campo, ", ".join(distintos)))
+        return distintos[0] if distintos else None
 
-    sessao = re.search(SESSAO, texto, flags=re.IGNORECASE)
-    if sessao:
-        campos["sessao_numero_na_autorizacao"], campos["autorizacao_sessoes_limite"] = sessao.groups()
-    validade = re.search(VALIDADE, texto, flags=re.IGNORECASE)
+    for campo, padrao in PADROES.items():
+        achados = ["".join(g for g in m if g).strip() if isinstance(m, tuple) else m.strip()
+                   for m in re.findall(padrao, texto, flags=re.IGNORECASE)]
+        if campo == "numero_autorizacao":
+            achados = [a.replace(" ", "").upper() for a in achados]
+        valor = unico(campo, achados)
+        if valor:
+            campos[campo] = valor
+
+    sessoes = re.findall(SESSAO, texto, flags=re.IGNORECASE)
+    if sessoes:
+        unico("sessao_numero_na_autorizacao", ["%s de %s" % par for par in sessoes])
+        campos["sessao_numero_na_autorizacao"], campos["autorizacao_sessoes_limite"] = sessoes[0]
+    validade = unico("autorizacao_validade", re.findall(VALIDADE, texto, flags=re.IGNORECASE))
     if validade:
-        campos["autorizacao_validade"] = validade.group(1)
-    outras_datas = [d for d in re.findall(_DATA, texto) if d != campos.get("autorizacao_validade")]
-    if outras_datas:
-        campos["data_atendimento"] = outras_datas[0]
+        campos["autorizacao_validade"] = validade
+    obs = re.search(r"\bobs(?:erva[cç][aã]o)?\b\.?\s*[:\-]\s*(.+)$", texto, flags=re.IGNORECASE | re.DOTALL)   # Obs: ...
+    antes_da_obs = texto[:obs.start()] if obs else texto
+    datas = [d for d in re.findall(_DATA, antes_da_obs) if d != validade]
+    atendimento = unico("data_atendimento", datas)
+    if atendimento:
+        campos["data_atendimento"] = atendimento
 
     for unidade in ("Centro", "Norte", "Sul"):
-        if re.search(r"\b%s\b" % unidade, texto):
+        if re.search(r"\bunidade\s+%s\b" % unidade, texto, flags=re.IGNORECASE):
             campos.setdefault("unidade", unidade)
-    obs = re.search(r"\bobs(?:erva[cç][aã]o)?\b\.?\s*[:\-]\s*(.+)$", texto, flags=re.IGNORECASE | re.DOTALL)   # Obs: ...
-    if obs:
-        campos["observacao_recepcao"] = obs.group(1).strip()
-    return campos
+
+    # Observação: o que vem depois de 'Obs:' e toda FRASE em que nenhum campo foi achado.
+    # Frase de comentário sem o rótulo 'Obs:' não pode ser jogada fora: ela pode segurar a guia.
+    comentarios = [obs.group(1).strip()] if obs else []
+    achados_no_texto = [v for c, v in campos.items() if c not in ("convenio", "procedimento_codigo", "procedimento_descricao")]
+    for frase in re.split(r"(?<=[.!?])\s+|\n", antes_da_obs):
+        tem_campo = any(v and v.lower() in frase.lower() for v in achados_no_texto) \
+            or any(sem_acento(r["nome"]) in sem_acento(frase) for r in regras["convenios"].values()) \
+            or achar_procedimento(regras, frase) is not None
+        if frase.strip() and not tem_campo:
+            comentarios.append(frase.strip())
+    if comentarios:
+        campos["observacao_recepcao"] = " ".join(comentarios)
+    return campos, avisos
 
 
 def _de_ia(texto, regras):
@@ -161,41 +197,64 @@ CONFERIDOS = {
 }
 
 
-def _juntar(da_regex, da_ia):
-    """Começa pelo que a IA separou e deixa o ESCRITO mandar nos campos conferidos."""
-    campos, avisos = dict(da_ia), []
+def _esta_no_texto(valor, texto):
+    junto = lambda t: re.sub(r"\s+", "", sem_acento(t))
+    return bool(valor) and junto(valor) in junto(texto)
+
+
+def _juntar(da_regex, da_ia, texto, regras):
+    """Começa pelo que a IA separou, joga fora o que ela devolveu sem estar escrito, e deixa o
+    ESCRITO mandar nos campos de formato inconfundível."""
+    campos, avisos = {}, []
+    for campo, valor in da_ia.items():
+        if campo in ("procedimento_codigo", "procedimento_descricao"):
+            continue                                  # procedimento sai da tabela, nunca da IA
+        if _esta_no_texto(valor, texto):
+            campos[campo] = valor
+        else:
+            avisos.append("A IA devolveu '%s' para %s, mas isso não está no texto. Descartei." % (valor[:60], campo))
     for campo, comparavel in CONFERIDOS.items():
-        escrito, sugerido = da_regex.get(campo), da_ia.get(campo)
+        escrito, sugerido = da_regex.get(campo), campos.get(campo)
         if escrito and sugerido and comparavel(escrito) != comparavel(sugerido):
             avisos.append("Em %s a IA leu '%s', mas o texto diz '%s'. Vale o que está escrito." % (
                 campo, sugerido, escrito))
         if escrito:
             campos[campo] = escrito
     for campo, valor in da_regex.items():
-        campos.setdefault(campo, valor)
+        if campo == "observacao_recepcao" and campos.get(campo):
+            if not _esta_no_texto(valor, campos[campo]):          # o comentário achado sem IA nunca se perde
+                campos[campo] = "%s %s" % (campos[campo], valor)
+        elif campo in ("convenio", "procedimento_codigo", "procedimento_descricao"):
+            campos[campo] = valor                     # nomes oficiais vêm das regras
+        else:
+            campos.setdefault(campo, valor)
     return campos, avisos
 
 
 def interpretar_texto(texto, regras, usar_ia=True):
-    """Devolve {"campos": {...}, "lido_por": ..., "faltando": [...], "avisos": [...]}."""
-    texto = limpar_texto(texto, MAXIMO_DE_TEXTO)
-    avisos = []
+    """Devolve {"campos", "lido_por", "faltando", "avisos", "precisa_confirmar"}."""
+    bruto = str(texto or "")
+    texto = limpar_texto(bruto, MAXIMO_DE_TEXTO)
+    avisos = ["O texto passa de %d caracteres e foi lido só até ali." % MAXIMO_DE_TEXTO] if len(bruto.strip()) > MAXIMO_DE_TEXTO else []
+    precisa_confirmar = False
 
     campos, avisos_csv = _de_csv(texto)
     lido_por = "linha do sistema"
     avisos += avisos_csv
     if campos is None:
-        campos, lido_por = _de_campos(texto), "campos 'nome: valor'"
+        campos, avisos_campos = _de_campos(texto)
+        lido_por = "campos 'nome: valor'"
+        avisos += avisos_campos
     if campos is None:
-        campos, lido_por = _de_regex(texto, regras), "expressões regulares, sem IA"
+        campos, avisos_regex = _de_regex(texto, regras)
+        lido_por, precisa_confirmar = "expressões regulares, sem IA", True
+        avisos += avisos_regex
         da_ia = _de_ia(texto, regras) if usar_ia else None
         if da_ia:
-            campos, avisos_ia = _juntar(campos, da_ia)
+            campos, avisos_ia = _juntar(campos, da_ia, texto, regras)
             avisos += avisos_ia
             lido_por = "IA e expressões regulares"
-        if campos:
-            avisos.append("Os campos foram separados de um texto corrido. Confira como a guia foi lida antes de enviar.")
 
     essenciais = ("convenio", "procedimento_codigo", "data_atendimento")
-    return {"campos": campos, "lido_por": lido_por, "avisos": avisos,
+    return {"campos": campos, "lido_por": lido_por, "avisos": avisos, "precisa_confirmar": precisa_confirmar,
             "faltando": [c for c in essenciais if not campos.get(c)]}
