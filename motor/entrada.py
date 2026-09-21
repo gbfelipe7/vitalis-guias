@@ -122,7 +122,7 @@ def _de_regex(texto, regras):
     for unidade in ("Centro", "Norte", "Sul"):
         if re.search(r"\b%s\b" % unidade, texto):
             campos.setdefault("unidade", unidade)
-    obs = re.search(r"\bobs(?:erva[cç][aã]o)?\.?\s*[:\-]?\s*(.+)$", texto, flags=re.IGNORECASE | re.DOTALL)
+    obs = re.search(r"\bobs(?:erva[cç][aã]o)?\b\.?\s*[:\-]\s*(.+)$", texto, flags=re.IGNORECASE | re.DOTALL)   # Obs: ...
     if obs:
         campos["observacao_recepcao"] = obs.group(1).strip()
     return campos
