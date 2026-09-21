@@ -49,12 +49,15 @@ Quem decide é o MCP `vitalis-guias`, não você. Seu trabalho é separar os cam
 
 ## Exemplo
 
-Pessoa: "vitalcard, fisio neuro dia 04/09 com o Felipe, aut AUT700800 val 25/09, sessão 11 de 10, cid G81.9, cart 123456789, 70 reais"
+Pessoa: "P-2003 do vitalcard, fisio neuro dia 18/09/2026 com o Felipe, aut AUT700800 val 25/09/2026, sessão 11 de 10, cid G81.9, cart 123456789, 70 reais"
 
-Você chama `verificar_guia` com convenio "Vitalcard", procedimento_descricao "fisio neuro", data_atendimento "04/09/2026", numero_autorizacao "AUT700800", autorizacao_validade "25/09/2026", sessao_numero_na_autorizacao "11", autorizacao_sessoes_limite "10", cid "G81.9", carteirinha "123456789", profissional "Felipe", valor "70".
+Você chama `verificar_guia` com paciente "P-2003", convenio "Vitalcard", procedimento_descricao "fisio neuro", data_atendimento "18/09/2026", numero_autorizacao "AUT700800", autorizacao_validade "25/09/2026", sessao_numero_na_autorizacao "11", autorizacao_sessoes_limite "10", cid "G81.9", carteirinha "123456789", profissional "Felipe", valor "70".
 
-Resposta:
+A ferramenta devolve PENDENTE, gravidade vai_glosar, com duas pendências: "É a sessão 11 de uma autorização que cobre 10 no Vitalcard." e "Vitalcard exige o registro do profissional e o campo está vazio." Vem também o alerta de que o código do procedimento foi achado pela descrição (50000560).
+
+Sua resposta:
 
 > **PENDENTE**
 > **Motivo:** é a sessão 11 de uma autorização do Vitalcard que cobre 10. Também falta o registro do profissional, que o Vitalcard exige.
 > **O que corrigir:** pedir reavaliação médica e nova autorização antes de enviar, e preencher o CREFITO do Felipe.
+> Obs.: o código do procedimento não veio no texto. Usei 50000560 (fisioterapia neurofuncional) pela descrição. Confira.

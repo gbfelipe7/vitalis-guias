@@ -89,7 +89,7 @@ ol,ul{margin:6px 0 0;padding-left:18px}li{margin:3px 0}
         <thead><tr><th>Guia</th><th>Unidade</th><th>Convênio</th><th>Procedimento</th><th class="num">Valor</th><th>Decisão</th><th>Motivo principal</th></tr></thead>
         <tbody id="linhas"></tbody>
       </table></div>
-      <div class="mini" style="margin-top:8px">Clique numa guia para ver todos os motivos, o que corrigir e o que a recepção escreveu.</div>
+      <div class="mini" style="margin-top:8px">Clique numa guia para ver todos os motivos, o que corrigir e o que a recepção escreveu. O lote de agosto é conferido na data de lançamento de cada guia, como se ela tivesse acabado de ser lançada e ainda não tivesse sido enviada. Guia nova é conferida com a data de hoje.</div>
     </div>
   </section>
 
@@ -137,7 +137,7 @@ ol,ul{margin:6px 0 0;padding-left:18px}li{margin:3px 0}
       <ol>
         <li>A guia entra por esta página, pelo endereço <code>POST /api/verificar</code> ou pelo MCP. É o mesmo motor nos três.</li>
         <li>O motor lê a guia como ela veio: data em dia/mês/ano, valor com vírgula, convênio sem acento.</li>
-        <li>A observação da recepção vira fatos: quer particular, autorização por telefone, código errado. Primeiro por palavras-chave. Se sobrar texto desconhecido e houver chave de IA, a IA lê. A IA nunca decide.</li>
+        <li>A observação da recepção vira fatos: quer particular, autorização por telefone, código errado. Primeiro por palavras-chave, trecho a trecho. Se sobrar texto desconhecido e houver chave de IA, a IA lê e pode acrescentar fatos. Se ninguém entender, a guia fica para uma pessoa ler. A IA nunca libera guia e nunca decide.</li>
         <li>As regras decidem: campo obrigatório, validade contra a data do atendimento, limite de sessões, cobertura, registro do profissional, prazo de envio contado do atendimento, duplicidade no lote.</li>
         <li>Sai OK ou PENDENTE, com motivo e o que corrigir. Pendente tem três níveis: vai glosar, recepção corrige, alguém precisa olhar.</li>
       </ol>

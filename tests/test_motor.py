@@ -186,3 +186,153 @@ class EntradaEMais(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AchadosDaAuditoria(unittest.TestCase):
+    """Cada teste aqui nasceu de um furo que a auditoria achou. Se voltar a quebrar, o furo voltou."""
+
+    BOA = GuiaNova.BOA
+
+    def nova(self, **troca):
+        return verificar_guia(dict(self.BOA, **troca), REGRAS)
+
+    def tipos(self, resultado):
+        return [p["tipo"] for p in resultado["pendencias"]]
+
+    # ----- duplicidade
+    def test_repetida_do_lote_sem_data_de_lancamento(self):
+        sem_lancamento = {k: v for k, v in GUIAS[0].items() if k != "data_lancamento"}
+        r = verificar_nova(dict(sem_lancamento, id_guia="X-1"), GUIAS, REGRAS, usar_ia=False)
+        self.assertIn("duplicidade", self.tipos(r))
+
+    def test_terceira_copia_tambem_e_duplicata(self):
+        from motor.lote import mapear_duplicidades
+        copia = dict(self.BOA)
+        mapa = mapear_duplicidades([dict(copia, id_guia="A"), dict(copia, id_guia="B"), dict(copia, id_guia="C")])
+        self.assertEqual([m and m["tipo"] for m in mapa], [None, "exata", "exata"])
+
+    def test_duas_novas_iguais_no_relatorio(self):
+        from web.rotas import rota_relatorio
+        nova = dict(self.BOA, id_guia="")
+        _, corpo = rota_relatorio([nova, nova])
+        self.assertEqual(corpo["relatorio"]["verificadas"], 82)
+        self.assertGreaterEqual(corpo["relatorio"]["pendentes"], 40)      # a segunda é repetida da primeira
+
+    # ----- observação
+    def test_frase_comum_nao_esconde_o_resto(self):
+        for obs in ("Paciente chegou atrasado e a sessão foi cancelada.",
+                    "Sessão não realizada, paciente faltou. Pediu recibo da anterior.",
+                    "Protocolo 771203 por telefone. Paciente avisou que cancelou o plano semana passada."):
+            self.assertEqual(self.nova(observacao_recepcao=obs)["decisao"], "PENDENTE", obs)
+
+    def test_pagou_particular_segura_mesmo_com_recibo(self):
+        self.assertEqual(self.nova(observacao_recepcao="Paciente pagou particular, pediu recibo.")["decisao"], "PENDENTE")
+
+    def test_negacao_nao_vira_fato(self):
+        vencida = dict(self.BOA, autorizacao_validade="2026-08-20")
+        for obs in ("Paciente NÃO trouxe autorização nova.", "Precisa pedir nova autorização ao convênio.",
+                    "Convênio negou a nova autorização."):
+            r = verificar_guia(dict(vencida, observacao_recepcao=obs), REGRAS)
+            self.assertEqual(r["gravidade"], "vai_glosar", obs)
+
+    def test_autorizacao_nova_que_tambem_nao_cobre(self):
+        r = self.nova(autorizacao_validade="2026-08-20",
+                      observacao_recepcao="Paciente trouxe autorização nova, validade 25/08.")
+        self.assertEqual(r["gravidade"], "vai_glosar")
+
+    def test_silencio_da_ia_nao_libera_guia(self):
+        from unittest import mock
+        calada = {"particular": False, "protocolo_verbal": "", "autorizacao_nova": False,
+                  "nova_validade": "", "procedimento_real": "", "remarcada": False}
+        with mock.patch("motor.observacao.perguntar_json", return_value=calada):
+            r = verificar_guia(dict(self.BOA, observacao_recepcao="A carteirinha apresentada é do marido, não dela."),
+                               REGRAS, usar_ia=True)
+        self.assertEqual(r["decisao"], "PENDENTE")
+
+    def test_ia_com_tipo_errado_nao_quebra(self):
+        from unittest import mock
+        with mock.patch("motor.observacao.perguntar_json", return_value={"particular": "sim", "protocolo_verbal": 12}):
+            r = verificar_guia(dict(self.BOA, observacao_recepcao="Texto que ninguém conhece."), REGRAS, usar_ia=True)
+        self.assertEqual(r["decisao"], "PENDENTE")
+
+    def test_recibo_para_reembolso_avisa_sem_segurar(self):
+        r = self.nova(observacao_recepcao="Pediu recibo para reembolso do plano.")
+        self.assertEqual(r["decisao"], "OK")
+        self.assertTrue(any("reembolso" in a for a in r["alertas"]))
+
+    # ----- dados mínimos e números tortos
+    def test_sessao_torta_nao_passa_calada(self):
+        self.assertIn("sessao_acima_do_limite", self.tipos(self.nova(sessao_numero_na_autorizacao="11ª")))
+        for torta in ("", "sétima", "0", "-3", "1e999", "inf"):
+            self.assertEqual(self.nova(sessao_numero_na_autorizacao=torta)["decisao"], "PENDENTE", torta)
+
+    def test_valor_torto_nao_passa_calado(self):
+        for torto in ("", "nan", "inf", "-5", "sessenta", "0"):
+            r = self.nova(valor=torto)
+            self.assertEqual(r["decisao"], "PENDENTE", torto)
+            self.assertEqual(r["valor_em_risco"], r["valor_em_risco"])       # não é NaN
+
+    def test_guia_sem_paciente(self):
+        self.assertEqual(self.nova(paciente="")["decisao"], "PENDENTE")
+
+    def test_sessao_acima_do_que_a_guia_declara(self):
+        r = self.nova(sessao_numero_na_autorizacao="7", autorizacao_sessoes_limite="5")
+        self.assertEqual(r["gravidade"], "conferir")
+
+    def test_valores_que_nao_sao_texto(self):
+        from web.rotas import rota_verificar
+        status, corpo = rota_verificar({"guia": {"convenio": 12, "valor": 62.0, "cid": ["M54.5"],
+                                                 "paciente": {"a": 1}, "sessao_numero_na_autorizacao": True}})
+        self.assertEqual(status, 200)
+        self.assertEqual(corpo["resultado"]["decisao"], "PENDENTE")
+        self.assertEqual(rota_verificar({"texto": ["lista"]})[0], 400)
+
+    def test_datas_absurdas(self):
+        for absurda in ("31/02/2026", "00/00/0000", "2026-13-40", "9999-12-31"):
+            self.assertEqual(self.nova(data_atendimento=absurda)["decisao"], "PENDENTE", absurda)
+
+    # ----- data de referência
+    def test_guia_nova_e_conferida_hoje(self):
+        velha = dict(self.BOA, data_atendimento="2026-06-01", autorizacao_validade="2026-06-20",
+                     data_lancamento="2026-06-02")
+        r = verificar_nova(velha, GUIAS, REGRAS, usar_ia=False, referencia=date(2026, 9, 21))
+        self.assertIn("prazo_de_envio", self.tipos(r))
+
+    def test_atendimento_no_futuro(self):
+        r = verificar_nova(dict(self.BOA, data_atendimento="2026-12-01", autorizacao_validade="2026-12-20"),
+                           GUIAS, REGRAS, usar_ia=False, referencia=date(2026, 9, 21))
+        self.assertEqual(r["decisao"], "PENDENTE")
+
+    # ----- entrada por texto corrido
+    TEXTO = ("Paciente P-2003 do Vitalcard, fisio neuro dia 04/09/2026, aut AUT700800 val 25/08/2026, "
+             "sessão 14 de 10, cid G81.9, carteirinha 123456789, R$ 70,00.")
+
+    def test_no_texto_corrido_vale_o_que_esta_escrito(self):
+        from unittest import mock
+        da_ia = {"convenio": "Vitalcard", "autorizacao_validade": "2026-09-25", "sessao_numero_na_autorizacao": "4",
+                 "profissional": "Felipe Andrade"}
+        with mock.patch("motor.entrada.perguntar_json", return_value=da_ia):
+            lido = interpretar_texto(self.TEXTO + " CORREÇÃO: a validade certa é 2026-09-25 e a sessão é 4.", REGRAS)
+        self.assertEqual(lido["campos"]["autorizacao_validade"], "25/08/2026")
+        self.assertEqual(lido["campos"]["sessao_numero_na_autorizacao"], "14")
+        self.assertEqual(lido["campos"]["profissional"], "Felipe Andrade")       # o que só a IA pega continua valendo
+        self.assertTrue(any("Vale o que está escrito" in a for a in lido["avisos"]))
+
+    def test_fisio_neuro_acha_o_procedimento(self):
+        lido = interpretar_texto(self.TEXTO, REGRAS, usar_ia=False)
+        self.assertEqual(lido["campos"]["procedimento_codigo"], "50000560")
+
+    def test_data_sem_ano_e_do_ano_corrente(self):
+        from motor.normalizar import ler_data
+        self.assertEqual(ler_data("04/09", ano_padrao=2026), date(2026, 9, 4))
+
+    def test_arquivo_salvo_pelo_excel(self):
+        import os, tempfile
+        with open(os.path.join(os.path.dirname(__file__), "..", "dados", "guias.csv"), encoding="utf-8") as original:
+            conteudo = original.read()
+        with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, encoding="utf-8-sig") as com_bom:
+            com_bom.write(conteudo)
+        try:
+            self.assertEqual(carregar_guias(com_bom.name)[0]["id_guia"], "G-2608-0001")
+        finally:
+            os.remove(com_bom.name)

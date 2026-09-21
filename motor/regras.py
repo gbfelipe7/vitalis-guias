@@ -35,25 +35,26 @@ def achar_convenio(regras, nome):
 
 
 def achar_procedimento(regras, codigo_ou_nome):
-    """Procura pelo código (50000470) e, se não achar, por um pedaço da descrição ('neurofuncional')."""
+    """Procura pelo código (50000470) ou por um pedaço do nome ('neuro', 'consulta', 'infiltração').
+
+    Pelo nome, vale a palavra de 4 letras ou mais que aparece em UM procedimento só. 'fisio' aparece
+    em três, então não decide nada. Se duas palavras apontam para procedimentos diferentes, devolve
+    None: melhor não achar do que achar errado.
+    """
     procurado = str(codigo_ou_nome or "").strip()
     if procurado in regras["procedimentos"]:
         return regras["procedimentos"][procurado]
-    alvo = sem_acento(procurado)
-    if not alvo:
-        return None
-    achados = [p for p in regras["procedimentos"].values()
-               if alvo in sem_acento(p["descricao"]) or sem_acento(p["descricao"]) in alvo]
-    if len(achados) == 1:
-        return achados[0]
-    # palavra marcante: 'neurofuncional' só existe em um procedimento, 'fisioterapia' em dois
-    for palavra in alvo.replace(",", " ").split():
-        if len(palavra) < 7:
+
+    apontados = set()
+    for palavra in sem_acento(procurado).replace(",", " ").replace(".", " ").split():
+        if len(palavra) < 4:
             continue
-        com_a_palavra = [p for p in regras["procedimentos"].values() if palavra in sem_acento(p["descricao"])]
+        com_a_palavra = [p["codigo"] for p in regras["procedimentos"].values()
+                         if any(parte.startswith(palavra) or palavra.startswith(parte)
+                                for parte in sem_acento(p["descricao"]).split() if len(parte) >= 4)]
         if len(com_a_palavra) == 1:
-            return com_a_palavra[0]
-    return None
+            apontados.add(com_a_palavra[0])
+    return regras["procedimentos"][apontados.pop()] if len(apontados) == 1 else None
 
 
 def consultar_regra(regras, convenio, procedimento):

@@ -28,6 +28,8 @@ mcp = ServidorMCP("vitalis-guias")
 
 REGRAS = carregar_regras()
 GUIAS = carregar_guias()
+# O lote é conferido uma vez, quando o servidor sobe. As ferramentas só consultam.
+LOTE_CONFERIDO = {r["id_guia"].upper(): r for r in verificar_lote(GUIAS, REGRAS)}
 
 
 def _enxuto(resultado):
@@ -86,16 +88,26 @@ def verificar_guia(
 
     Campo que não estiver no texto fica vazio. Não invente valor para preencher.
     """
-    campos = {k: v for k, v in locals().items() if v}
-    apenas_id = set(campos) == {"id_guia"}
+    id_guia = id_guia.strip()
+    campos = {
+        "convenio": convenio, "procedimento_codigo": procedimento_codigo,
+        "procedimento_descricao": procedimento_descricao, "data_atendimento": data_atendimento,
+        "numero_autorizacao": numero_autorizacao, "autorizacao_validade": autorizacao_validade,
+        "sessao_numero_na_autorizacao": sessao_numero_na_autorizacao,
+        "autorizacao_sessoes_limite": autorizacao_sessoes_limite, "carteirinha": carteirinha, "cid": cid,
+        "profissional": profissional, "profissional_registro": profissional_registro, "valor": valor,
+        "paciente": paciente, "unidade": unidade, "observacao_recepcao": observacao_recepcao,
+        "data_lancamento": data_lancamento,
+    }
+    campos = {nome: texto for nome, texto in campos.items() if str(texto).strip()}
 
-    if apenas_id:
-        do_lote = [g for g in GUIAS if g["id_guia"].strip().upper() == id_guia.strip().upper()]
-        if not do_lote:
+    if id_guia and not campos:                       # só o número: é uma guia do lote de agosto
+        do_lote = LOTE_CONFERIDO.get(id_guia.upper())
+        if do_lote is None:
             return {"encontrada": False, "motivo": "A guia %s não está no lote de agosto." % id_guia}
-        resultado = [r for r in verificar_lote(GUIAS, REGRAS) if r["id_guia"] == do_lote[0]["id_guia"]][0]
-        return _enxuto(resultado)
+        return _enxuto(do_lote)
 
+    campos["id_guia"] = id_guia
     return _enxuto(verificar_nova(campos, GUIAS, REGRAS, usar_ia=False))
 
 
@@ -104,7 +116,7 @@ def listar_pendentes(convenio: str = "", unidade: str = "") -> list:
     """Lista as guias do lote de agosto que estão PENDENTES, com o motivo principal.
     Filtros opcionais: convenio e unidade (Centro, Norte ou Sul)."""
     pendentes = []
-    for r in verificar_lote(GUIAS, REGRAS):
+    for r in LOTE_CONFERIDO.values():
         if r["decisao"] != "PENDENTE":
             continue
         if convenio and convenio.strip().lower() not in r["guia"]["convenio"].lower():
@@ -121,7 +133,7 @@ def listar_pendentes(convenio: str = "", unidade: str = "") -> list:
 @mcp.tool()
 def relatorio_de_terca() -> str:
     """O relatório de terça do Dr. Renato: guias verificadas, com problema, por tipo e dinheiro em risco."""
-    return relatorio_em_texto(montar_relatorio(verificar_lote(GUIAS, REGRAS)))
+    return relatorio_em_texto(montar_relatorio(list(LOTE_CONFERIDO.values())))
 
 
 if __name__ == "__main__":

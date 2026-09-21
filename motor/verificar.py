@@ -15,7 +15,7 @@ from datetime import date, timedelta
 from .normalizar import normalizar_guia, sem_acento
 from .observacao import ler_observacao
 from .regras import achar_convenio, achar_procedimento
-from .textos import CORRIGIR, MOTIVO, NOMES_DOS_CAMPOS, ORDEM_GRAVIDADE, TIPOS
+from .textos import ALERTA, CORRIGIR, MOTIVO, NOMES_DOS_CAMPOS, ORDEM_GRAVIDADE, TIPOS
 
 
 def _br(dia):
@@ -34,13 +34,12 @@ def _somar_dias_uteis(inicio, dias):
 
 def _pendencia(tipo, gravidade, chave, corrigir=None, **dados):
     """Monta uma pendência buscando as frases em textos.py."""
-    dados_corrigir = dict(dados)
     return {
         "tipo": tipo,
         "titulo": TIPOS[tipo],
         "gravidade": gravidade,
         "motivo": MOTIVO[chave].format(**dados),
-        "corrigir": CORRIGIR[corrigir or chave].format(**dados_corrigir),
+        "corrigir": CORRIGIR[corrigir or chave].format(**dados),
     }
 
 
@@ -87,10 +86,26 @@ def _sem_autorizacao(guia, regra, extra, fatos, referencia):
                       dias_uteis=dias_uteis, limite=_br(limite))
 
 
-def _datas(guia):
+def _dados_minimos(guia):
+    """Sem paciente, sessão ou valor a guia não tem como ser conferida. Não passa calada."""
+    pendencias = []
+    if not guia["paciente"]:
+        pendencias.append(_pendencia("dado_invalido", "corrigir", "sem_paciente"))
+    if guia["_sessao"] is None or guia["_sessao"] < 1:
+        pendencias.append(_pendencia("dado_invalido", "corrigir", "sem_sessao",
+                                     valor=guia["sessao_numero_na_autorizacao"]))
+    if guia["_valor"] is None or guia["_valor"] <= 0:
+        pendencias.append(_pendencia("dado_invalido", "corrigir", "sem_valor", valor=guia["valor"]))
+    return pendencias
+
+
+def _datas(guia, referencia):
     pendencias = []
     if not guia["data_atendimento"]:
         pendencias.append(_pendencia("dado_invalido", "corrigir", "sem_data_atendimento"))
+    if guia["_atendimento"] and referencia and guia["_atendimento"] > referencia:
+        pendencias.append(_pendencia("dado_invalido", "conferir", "atendimento_no_futuro",
+                                     atendimento=_br(guia["_atendimento"]), referencia=_br(referencia)))
     for campo, chave in (("data_atendimento", "_atendimento"), ("autorizacao_validade", "_validade")):
         if guia[campo] and guia[chave] is None:
             pendencias.append(_pendencia("dado_invalido", "corrigir", "data_ilegivel",
@@ -110,6 +125,9 @@ def _validade_da_autorizacao(guia, fatos):
 
     if fatos["autorizacao_nova"]:
         nova = fatos["nova_validade"]
+        if nova and nova < atendimento:
+            return [_pendencia("autorizacao_vencida", "vai_glosar", "nova_tambem_nao_cobre",
+                               validade=_br(validade), nova=_br(nova), atendimento=_br(atendimento))]
         return [_pendencia("autorizacao_vencida", "corrigir", "autorizacao_vencida_com_nova",
                            validade=_br(validade),
                            nova_validade=", válida até %s" % _br(nova) if nova else "")]
@@ -120,11 +138,19 @@ def _validade_da_autorizacao(guia, fatos):
 
 def _limite_de_sessoes(guia, regra, extra):
     sessao, limite = guia["_sessao"], regra["limite_sessoes_por_autorizacao"]
-    if sessao is None or sessao <= limite:
-        return []
-    acao = extra.get("ao_passar_do_limite", "Pedir nova autorização ao convênio antes de enviar.")
-    return [_pendencia("sessao_acima_do_limite", "vai_glosar", "sessao_acima",
-                       sessao=sessao, limite=limite, convenio=regra["nome"], acao=acao)]
+    if sessao is None:
+        return []                       # quem reclama de sessão ilegível é _dados_minimos
+    if sessao > limite:
+        acao = extra.get("ao_passar_do_limite", "Pedir nova autorização ao convênio antes de enviar.")
+        return [_pendencia("sessao_acima_do_limite", "vai_glosar", "sessao_acima",
+                           sessao=sessao, limite=limite, convenio=regra["nome"], acao=acao)]
+    # A autorização pode cobrir menos que o máximo do convênio. Não é regra escrita do convênio,
+    # é o que a própria guia declara: por isso 'conferir'.
+    declarado = guia["_limite_declarado"]
+    if declarado and sessao > declarado:
+        return [_pendencia("sessao_acima_do_limite", "conferir", "sessao_acima_do_declarado",
+                           sessao=sessao, declarado=declarado)]
+    return []
 
 
 def _procedimento(guia, regras, regra, extra):
@@ -150,7 +176,7 @@ def _procedimento(guia, regras, regra, extra):
                                      codigo=codigo, certa=proc["descricao"],
                                      lancada=guia["procedimento_descricao"]))
 
-    if guia["_valor"] is not None and abs(guia["_valor"] - proc["valor_referencia"]) > 0.005:
+    if guia["_valor"] and abs(guia["_valor"] - proc["valor_referencia"]) > 0.005:
         pendencias.append(_pendencia("dado_invalido", "corrigir", "valor_divergente",
                                      lancado="%.2f" % guia["_valor"],
                                      referencia="%.2f" % proc["valor_referencia"]))
@@ -183,8 +209,8 @@ def _prazo_de_envio(guia, regra, referencia, dias_de_alerta):
                            limite=_br(limite))], [], limite
     alertas = []
     if referencia and (limite - referencia).days <= dias_de_alerta:
-        alertas.append("Enviar até %s: faltam %d dia(s) para o prazo do %s." % (
-            _br(limite), (limite - referencia).days, regra["nome"]))
+        alertas.append(ALERTA["prazo_perto"].format(limite=_br(limite), dias=(limite - referencia).days,
+                                                    convenio=regra["nome"]))
     return [], alertas, limite
 
 
@@ -227,7 +253,7 @@ def _duplicidade(contexto):
 # ---------------------------------------------------------------- a decisão
 
 def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
-                   registros_conhecidos=None, usar_ia=False):
+                   registros_conhecidos=None, usar_ia=False, veio_do_sistema=True):
     """Confere uma guia.
 
     bruta                 dicionário com as colunas da guia, do jeito que vier
@@ -236,13 +262,18 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
     duplicidade           o que o lote sabe sobre esta guia (ver lote.py)
     registros_conhecidos  {profissional: registro}, para sugerir o registro que falta
     usar_ia               deixa a observação ser lida por IA quando as palavras-chave não bastam
+    veio_do_sistema       guia exportada do sistema deveria ter data em AAAA-MM-DD, e se não tiver vale
+                          um aviso. Guia digitada por gente em dia/mês/ano é o normal, sem aviso.
     """
     guia = normalizar_guia(bruta)
     referencia = referencia or guia["_lancamento"] or date.today()
     ano = (guia["_atendimento"] or referencia).year
     fatos = ler_observacao(guia["observacao_recepcao"], ano=ano, usar_ia=usar_ia)
+    # "validade 15/01" anotada numa guia de dezembro é do ano seguinte
+    if fatos["nova_validade"] and guia["_atendimento"] and (guia["_atendimento"] - fatos["nova_validade"]).days > 180:
+        fatos["nova_validade"] = fatos["nova_validade"].replace(year=fatos["nova_validade"].year + 1)
 
-    pendencias, alertas, enviar_ate = [], list(guia["avisos_de_leitura"]), None
+    pendencias, alertas, enviar_ate = [], (list(guia["avisos_de_leitura"]) if veio_do_sistema else []), None
     regra = achar_convenio(regras, guia["convenio"])
 
     if not guia["procedimento_codigo"] and guia["procedimento_descricao"]:
@@ -250,7 +281,7 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
         if pelo_nome:
             guia["procedimento_codigo"] = pelo_nome["codigo"]
             guia["procedimento_descricao"] = pelo_nome["descricao"]
-            alertas.append("O código do procedimento não veio. Pela descrição, usei %s." % pelo_nome["codigo"])
+            alertas.append(ALERTA["codigo_pela_descricao"].format(codigo=pelo_nome["codigo"]))
 
     if regra is None:
         pendencias.append(_pendencia("dado_invalido", "corrigir", "convenio_desconhecido",
@@ -258,7 +289,8 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
     else:
         extra = regras["extras_convenio"].get(sem_acento(regra["nome"]), {})
         pendencias += _campos_obrigatorios(guia, regra, extra, fatos, referencia, registros_conhecidos or {})
-        pendencias += _datas(guia)
+        pendencias += _dados_minimos(guia)
+        pendencias += _datas(guia, referencia)
         vencida = _validade_da_autorizacao(guia, fatos)
         pendencias += vencida
         pendencias += _limite_de_sessoes(guia, regra, extra)
@@ -270,12 +302,18 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
         alertas += alertas_prazo
         pendencias += _observacao(guia, fatos, regras, ja_tratou_autorizacao_nova=bool(vencida))
 
-        if guia["_sessao"] is not None and guia["_sessao"] == regra["limite_sessoes_por_autorizacao"]:
-            alertas.append("É a última sessão desta autorização. A próxima precisa de autorização nova.")
-        if guia["_limite_declarado"] is not None and \
-                guia["_limite_declarado"] != regra["limite_sessoes_por_autorizacao"]:
-            alertas.append("A guia diz que a autorização cobre %d sessões; a regra do %s diz %d." % (
-                guia["_limite_declarado"], regra["nome"], regra["limite_sessoes_por_autorizacao"]))
+        limite = regra["limite_sessoes_por_autorizacao"]
+        if guia["_sessao"] == limite:
+            alertas.append(ALERTA["ultima_sessao"])
+        if guia["_limite_declarado"] and guia["_limite_declarado"] != limite:
+            alertas.append(ALERTA["limite_diferente"].format(declarado=guia["_limite_declarado"],
+                                                         convenio=regra["nome"], limite=limite))
+        if fatos["recibo_reembolso"]:
+            alertas.append(ALERTA["recibo_reembolso"])
+        nova = fatos["nova_validade"]
+        if nova and guia["_atendimento"] and (nova - guia["_atendimento"]).days > regra["validade_maxima_autorizacao_dias"]:
+            alertas.append(ALERTA["nova_validade_longa"].format(
+                nova=_br(nova), maximo=regra["validade_maxima_autorizacao_dias"], convenio=regra["nome"]))
 
     pendencias += _duplicidade(duplicidade)
     pendencias.sort(key=lambda p: ORDEM_GRAVIDADE.index(p["gravidade"]))

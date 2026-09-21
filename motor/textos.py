@@ -33,6 +33,12 @@ MOTIVO = {
     "data_ilegivel": "Não deu para entender a data em {campo}: '{valor}'.",
     "sem_data_atendimento": "A guia está sem a data do atendimento. Sem ela não dá para conferir validade nem prazo.",
     "sem_procedimento": "A guia está sem o procedimento.",
+    "sem_paciente": "A guia está sem o paciente.",
+    "sem_sessao": "A guia está sem o número da sessão, ou ele não é um número: '{valor}'. Sem ele não dá para conferir o limite da autorização.",
+    "sem_valor": "A guia está sem valor, ou o valor não é um número válido: '{valor}'.",
+    "atendimento_no_futuro": "O atendimento está marcado para {atendimento}, depois do dia da conferência ({referencia}).",
+    "sessao_acima_do_declarado": "É a sessão {sessao}, mas a própria guia diz que a autorização cobre {declarado}.",
+    "nova_tambem_nao_cobre": "A autorização lançada venceu em {validade} e a nova, que a recepção anotou, vale só até {nova}, antes do atendimento de {atendimento}.",
     "autorizacao_vencida": "A autorização venceu em {validade}, {dias} dia(s) antes do atendimento de {atendimento}.",
     "autorizacao_vencida_com_nova": "A autorização lançada venceu em {validade}, mas a recepção anotou que o paciente trouxe uma nova{nova_validade}.",
     "sem_autorizacao": "A guia está sem número de autorização.",
@@ -62,6 +68,12 @@ CORRIGIR = {
     "data_ilegivel": "Corrigir a data para o formato dia/mês/ano.",
     "sem_data_atendimento": "Preencher a data do atendimento.",
     "sem_procedimento": "Preencher o código do procedimento.",
+    "sem_paciente": "Preencher o paciente.",
+    "sem_sessao": "Preencher o número da sessão, só com algarismos.",
+    "sem_valor": "Preencher o valor da guia.",
+    "atendimento_no_futuro": "Conferir a data do atendimento. Guia só é enviada depois que a sessão aconteceu.",
+    "sessao_acima_do_declarado": "Conferir o limite desta autorização. Se for mesmo {declarado}, pedir nova autorização antes de enviar.",
+    "nova_tambem_nao_cobre": "Pedir ao convênio uma autorização que cubra a data do atendimento.",
     "autorizacao_vencida": "Pedir nova autorização ou prorrogação ao convênio antes de enviar.",
     "autorizacao_vencida_com_nova": "Lançar o número e a validade da autorização nova antes de enviar.",
     "sem_autorizacao": "Conseguir o número com o convênio e lançar antes de enviar.",
@@ -92,4 +104,14 @@ NOMES_DOS_CAMPOS = {
     "profissional_registro": "o registro do profissional",
     "carteirinha": "a carteirinha",
     "cid": "o CID",
+}
+
+# Avisos que não seguram a guia. Aparecem junto da decisão.
+ALERTA = {
+    "codigo_pela_descricao": "O código do procedimento não veio. Pela descrição, usei {codigo}.",
+    "prazo_perto": "Enviar até {limite}: faltam {dias} dia(s) para o prazo do {convenio}.",
+    "ultima_sessao": "É a última sessão desta autorização. A próxima precisa de autorização nova.",
+    "limite_diferente": "A guia diz que a autorização cobre {declarado} sessões; a regra do {convenio} diz {limite}.",
+    "recibo_reembolso": "A recepção anotou pedido de recibo para reembolso do plano. Se o paciente pagou a sessão como particular, não enviar ao convênio.",
+    "nova_validade_longa": "A validade anotada para a autorização nova ({nova}) passa dos {maximo} dias que o {convenio} costuma dar. Conferir a data no documento.",
 }

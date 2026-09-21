@@ -6,7 +6,7 @@ LIMITE_DO_CORPO = 20000   # bytes. Uma guia tem menos de 1 KB; isso barra abuso 
 
 
 def responder(handler, status, corpo):
-    dados = json.dumps(corpo, ensure_ascii=False, default=str).encode("utf-8")
+    dados = json.dumps(corpo, ensure_ascii=False, default=str, allow_nan=False).encode("utf-8")
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json; charset=utf-8")
     handler.send_header("Cache-Control", "no-store")
