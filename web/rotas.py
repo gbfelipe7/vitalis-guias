@@ -4,6 +4,8 @@ As funções da pasta api/ (Vercel) e o servidor_local.py chamam estas mesmas fu
 Assim o que roda na minha máquina é exatamente o que roda publicado.
 """
 
+from datetime import timedelta
+
 from motor import (carregar_guias, carregar_regras, consultar_regra, montar_relatorio,
                    relatorio_em_texto, verificar_lote, verificar_nova)
 from motor.entrada import interpretar_texto
@@ -111,12 +113,28 @@ def rota_verificar(dados):
                  "resultado": resultado}
 
 
-def rota_relatorio(novas=None):
-    """GET ou POST /api/relatorio: o relatório de terça. 'novas' são guias conferidas na sessão."""
+def _segunda_da_semana(valor):
+    """A segunda-feira da semana de uma data, ou None se a data não fizer sentido."""
+    dia = ler_data(valor)
+    return dia - timedelta(days=dia.weekday()) if dia else None
+
+
+def rota_relatorio(novas=None, semana=None):
+    """GET ou POST /api/relatorio: o relatório de terça. 'novas' são guias conferidas na sessão.
+    'semana' é uma data da semana a mostrar: o relatório pega as guias lançadas de segunda a domingo dessa semana.
+    'ultima' é a última semana completa do lote, a que o Dr. Renato veria na terça seguinte."""
     novas = novas or []
     if not isinstance(novas, list):
         return 400, {"erro": "Mande 'novas' como uma lista de guias."}
     regras, guias = carregar_regras(), carregar_guias()
+    inicio = None
+    if semana and str(semana).strip().lower() == "ultima":
+        ultimo = max(d for d in (ler_data(g.get("data_lancamento")) for g in guias) if d)
+        inicio = ultimo - timedelta(days=(ultimo.weekday() + 1) % 7) - timedelta(days=6)   # o domingo mais recente, menos 6 dias
+    elif semana:
+        inicio = _segunda_da_semana(semana)
+        if not inicio:
+            return 400, {"erro": "Mande 'semana' como uma data, por exemplo 2026-08-24, ou 'ultima'."}
     resultados = verificar_lote(guias, regras)
     for r in resultados:
         r["origem"] = "lote"
@@ -132,8 +150,17 @@ def rota_relatorio(novas=None):
             # guia corrigida e conferida de novo (mesmo número) entra no lugar da antiga, não conta duas vezes
             resultados = [r for r in resultados if r["id_guia"].upper() != conferida["id_guia"].upper()] + [conferida]
             ja_vistas = [g for g in ja_vistas if (g.get("id_guia") or "").strip().upper() != conferida["id_guia"].upper()] + [campos]
-    relatorio = montar_relatorio(resultados)
-    return 200, {"relatorio": relatorio, "texto": relatorio_em_texto(relatorio), "guias": resultados}
+    # as semanas que têm guia, para a página montar a escolha; a conferência acima usou o lote inteiro
+    semanas = sorted({s.isoformat() for s in (_segunda_da_semana(r["guia"].get("data_lancamento")) for r in resultados) if s})
+    do_periodo = resultados
+    if inicio:
+        fim = inicio + timedelta(days=6)
+        do_periodo = [r for r in resultados if (ler_data(r["guia"].get("data_lancamento")) or inicio - timedelta(days=1)) >= inicio
+                      and ler_data(r["guia"].get("data_lancamento")) <= fim]
+    relatorio = montar_relatorio(do_periodo)
+    if inicio:
+        relatorio["semana"] = [inicio.isoformat(), fim.isoformat()]
+    return 200, {"relatorio": relatorio, "texto": relatorio_em_texto(relatorio), "guias": resultados, "semanas": semanas}
 
 
 def rota_regra(convenio, procedimento):

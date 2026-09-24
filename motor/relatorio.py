@@ -110,7 +110,8 @@ def relatorio_em_texto(rel):
     periodo = rel.get("periodo") or []
     linhas = [
         "Relatório de terça: guias de convênio",
-        ("Lançadas de %s a %s. " % (br(periodo[0])[:5], br(periodo[1])[:5]) if periodo else "") + "Gerado em %s." % br(rel["gerado_em"]),
+        ("Semana de segunda %s a domingo %s. " % (br(rel["semana"][0])[:5], br(rel["semana"][1])[:5]) if rel.get("semana")
+         else "Lançadas de %s a %s. " % (br(periodo[0])[:5], br(periodo[1])[:5]) if periodo else "") + "Gerado em %s." % br(rel["gerado_em"]),
         "",
         "%d guias conferidas antes do envio." % rel["verificadas"],
         "%d podem ir para o convênio." % rel["ok"],
@@ -127,7 +128,7 @@ def relatorio_em_texto(rel):
         linhas.append("- %s: %d" % (t["nome"], t["guias"]))
     decidir = []
     faixas = [f for f in rel.get("por_atraso", []) if f["guias"]]
-    if len(faixas) > 1:
+    if len(faixas) > 1 and not rel.get("semana"):
         taxa = lambda f: round(100.0 * f["retidas"] / f["guias"])
         if taxa(faixas[-1]) > taxa(faixas[0]):
             decidir.append("- Lançar as guias no mesmo dia do atendimento: no mesmo dia, %d%% ficam retidas; com %s dias de atraso, %d%%." % (

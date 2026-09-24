@@ -29,7 +29,7 @@ class Local(BaseHTTPRequestHandler):
         elif caminho.path == "/api/guias":
             responder(self, *rota_guias())
         elif caminho.path == "/api/relatorio":
-            responder(self, *rota_relatorio())
+            responder(self, *rota_relatorio(semana=(parse_qs(caminho.query).get("semana") or [None])[0]))
         elif caminho.path == "/api/regra":
             q = parse_qs(caminho.query)
             responder(self, *rota_regra((q.get("convenio") or [""])[0], (q.get("procedimento") or [""])[0]))
@@ -44,7 +44,7 @@ class Local(BaseHTTPRequestHandler):
         if caminho == "/api/verificar":
             responder(self, *rota_verificar(dados))
         elif caminho == "/api/relatorio":
-            responder(self, *rota_relatorio(dados.get("novas")))
+            responder(self, *rota_relatorio(dados.get("novas"), dados.get("semana")))
         else:
             responder(self, 404, {"erro": "Endereço não existe."})
 

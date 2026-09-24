@@ -189,6 +189,24 @@ class EntradaEMais(unittest.TestCase):
         self.assertFalse(ler_observacao("Paciente chegou 10 min atrasado.")["nao_reconhecida"])
 
 
+
+class RelatorioDaSemana(unittest.TestCase):
+    """A reunião de terça olha a semana anterior, de segunda a domingo, pela data de lançamento."""
+
+    def test_semana_de_segunda_a_domingo(self):
+        from web.rotas import rota_relatorio
+        codigo, d = rota_relatorio(semana="2026-08-26")          # uma quarta: vale a semana dela
+        self.assertEqual(codigo, 200)
+        self.assertEqual(d["relatorio"]["semana"], ["2026-08-24", "2026-08-30"])
+        self.assertEqual((d["relatorio"]["verificadas"], d["relatorio"]["pendentes"]), (26, 13))
+        self.assertIn("Semana de segunda 24/08 a domingo 30/08", d["texto"])
+
+    def test_ultima_semana_completa_e_mes_inteiro(self):
+        from web.rotas import rota_relatorio
+        self.assertEqual(rota_relatorio(semana="ultima")[1]["relatorio"]["semana"], ["2026-08-24", "2026-08-30"])
+        self.assertEqual(rota_relatorio()[1]["relatorio"]["verificadas"], 80)
+        self.assertEqual(rota_relatorio(semana="ontem")[0], 400)
+
 if __name__ == "__main__":
     unittest.main()
 
