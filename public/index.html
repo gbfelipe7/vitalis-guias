@@ -948,7 +948,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     };
     const passos = Object.values(rel.por_proximo_passo).filter((p) => p.guias).sort((a, b) => (a.e_receita ? 0 : 1) - (b.e_receita ? 0 : 1) || b.em_risco - a.em_risco);
     barras('Quem resolve', passos.map((p) => ({nome: p.nome, valor: reaisInt(p.em_risco), v: p.em_risco, claro: !p.e_receita})));
-    barras('Problemas mais comuns', rel.por_tipo.slice(0, 3).map((t) => ({nome: t.nome, valor: t.guias + ' guias', v: t.guias})));
+    barras('Problemas mais comuns', rel.por_tipo.slice(0, 3).map((t) => ({nome: t.nome, valor: t.guias + (t.guias === 1 ? ' guia' : ' guias'), v: t.guias})));
     c.fillStyle = cor.claro; fonte(400, 22); c.fillText('Vitalis · conferência de guias antes do envio', P, H - P + 10);
     return cv;
   }
@@ -972,6 +972,11 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       const maxC = Math.max(1, ...Object.values(rel.por_convenio).map((g) => g.guias));
       const hoje = hojeISO();
       const opcoes = (d.semanas || []).map((s) => `<option value="${s}" ${rel.semana && rel.semana[0] === s ? 'selected' : ''}>${ddmm(s)} a ${ddmm(somaDias(s, 6))}, reunião na terça ${ddmm(somaDias(s, 8))}${somaDias(s, 6) >= hoje ? ' (em andamento)' : ''}</option>`).join('');
+      const fx = rel.por_atraso || [], nomesFx = ['No mesmo dia', '1 dia depois', '2 dias depois', '3 dias ou mais'];
+      const processo = `<div class="secao cartao"><h2>Como as guias foram lançadas</h2>
+        <div class="pergunta">Mostra, semana a semana, se a mudança de processo pegou. É pista, não prova.</div>
+        ${barras(fx.map((f, k) => ({nome: nomesFx[k], valor: `${f.guias} ${f.guias === 1 ? 'guia' : 'guias'}`, extra: `${f.retidas} ${f.retidas === 1 ? 'retida' : 'retidas'}`, partes: [{c: 'tinta', v: f.guias}]})), Math.max(1, ...fx.map((f) => f.guias)))}
+        <div class="nota">No mesmo dia: ${fx.length ? pct(fx[0].guias, rel.verificadas) : '0%'} das guias. No fim de semana, sem atendimento: ${rel.lancadas_fim_de_semana || 0}.</div></div>`;
       $('terca').innerHTML = `
         <div class="escolha-semana"><label for="semanaSel">Semana</label><select id="semanaSel">${opcoes}<option value="mes" ${rel.semana ? '' : 'selected'}>Agosto inteiro e as guias desta sessão</option></select></div>
         <div class="frase">${rel.semana ? `De segunda ${ddmm(rel.semana[0])} a domingo ${ddmm(rel.semana[1])}: ` : ''}<b>${rel.pendentes}</b> das <b>${rel.verificadas}</b> guias ficaram retidas, somando <b>${reaisInt(rel.valor_em_risco)}</b>. ${passos.length ? `O maior pedaço, <b>${reaisInt(passos[0][1].em_risco)}</b>, ${FRASE_PASSO[passos[0][0]]}.` : ''}</div>
@@ -983,13 +988,14 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
           <div class="cartao"><h2>Por decisão</h2><div class="pergunta" style="margin-bottom:12px"></div>
             ${barras(ORDEM.map((g) => ({nome: DECISAO[g], valor: reais(pg[g].em_risco), extra: pg[g].guias + ' guias', v: pg[g].em_risco, partes: [{c: g, v: pg[g].em_risco}]})), maxG)}</div>
           <div class="cartao"><h2>Por tipo de problema</h2><div class="pergunta">Cada guia conta uma vez.</div>
-            ${barras(rel.por_tipo.map((t) => ({nome: t.nome, valor: reais(t.em_risco), extra: t.guias + ' guias', v: t.em_risco})), maxT)}</div>
+            ${barras(rel.por_tipo.map((t) => ({nome: t.nome, valor: reais(t.em_risco), extra: t.guias + (t.guias === 1 ? ' guia' : ' guias'), v: t.em_risco})), maxT)}</div>
           <div class="cartao"><h2>Por unidade</h2><div class="pergunta">Retidas de cada grupo.</div>
-            ${barras(grupo(rel.por_unidade).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), partes: [{c: 'tinta', v: g.pendentes}]})), maxU)}</div>
+            ${barras(grupo(rel.por_unidade).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias} · ${pct(g.pendentes, g.guias)}`, extra: reais(g.em_risco), partes: [{c: 'tinta', v: g.pendentes}]})), maxU)}</div>
           <div class="cartao"><h2>Por convênio</h2><div class="pergunta">Retidas de cada grupo.</div>
-            ${barras(grupo(rel.por_convenio).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), partes: [{c: 'tinta', v: g.pendentes}]})), maxC)}</div>
+            ${barras(grupo(rel.por_convenio).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias} · ${pct(g.pendentes, g.guias)}`, extra: reais(g.em_risco), partes: [{c: 'tinta', v: g.pendentes}]})), maxC)}</div>
         </div>
         <div class="nota">Com tão poucas guias por grupo, a diferença entre unidades e convênios pode ser acaso.</div>
+        ${processo}
         <div class="secao">
           <h2>Para mandar no WhatsApp</h2>
           <div class="pergunta">A imagem vai primeiro, o texto logo depois.</div>

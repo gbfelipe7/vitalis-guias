@@ -90,6 +90,8 @@ def montar_relatorio(resultados, gerado_em=None):
         "para_renovar": para_renovar,
         "por_atraso": por_atraso,
         "visiveis_antes_da_sessao": visiveis_antes,
+        "lancadas_fim_de_semana": sum(1 for r in resultados if (ler_data(r["guia"].get("data_lancamento", "")) or date.min).weekday() >= 5
+                                      and ler_data(r["guia"].get("data_lancamento", ""))),
         "confirmar_recibo": confirmar_recibo,
         "verificadas": len(resultados),
         "ok": len(resultados) - len(pendentes),
@@ -133,6 +135,14 @@ def relatorio_em_texto(rel):
     linhas += ["", "Problemas mais comuns:"]
     for t in rel["por_tipo"][:3]:
         linhas.append("- %s: %d" % (t["nome"], t["guias"]))
+    # Como as guias foram lançadas: indicador do processo, para ver semana a semana se a mudança pegou
+    faixas = rel.get("por_atraso") or []
+    if faixas and rel["verificadas"]:
+        mesmo_dia = faixas[0]["guias"]
+        linhas += ["", "Como as guias foram lançadas:",
+                   "- No mesmo dia do atendimento: %d de %d (%d%%)" % (mesmo_dia, rel["verificadas"], round(100.0 * mesmo_dia / rel["verificadas"]))]
+        if rel.get("lancadas_fim_de_semana"):
+            linhas.append("- No fim de semana, sem atendimento: %d" % rel["lancadas_fim_de_semana"])
     decidir = []
     if rel.get("visiveis_antes_da_sessao"):
         decidir.append("- Conferir antes da sessão: %d das %d retidas tinham um problema visível antes dela (autorização vencida ou esgotada, ou procedimento que o convênio não cobre)." % (
