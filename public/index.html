@@ -208,6 +208,24 @@ svg .nodo{font:12.5px var(--sans)}
 .dica b{display:block;font-weight:500;margin-bottom:4px;color:var(--ink)}
 .dica div{display:flex;align-items:center;gap:6px;color:var(--ink2);margin-top:2px}
 .dica .num{margin-left:auto;color:var(--ink);font-weight:500;padding-left:12px}
+.pecas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.peca .faz{margin-top:6px;color:var(--ink)}
+.peca .rotulo{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:12px}
+.peca p{margin:4px 0 0;color:var(--ink2);font-size:13px}
+.ver{display:inline-block;margin-top:8px;font-size:12.5px;color:var(--ink2);text-decoration:underline;text-decoration-color:var(--line2)}
+.achados{display:grid;gap:12px;margin-top:22px}
+.achado{display:grid;grid-template-columns:180px minmax(0,1fr);gap:20px;align-items:start}
+.achado .num-grande{font-family:var(--num);font-weight:var(--num-w);font-size:30px;letter-spacing:-.02em;line-height:1.1}
+.achado p{margin:6px 0 0;color:var(--ink2)}
+.achado .barras{margin-top:12px;max-width:520px}
+.solucoes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.solucao{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px}
+.solucao .k{font-family:var(--num);font-weight:var(--num-w);font-size:22px;color:var(--ink3);line-height:1.1}
+.solucao .resolve{font-size:12.5px;color:var(--bad);margin-top:4px}
+.solucao p{margin:6px 0 0;color:var(--ink2);font-size:13px}
+.etiquetas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.etq{font-size:11.5px;border-radius:5px;padding:2px 8px}
+.etq.ok{background:var(--good-soft);color:var(--good)}.etq.falta{background:var(--hover);color:var(--ink2)}
 .bolha{background:var(--good-soft);border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13px;color:var(--ink);margin-top:8px}
 .decisoes{display:grid;gap:10px}
 .decisao{display:grid;grid-template-columns:220px minmax(0,1fr) 90px;gap:16px;align-items:start;background:var(--card);border-radius:12px;padding:14px 18px}
@@ -232,6 +250,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   .grade2{grid-template-columns:1fr}
   .kpis{grid-template-columns:1fr 1fr}.kpi .n{font-size:28px}
   .zap{grid-template-columns:1fr}
+  .pecas,.solucoes{grid-template-columns:1fr}.achado{grid-template-columns:1fr;gap:6px}
   .grupos-regras{grid-template-columns:1fr}
   #v-guias table{min-width:560px}
   #v-guias th:nth-child(2),#v-guias td:nth-child(2),#v-guias th:nth-child(4),#v-guias td:nth-child(4),#v-guias th:nth-child(7),#v-guias td:nth-child(7),#v-guias th:nth-child(8),#v-guias td:nth-child(8){display:none}
@@ -245,6 +264,10 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
 <div class="app">
   <aside class="side">
     <div class="marca">Vitalis<small>Guias conferidas antes do envio</small></div>
+    <div class="navlab">Apresentação</div>
+    <a class="nav" href="#construido" data-v="construido">1. O que foi construído</a>
+    <a class="nav" href="#problemas" data-v="problemas">2. Dados e problemas</a>
+    <a class="nav" href="#solucoes" data-v="solucoes">3. Soluções</a>
     <div class="navlab">Conferência</div>
     <a class="nav" href="#visao" data-v="visao">Visão geral</a>
     <a class="nav" href="#guias" data-v="guias">Guias de agosto <span class="qt" id="qtGuias"></span></a>
@@ -257,6 +280,37 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   </aside>
 
   <main class="folha">
+    <!-- ================= 1. o que foi construído ================= -->
+    <section class="vista" id="v-construido">
+      <h1>O que foi construído</h1>
+      <div class="sub">Um conferente de guias que roda antes do envio. A regra foi escrita uma vez e atende a página, a API do sistema de gestão e o Claude.</div>
+      <div id="construido"></div>
+    </section>
+
+    <!-- ================= 2. dados e problemas ================= -->
+    <section class="vista" id="v-problemas">
+      <h1>Dados e problemas encontrados</h1>
+      <div class="sub">O que apareceu conferindo as 80 guias de agosto. Clique para ver as guias.</div>
+      <div id="problemas"></div>
+    </section>
+
+    <!-- ================= 3. soluções ================= -->
+    <section class="vista" id="v-solucoes">
+      <h1>Soluções</h1>
+      <div class="sub">O que fazer com o que os dados mostraram, do mais simples ao mais completo.</div>
+      <div id="solucoes"></div>
+      <div class="secao">
+        <h2>Como fica em produção</h2>
+        <div class="pergunta">A recepção continua no sistema dela. A conferência entra por trás, sem ninguém precisar lembrar.</div>
+        <div class="cartao" style="overflow-x:auto"><div style="min-width:640px"><svg viewBox="0 0 980 310" width="100%" role="img" aria-label="Como fica em produção: a guia salva no sistema de gestão passa pelo conferente e, se retida, gera aviso no WhatsApp"><defs><marker id="ponta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink3)"/></marker></defs><path d="M150,160 C170,160 170,85 190,85" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M150,160 C170,160 170,235 190,235" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M350,85 C372,85 368,160 390,160" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M350,235 C372,235 368,160 390,160" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M540,160 C572,160 568,45 600,45" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M540,160 L600,160" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M465,190 L465,250" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M780,160 L820,160" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M540,275 L600,275" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M895,130 L895,112 Q895,104 887,104 L488,104 Q480,104 480,112 L480,130" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)" stroke-dasharray="4 4"/><text x="690" y="98" text-anchor="middle" class="eixo">corrigida, confere de novo</text><rect x="0" y="130" width="150" height="60" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="75.0" y="156.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="75.0" dy="0">Recepção salva a guia</tspan><tspan x="75.0" dy="16">no sistema de gestão</tspan></text><rect x="190" y="58" width="160" height="54" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="270.0" y="81.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="270.0" dy="0">Sistema avisa na hora</tspan><tspan x="270.0" dy="16">(webhook)</tspan></text><rect x="190" y="208" width="160" height="54" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="270.0" y="231.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="270.0" dy="0">n8n lê a API do sistema</tspan><tspan x="270.0" dy="16">a cada 5 minutos</tspan></text><rect x="390" y="130" width="150" height="60" rx="10" fill="var(--ink)" stroke="var(--line2)"/><text x="465.0" y="156.0" text-anchor="middle" class="nodo" fill="var(--action-ink)"><tspan x="465.0" dy="0">Conferente</tspan><tspan x="465.0" dy="16">(este código)</tspan></text><rect x="390" y="250" width="150" height="50" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="465.0" y="271.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="465.0" dy="0">Banco guarda</tspan><tspan x="465.0" dy="16">cada decisão</tspan></text><rect x="600" y="18" width="180" height="54" rx="10" fill="var(--good-soft)" stroke="var(--line2)"/><text x="690.0" y="41.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="690.0" dy="0">Pode enviar:</tspan><tspan x="690.0" dy="16">entra no lote do convênio</tspan></text><rect x="600" y="130" width="180" height="60" rx="10" fill="var(--bad-soft)" stroke="var(--line2)"/><text x="690.0" y="156.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="690.0" dy="0">Retida: aviso no WhatsApp</tspan><tspan x="690.0" dy="16">de quem resolve</tspan></text><rect x="820" y="130" width="150" height="60" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="895.0" y="156.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="895.0" dy="0">Correção no</tspan><tspan x="895.0" dy="16">sistema de gestão</tspan></text><rect x="600" y="250" width="180" height="50" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="690.0" y="271.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="690.0" dy="0">Terça 7h30: relatório</tspan><tspan x="690.0" dy="16">ao Dr. Renato</tspan></text></svg></div></div>
+        <div class="grade2" style="margin-top:12px">
+          <div class="cartao"><h2>Onde roda</h2><p style="margin:8px 0 0">Na prova, na Vercel, sem banco e com a API aberta para a banca testar. Em produção, numa VPS no Brasil, com o conferente, o banco de dados, o n8n e o Nginx em containers, token na API e backup diário. O aviso sai pela API oficial do WhatsApp ou por Z-API ou Evolution, e a IA seria um modelo pequeno pago, como um GPT mini.</p></div>
+          <div class="cartao"><h2>MCP, Skill e código</h2><p style="margin:8px 0 0">Em <a href="https://github.com/gbfelipe7/vitalis-guias">github.com/gbfelipe7/vitalis-guias</a>: o conferente em <code>motor/</code>, o MCP em <code>mcp_server/</code> e a Skill em <code>skills/conferir-guia/</code>.</p></div>
+        </div>
+      </div>
+
+    </section>
+
     <!-- ================= visão geral ================= -->
     <section class="vista" id="v-visao">
       <h1>Visão geral</h1>
@@ -380,26 +434,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         <div class="decisoes" id="legendaDecisoes"></div>
       </div>
 
-      <div class="secao">
-        <h2>Como fica em produção</h2>
-        <div class="pergunta">A recepção continua no sistema dela. A conferência entra por trás, sem ninguém precisar lembrar.</div>
-        <div class="cartao" style="overflow-x:auto"><div style="min-width:640px"><svg viewBox="0 0 980 310" width="100%" role="img" aria-label="Como fica em produção: a guia salva no sistema de gestão passa pelo conferente e, se retida, gera aviso no WhatsApp"><defs><marker id="ponta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink3)"/></marker></defs><path d="M150,160 C170,160 170,85 190,85" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M150,160 C170,160 170,235 190,235" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M350,85 C372,85 368,160 390,160" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M350,235 C372,235 368,160 390,160" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M540,160 C572,160 568,45 600,45" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M540,160 L600,160" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M465,190 L465,250" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M780,160 L820,160" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M540,275 L600,275" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)"/><path d="M895,130 L895,112 Q895,104 887,104 L488,104 Q480,104 480,112 L480,130" fill="none" stroke="var(--ink3)" stroke-width="1.5" marker-end="url(#ponta)" stroke-dasharray="4 4"/><text x="690" y="98" text-anchor="middle" class="eixo">corrigida, confere de novo</text><rect x="0" y="130" width="150" height="60" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="75.0" y="156.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="75.0" dy="0">Recepção salva a guia</tspan><tspan x="75.0" dy="16">no sistema de gestão</tspan></text><rect x="190" y="58" width="160" height="54" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="270.0" y="81.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="270.0" dy="0">Sistema avisa na hora</tspan><tspan x="270.0" dy="16">(webhook)</tspan></text><rect x="190" y="208" width="160" height="54" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="270.0" y="231.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="270.0" dy="0">n8n lê a API do sistema</tspan><tspan x="270.0" dy="16">a cada 5 minutos</tspan></text><rect x="390" y="130" width="150" height="60" rx="10" fill="var(--ink)" stroke="var(--line2)"/><text x="465.0" y="156.0" text-anchor="middle" class="nodo" fill="var(--action-ink)"><tspan x="465.0" dy="0">Conferente</tspan><tspan x="465.0" dy="16">(este código)</tspan></text><rect x="390" y="250" width="150" height="50" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="465.0" y="271.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="465.0" dy="0">Banco guarda</tspan><tspan x="465.0" dy="16">cada decisão</tspan></text><rect x="600" y="18" width="180" height="54" rx="10" fill="var(--good-soft)" stroke="var(--line2)"/><text x="690.0" y="41.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="690.0" dy="0">Pode enviar:</tspan><tspan x="690.0" dy="16">entra no lote do convênio</tspan></text><rect x="600" y="130" width="180" height="60" rx="10" fill="var(--bad-soft)" stroke="var(--line2)"/><text x="690.0" y="156.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="690.0" dy="0">Retida: aviso no WhatsApp</tspan><tspan x="690.0" dy="16">de quem resolve</tspan></text><rect x="820" y="130" width="150" height="60" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="895.0" y="156.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="895.0" dy="0">Correção no</tspan><tspan x="895.0" dy="16">sistema de gestão</tspan></text><rect x="600" y="250" width="180" height="50" rx="10" fill="var(--card)" stroke="var(--line2)"/><text x="690.0" y="271.0" text-anchor="middle" class="nodo" fill="var(--ink)"><tspan x="690.0" dy="0">Terça 7h30: relatório</tspan><tspan x="690.0" dy="16">ao Dr. Renato</tspan></text></svg></div></div>
-        <div class="grade2" style="margin-top:12px">
-          <div class="cartao"><h2>Onde roda</h2><p style="margin:8px 0 0">Na prova, na Vercel, sem banco e com a API aberta para a banca testar. Em produção, numa VPS no Brasil, com o conferente, o banco de dados, o n8n e o Nginx em containers, token na API e backup diário. O aviso sai pela API oficial do WhatsApp ou por Z-API ou Evolution, e a IA seria um modelo pequeno pago, como um GPT mini.</p></div>
-          <div class="cartao"><h2>MCP, Skill e código</h2><p style="margin:8px 0 0">Em <a href="https://github.com/gbfelipe7/vitalis-guias">github.com/gbfelipe7/vitalis-guias</a>: o conferente em <code>motor/</code>, o MCP em <code>mcp_server/</code> e a Skill em <code>skills/conferir-guia/</code>.</p></div>
-        </div>
-      </div>
-
-      <div class="secao">
-        <h2>Próximos passos</h2>
-        <div class="pergunta">O que vem depois de segurar a guia errada.</div>
-        <div class="passos">
-          <div class="passo"><div class="k">1</div><b>Lançar a guia no mesmo dia</b><p>Quanto mais tarde a guia é lançada, mais ela fica retida. Mudar o processo para lançar na hora do atendimento, com a conferência na hora. Não custa nada.</p></div>
-          <div class="passo"><div class="k">2</div><b>Conferir na chegada do paciente</b><p>O mesmo conferente no balcão: a autorização vale hoje, sobram sessões, o convênio cobre. Evita o maior bloco de guias retidas.</p></div>
-          <div class="passo"><div class="k">3</div><b>Ler o retorno do convênio</b><p>Casar cada glosa real com a guia. Prova o resultado para o Dr. Renato, e o que escapou vira regra nova.</p></div>
-          <div class="passo"><div class="k">4</div><b>Recurso de glosa assistido</b><p>Para cada guia glosada, o texto do recurso pronto a partir do motivo do convênio, com o prazo controlado.</p></div>
-        </div>
-      </div>
+      <div class="secao nota">O desenho de como fica em produção e os próximos passos estão na aba <a href="#solucoes">3. Soluções</a>.</div>
 
       <div class="secao">
         <h2>Como o sistema de gestão chama a conferência</h2>
@@ -444,9 +479,9 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   mostrarTema();
 
   /* ---------------- navegação ---------------- */
-  const VISTAS = ['visao', 'guias', 'lancar', 'terca', 'como'];
+  const VISTAS = ['construido', 'problemas', 'solucoes', 'visao', 'guias', 'lancar', 'terca', 'como'];
   function irPara() {
-    const v = VISTAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'visao';
+    const v = VISTAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'construido';
     document.querySelectorAll('.vista').forEach((s) => s.classList.toggle('on', s.id === 'v-' + v));
     document.querySelectorAll('.nav').forEach((a) => a.classList.toggle('on', a.dataset.v === v));
     if (v === 'terca') carregarTerca();
@@ -1256,6 +1291,148 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     }
     $('qtGuias').textContent = DADOS.guias.length;
     desenharSegmento(); desenharLinhas(); desenharVisao(); desenharEvolucao(); desenharDiasDaSemana(); desenharLegenda(); desenharRegras();
+    desenharConstruido(); desenharProblemas(); desenharSolucoes();
+  }
+
+  /* ---------------- apresentação: construído, problemas e soluções ---------------- */
+  // Os números das três abas saem das guias como estão agora (lote mais correções da sessão).
+  function metricas() {
+    const guias = DADOS.guias, rel = DADOS.relatorio, pp = rel.por_proximo_passo, retidas = guias.filter((r) => r.decisao === 'PENDENTE');
+    const soma = (lista) => lista.reduce((s, r) => s + r.valor_em_risco, 0), ids = (lista) => lista.map((r) => r.id_guia);
+    const atraso = [0, 1, 2, 3].map(() => ({n: 0, ret: 0}));
+    const fds = {n: 0, ret: 0, ids: []};
+    guias.forEach((r) => {
+      const a = paraISO(r.guia.data_atendimento), l = paraISO(r.guia.data_lancamento); if (!a || !l) return;
+      const dias = Math.round((new Date(l + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000);
+      if (dias >= 0) { const f = atraso[Math.min(dias, 3)]; f.n++; if (r.decisao === 'PENDENTE') f.ret++; }
+      const dia = new Date(l + 'T12:00:00').getDay();
+      if (dia === 0 || dia === 6) { fds.n++; fds.ids.push(r.id_guia); if (r.decisao === 'PENDENTE') fds.ret++; }
+    });
+    const taxa = (f) => f.n ? Math.round(100 * f.ret / f.n) : 0;
+    const antes = retidas.filter((r) => r.proximo_passo === 'convenio');
+    const cobertura = retidas.filter((r) => r.pendencias.some((p) => p.regra === 'nao_coberto'));
+    const copias = retidas.filter((r) => r.proximo_passo === 'copia');
+    const recibo = guias.filter((r) => r.decisao === 'OK' && /reembolso/i.test(r.guia.observacao_recepcao || ''));
+    const renovar = guias.filter((r) => { const f = r.folga_da_autorizacao || {};
+      return r.decisao === 'OK' && ((f.dias != null && f.dias <= 7) || (f.sessoes != null && f.limite && f.sessoes <= 0.2 * f.limite)); });
+    return {guias, rel, pp, retidas, soma, ids, atraso, taxa, fds, antes, cobertura, copias, recibo, renovar,
+      unidadesCopia: [...new Set(copias.map((r) => r.guia.unidade))]};
+  }
+  const irVer = (rotulo, f) => f ? `<span class="clicavel ver" ${filtro(f)}>${rotulo}</span>` : `<a class="ver" href="${rotulo[1]}">${rotulo[0]}</a>`;
+
+  function desenharConstruido() {
+    const el = $('construido'); if (!el || !DADOS) return;
+    const m = metricas();
+    const peca = (titulo, faz, como, onde) => `<div class="cartao peca"><h2>${titulo}</h2><div class="faz">${faz}</div>
+      <div class="rotulo">Como é feito</div><p>${como}</p><div class="rotulo">Onde ver</div><p>${onde}</p></div>`;
+    el.innerHTML = `
+      <div class="kpis">
+        <div class="kpi"><div class="r">Guias conferidas</div><div class="n">${m.rel.verificadas}</div><div class="d">todas de agosto</div></div>
+        <div class="kpi"><div class="r">Podem enviar</div><div class="n">${m.rel.ok}</div><div class="d">${m.rel.ok} de ${m.rel.verificadas}</div></div>
+        <div class="kpi"><div class="r">Retidas antes do envio</div><div class="n">${m.rel.pendentes}</div><div class="d">${m.rel.pendentes} de ${m.rel.verificadas}</div></div>
+        <div class="kpi"><div class="r">Em risco</div><div class="n">${reaisInt(m.rel.valor_em_risco)}</div><div class="d">de ${reaisInt(m.rel.valor_total)}</div></div>
+      </div>
+      <div class="secao pecas">
+        ${peca('Conferência no lançamento', 'Cada guia é conferida quando é lançada e sai com a decisão, o motivo, o que fazer e quem resolve, em menos de um segundo.',
+          'O motor em Python compara a guia com as regras do convênio: campos exigidos, validade da autorização contra a data do atendimento, limite de sessões, cobertura, valor, profissional, prazo de envio, a observação da recepção e guia repetida. São 24 regras, e cada uma leva a uma decisão só.',
+          `${irVer(['Lançar guia', '#lancar'])} · API <code>POST /api/verificar</code> · MCP <code>verificar_guia</code>`)}
+        ${peca('Consulta de regra', 'Responde, antes do atendimento, se o convênio cobre o procedimento e o que ele exige.',
+          'Lê o arquivo de regras da prova e as frases dos convênios que viraram regra escrita. Para um convênio e um procedimento, devolve se cobre, o que fazer se não cobre, o limite de sessões, a validade máxima da autorização, o prazo de envio e os campos exigidos.',
+          `No formulário, o procedimento não coberto aparece marcado ao escolher o convênio · API <code>GET /api/regra</code> · MCP <code>consultar_regra</code>`)}
+        ${peca('Lista de renovação', `Aponta os pacientes cuja autorização vai vencer ou esgotar antes da próxima sessão. Hoje são ${m.renovar.length}.`,
+          'Para cada guia que pode ir, calcula quantos dias faltam da data do atendimento até a validade da autorização e quantas sessões sobram (o limite menos a sessão atual). Entra na lista quem vence em até 7 dias ou já usou 80% das sessões.',
+          `${irVer(['3. Soluções', '#solucoes'])} · no relatório de terça, em "Para esta semana"`)}
+        ${peca('Relatório de terça', 'O resumo do Dr. Renato: quantas guias, quantas retidas, de que tipo, quanto em risco e o que fazer na semana.',
+          'Junta todas as conferências. Cada guia retida conta uma vez, no problema mais grave, e o valor sai dividido por quem resolve. Gera a imagem e o texto para o WhatsApp.',
+          `${irVer(['Relatório de terça', '#terca'])} · API <code>GET /api/relatorio</code> · MCP <code>relatorio_de_terca</code>`)}
+        ${peca('Aviso para quem resolve', 'Guia retida já sai com a mensagem pronta e o destinatário.',
+          'O próximo passo da guia decide quem recebe: a recepção da unidade, quem pede autorização aos convênios, o financeiro ou a Carla. A mensagem leva só o número da guia, a unidade, o convênio, o problema e o que fazer, sem nome de paciente nem CID.',
+          `${irVer(['Lançar guia', '#lancar'])}, depois de lançar uma guia retida`)}
+        ${peca('Guia repetida e correção', 'Acha a mesma guia lançada duas vezes, e deixa corrigir uma guia retida.',
+          'Arruma as datas antes de comparar. Se tudo bate, é o mesmo atendimento: a lançada depois é a cópia. Se só parte bate, fica para conferir. Uma guia corrigida é conferida de novo e entra no lugar da original.',
+          `${irVer(['Como funciona', '#como'])} · botão "Corrigir esta guia" em ${irVer(['Guias de agosto', '#guias'])}`)}
+        ${peca('MCP e Skill', 'Deixam conferir pelo Claude, colando a guia do jeito que a recepção escreveu.',
+          'O MCP conecta o Claude às regras e às guias, com quatro ferramentas: consultar regra, verificar guia, listar pendentes e relatório de terça. A Skill é o manual que ensina o Claude a separar os dados, perguntar o que falta e responder no mesmo formato.',
+          'No repositório: <code>mcp_server/</code> e <code>skills/conferir-guia/</code>')}
+        ${peca('Onde a IA entra', 'Só para ler texto. Nunca decide e nunca libera uma guia.',
+          'Separa os campos de uma guia colada como texto corrido, e lê o trecho da observação da recepção que as palavras-chave não entenderam. Todo valor que ela devolve tem que estar escrito no texto, e ela só pode segurar a guia.',
+          `${irVer(['Como funciona', '#como'])}`)}
+      </div>`;
+  }
+
+  function desenharProblemas() {
+    const el = $('problemas'); if (!el || !DADOS) return;
+    const m = metricas(), a = m.atraso, ult = a[3].n ? a[3] : a[2];
+    const achado = (num, titulo, frase, ver, extra) => `<div class="cartao achado"><div class="num-grande">${num}</div><div><h2>${titulo}</h2><p>${frase}</p>${extra || ''}${ver || ''}</div></div>`;
+    el.innerHTML = `<div class="achados">
+      ${achado(`${m.rel.pendentes} de ${m.rel.verificadas}`, 'Quase metade das guias ficaria retida',
+        `São ${reaisInt(m.rel.valor_em_risco)} em risco, de ${reaisInt(m.rel.valor_total)}. ${pct(m.pp.convenio ? m.pp.convenio.em_risco : 0, m.rel.valor_em_risco)} desse valor depende do convênio.`,
+        irVer('Ver as retidas', {decisao: ''}) )}
+      ${achado(`${m.taxa(a[0])}% a ${m.taxa(ult)}%`, 'Quanto mais tarde a guia é lançada, mais ela fica retida',
+        `Só ${a[0].n} de ${m.guias.length} guias são lançadas no dia do atendimento. No mesmo dia, ${m.taxa(a[0])}% ficam retidas; com 3 dias ou mais, ${m.taxa(ult)}%.`,
+        irVer(['Ver na Visão geral', '#visao']),
+        barras(['No mesmo dia', '1 dia depois', '2 dias depois', '3 dias ou mais'].map((nome, k) => ({nome, valor: m.taxa(a[k]) + '%', extra: a[k].ret + ' de ' + a[k].n, v: 100, partes: [{c: 'nao_enviar', v: m.taxa(a[k])}]})), 100))}
+      ${achado(`${m.antes.length} de ${m.retidas.length}`, 'O maior problema nasce antes da sessão',
+        `São guias com a autorização vencida, esgotada ou sem número, somando ${reaisInt(m.soma(m.antes))}. Conferir a guia depois segura o erro, mas não salva a sessão.`,
+        irVer('Ver as guias', {ids: m.ids(m.antes), rotulo: 'Nascem antes da sessão'}))}
+      ${achado(`${m.cobertura.length} guias`, 'Procedimento que o convênio não cobre, e era previsível',
+        `Consulta no Plano Bem e infiltração no Vitalcard: ${reaisInt(m.soma(m.cobertura))}. A regra já dizia isso na hora de agendar.`,
+        irVer('Ver as guias', {ids: m.ids(m.cobertura), rotulo: 'Convênio não cobre'}))}
+      ${achado(`${m.fds.n} guias`, 'Lançadas no fim de semana, sem atendimento nesses dias',
+        `${m.fds.ret} delas ficaram retidas. Vale entender quem lança no sábado e no domingo, e por quê.`,
+        irVer('Ver as guias', {ids: m.fds.ids, rotulo: 'Lançadas no fim de semana'}))}
+      ${m.copias.length ? achado(`${m.copias.length} cópias`, 'A mesma guia lançada duas vezes',
+        `Lançadas de novo no dia seguinte${m.unidadesCopia.length === 1 ? ', as duas na unidade ' + esc(m.unidadesCopia[0]) : ''}. Mandar as duas é cobrar duas vezes.`,
+        irVer('Ver as cópias', {passo: 'copia', rotulo: 'Descartar a cópia'})) : ''}
+      ${m.recibo.length ? achado(`${m.recibo.length} guias`, 'Podem estar cobrando duas vezes',
+        `Podem ir, mas dizem "pediu recibo para reembolso". Se o paciente já pagou, enviar ao convênio é cobrar de novo. É pergunta para a Carla.`,
+        irVer('Ver as guias', {ids: m.ids(m.recibo), rotulo: 'Pediu recibo para reembolso'})) : ''}
+    </div>
+    <div class="nota" style="margin-top:18px">Unidades e convênios: com poucas guias por grupo, a diferença entre eles pode ser acaso, então não viraram problema. O lote de agosto tem erros de propósito: as taxas servem para achar padrões, não para projetar a clínica.</div>`;
+  }
+
+  function desenharSolucoes() {
+    const el = $('solucoes'); if (!el || !DADOS) return;
+    const m = metricas(), a = m.atraso;
+    const sol = (k, titulo, resolve, frase, pronto, falta) => `<div class="cartao solucao"><div class="k">${k}</div><div>
+      <h2>${titulo}</h2><div class="resolve">Resolve: ${resolve}</div><p>${frase}</p>
+      <div class="etiquetas">${pronto ? `<span class="etq ok">Pronto: ${pronto}</span>` : ''}${falta ? `<span class="etq falta">Falta: ${falta}</span>` : ''}</div></div></div>`;
+    const urg = (r) => Math.min(r.folga_da_autorizacao.dias == null ? 99 : r.folga_da_autorizacao.dias, r.folga_da_autorizacao.sessoes == null ? 99 : r.folga_da_autorizacao.sessoes * 7);
+    const motivo = (f) => [f.dias != null && f.dias <= 7 ? (f.dias === 0 ? 'vence no dia do atendimento' : `vence ${f.dias} dia${f.dias > 1 ? 's' : ''} depois do atendimento`) : '',
+      f.sessoes != null && f.limite && f.sessoes <= 0.2 * f.limite ? (f.sessoes <= 0 ? `usou as ${f.limite} sessões` : `restam ${f.sessoes} de ${f.limite} sessões`) : ''].filter(Boolean).join(' e ');
+    el.innerHTML = `
+      <div class="emjogo" style="margin-top:18px">O que está em jogo na clínica, por mês
+        <div class="n">~ R$ 14,5 mil</div>de glosa por guia errada ou autorização vencida, pela estimativa da Carla.</div>
+      <div class="secao solucoes">
+        ${sol(1, 'Lançar a guia no mesmo dia', `quanto mais tarde lança, mais erra (${m.taxa(a[0])}% no mesmo dia, ${m.taxa(a[3])}% com 3 dias)`,
+          'Mudar o processo para lançar na hora do atendimento, com a conferência na hora, enquanto o paciente ainda está na clínica. Não custa nada e dá para medir em 4 semanas.',
+          'a conferência na hora', '')}
+        ${sol(2, 'Consultar a regra no agendamento', `${m.cobertura.length} guias de procedimento que o convênio não cobre`,
+          'Na hora de marcar, perguntar ao conferente se o convênio cobre. Se não cobre, a recepção avisa o paciente que vai ser particular, antes da sessão.',
+          'a consulta de regra na API e no MCP', 'ligar na agenda do sistema de gestão')}
+        ${sol(3, 'Conferir a autorização na chegada do paciente', `${m.antes.length} guias que nascem antes da sessão`,
+          'O mesmo conferente, chamado no balcão: a autorização vale hoje? sobram sessões? Se não, pede autorização na hora, remarca ou cobra particular.',
+          'o conferente', 'ligar no check-in do sistema de gestão')}
+        ${sol(4, 'Renovar as autorizações em lote', `${m.renovar.length} autorizações perto de vencer ou de esgotar`,
+          'Toda segunda, a Carla pede a renovação por convênio e marca a reavaliação antes da última sessão.', 'a lista abaixo e a linha no relatório de terça', '')}
+        ${sol(5, 'Avisar na hora quem resolve', `${m.rel.pendentes} guias retidas`,
+          'Cada guia retida gera uma mensagem no WhatsApp de quem resolve, sem dado do paciente. Quando a guia é corrigida e passa, o aviso fica resolvido.',
+          'a mensagem e o destinatário', 'o envio pela API oficial do WhatsApp, Z-API ou Evolution')}
+        ${sol(6, 'Ajustar a rotina da recepção', `${m.fds.n} guias lançadas no fim de semana e ${m.copias.length} guias lançadas duas vezes`,
+          'Entender quem lança no fim de semana e por que uma guia é lançada de novo no dia seguinte. É conversa e treino, não tecnologia.', '', 'conversar com a Carla e as unidades')}
+        ${sol(7, 'Confirmar a regra do recibo', `${m.recibo.length} guias com pedido de recibo para reembolso`,
+          'Se o paciente que pede recibo pagou do bolso, a guia não vai ao convênio. Uma resposta da Carla vira regra para todos os meses.', 'o aviso nessas guias', 'a resposta da Carla')}
+        ${sol(8, 'Provar o resultado em dinheiro', 'saber se a glosa caiu de verdade',
+          'Ler o retorno do convênio e casar cada glosa com a guia. O que escapou vira regra nova, e para cada glosa sai o texto do recurso pronto.', '', 'o demonstrativo de retorno de cada convênio')}
+      </div>
+      <div class="secao cartao">
+        <h2>${m.renovar.length} autorizações para renovar</h2>
+        <div class="pergunta">Vencem em até 7 dias ou já usaram 80% das sessões. As 6 mais urgentes.</div>
+        <div class="tabela" style="border-top:0"><table class="lista" style="min-width:560px"><tbody>
+          ${m.renovar.slice().sort((x, y) => urg(x) - urg(y)).slice(0, 6).map((r) => `<tr><td class="id">${esc(r.id_guia)}</td><td>${esc(r.guia.paciente)}</td><td>${esc(r.guia.convenio)}</td><td>${esc(r.guia.unidade)}</td><td>${esc(motivo(r.folga_da_autorizacao))}</td></tr>`).join('')}
+        </tbody></table></div>
+        <div class="nota">${irVer('Ver as ' + m.renovar.length + ' guias', {ids: m.ids(m.renovar), rotulo: 'Autorizações para renovar'})}</div>
+      </div>`;
   }
 
   /* ---------------- início ---------------- */
