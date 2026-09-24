@@ -1397,7 +1397,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     const linha = (n, texto, f) => `<li><span class="clicavel" ${filtro(f)}><b>${n}</b> ${texto}</span></li>`;
     el.innerHTML = `<div class="achados">
       ${achado(`${m.rel.pendentes} de ${m.rel.verificadas}`, 'Quase metade ficaria retida',
-        `${reaisInt(m.rel.valor_em_risco)} em risco, de ${reaisInt(m.rel.valor_total)}.`, '', irVer('Ver as retidas', {decisao: ''}))}
+        `${reaisInt(m.rel.valor_em_risco)} em risco, de ${reaisInt(m.rel.valor_total)}.`, '', irVer('Ver as ' + m.retidas.length + ' retidas', {ids: m.ids(m.retidas), rotulo: 'Retidas'}))}
       ${achado(`${m.evitavel.length} de ${m.retidas.length}`, 'O problema já existia antes da sessão',
         `${m.lancadasAntes ? '' : 'Nenhuma guia é lançada antes do atendimento. '}Quando a conferência acha o erro, a sessão já foi feita.`,
         barras(grupos.map(([g, c], k) => ({nome: ORIGEM[k].nome, valor: reaisInt(m.soma(g)), extra: g.length + ' guias', partes: [{c, v: g.length}],
