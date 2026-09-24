@@ -1,7 +1,7 @@
 {
   "_para_que_serve": "O regras_convenio.json traz parte das regras em texto livre, no campo observacao de cada convênio. Aqui essas frases viram regra estruturada, para o motor decidir sem depender de IA. Cada item cita a frase de origem.",
   "registro_por_procedimento": {
-    "_origem": "Dicionário de dados: CREFITO para fisioterapeuta, CRM para médico.",
+    "_origem": "Dedução minha. O dicionário diz que fisioterapeuta tem CREFITO e médico tem CRM; o nome do procedimento diz quem o faz. A prova não traz essa regra ligada a cada procedimento, por isso ela nunca segura como glosa certa: só manda conferir.",
     "50000470": "CREFITO",
     "50000560": "CREFITO",
     "50000012": "CREFITO",
@@ -19,7 +19,9 @@
     },
     "Plano Bem": {
       "_origem": "Não cobre consulta médica; consulta é faturada como particular.",
-      "nao_coberto_vira_particular": ["20103301"]
+      "nao_coberto_vira_particular": [
+        "20103301"
+      ]
     }
   },
   "dias_de_alerta_para_prazo_de_envio": 5

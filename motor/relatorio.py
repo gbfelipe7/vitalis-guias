@@ -2,6 +2,7 @@
 
 from datetime import date
 
+from .normalizar import ler_data
 from .textos import GRAVIDADES, ORDEM_GRAVIDADE, PROXIMOS_PASSOS, TIPOS, reais as _reais
 
 
@@ -65,8 +66,12 @@ def montar_relatorio(resultados, gerado_em=None):
     confirmar_recibo = [r["id_guia"] for r in prontas
                         if "reembolso" in (r["guia"].get("observacao_recepcao") or "").lower()]
 
+    datas = sorted(r["guia"].get("data_lancamento") or "" for r in resultados)
+    datas = [d for d in (ler_data(x) for x in datas) if d]
+
     return {
         "gerado_em": (gerado_em or date.today()).isoformat(),
+        "periodo": [min(datas).isoformat(), max(datas).isoformat()] if datas else [],
         "para_renovar": para_renovar,
         "confirmar_recibo": confirmar_recibo,
         "verificadas": len(resultados),
@@ -91,13 +96,15 @@ def montar_relatorio(resultados, gerado_em=None):
 
 def relatorio_em_texto(rel):
     """Versão para mandar no WhatsApp: curta, em frases, do jeito que o Dr. Renato lê no celular."""
-    dia = "/".join(reversed(rel["gerado_em"].split("-")))
+    br = lambda iso: "/".join(reversed(iso.split("-")))
+    periodo = rel.get("periodo") or []
     linhas = [
-        "Guias de convênio, relatório de terça (%s)" % dia,
+        "Relatório de terça: guias de convênio",
+        ("Lançadas de %s a %s. " % (br(periodo[0])[:5], br(periodo[1])[:5]) if periodo else "") + "Gerado em %s." % br(rel["gerado_em"]),
         "",
         "%d guias conferidas antes do envio." % rel["verificadas"],
         "%d podem ir para o convênio." % rel["ok"],
-        "%d ficaram retidas, somando %s." % (rel["pendentes"], _reais(rel["valor_em_risco"])),
+        "%d ficaram retidas, com %s em risco." % (rel["pendentes"], _reais(rel["valor_em_risco"])),
         "",
         "Quem resolve as retidas:",
     ]

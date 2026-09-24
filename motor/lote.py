@@ -30,13 +30,23 @@ def registros_conhecidos(guias_brutas):
     return conhecidos
 
 
+def _mesma_pessoa(uma, outra):
+    """Mesma carteirinha ou mesma autorização: aí sim é o mesmo paciente."""
+    def igual(campo):
+        a, b = (uma[campo] or "").strip().upper(), (outra[campo] or "").strip().upper()
+        return bool(a) and a == b
+    return igual("carteirinha") or igual("numero_autorizacao")
+
+
 def mapear_duplicidades(guias_brutas, chegou_agora=None):
     """Devolve uma lista do tamanho do lote: None, ou {"tipo": "exata" | "mesma_sessao" | "suspeita", "outra": id}.
 
     Exata:    mesmo paciente, data, procedimento, autorização e sessão de uma guia anterior.
               A anterior segue normal; a repetida não deve ser enviada.
-    Suspeita: mesmo paciente, data e procedimento, mas com outra autorização. As duas ficam
-              para conferir, porque não dá para saber qual está errada.
+    Suspeita: mesmo paciente, data e procedimento, com a mesma carteirinha ou a mesma autorização,
+              mas sem ser a mesma sessão. As duas ficam para conferir, porque não dá para saber
+              qual está errada. Só o código do paciente igual não basta: nesta base ele se repete
+              entre pessoas diferentes (carteirinha, unidade e profissional diferentes).
 
     'Anterior' é a que foi lançada antes. A guia que está chegando agora (posição chegou_agora)
     é sempre a mais nova, tenha ou não data de lançamento. As datas são comparadas já
@@ -77,9 +87,11 @@ def mapear_duplicidades(guias_brutas, chegou_agora=None):
             if gemea:
                 mapa[atual] = {"tipo": "exata", "outra": guias[gemea[0]]["id_guia"]}
             elif mapa[atual] is None:
-                mapa[atual] = {"tipo": "suspeita", "outra": guias[anteriores[0]]["id_guia"]}
-                if mapa[anteriores[0]] is None:
-                    mapa[anteriores[0]] = {"tipo": "suspeita", "outra": guias[atual]["id_guia"]}
+                mesma_pessoa = [p for p in anteriores if _mesma_pessoa(guias[p], guias[atual])]
+                if mesma_pessoa:
+                    mapa[atual] = {"tipo": "suspeita", "outra": guias[mesma_pessoa[0]]["id_guia"]}
+                    if mapa[mesma_pessoa[0]] is None:
+                        mapa[mesma_pessoa[0]] = {"tipo": "suspeita", "outra": guias[atual]["id_guia"]}
     return mapa
 
 
@@ -100,7 +112,10 @@ def verificar_nova(bruta, guias_do_lote, regras, usar_ia=True, referencia=None):
     bruta["id_guia"] = str(bruta.get("id_guia") or "").strip() or "NOVA"
     # mesma guia conferida de novo (mesmo id) não é duplicata de si mesma
     outras = [g for g in guias_do_lote if (g.get("id_guia") or "").strip().upper() != bruta["id_guia"].upper()]
-    duplicidades = mapear_duplicidades(outras + [bruta], chegou_agora=len(outras))
+    # Guia que já estava no lote e voltou (corrigida ou reenviada) fica na ordem da sua data de
+    # lançamento: a G-2608-0027 reenviada continua sendo a original, e a 0057 continua a cópia.
+    reconferida = len(outras) < len(guias_do_lote)
+    duplicidades = mapear_duplicidades(outras + [bruta], chegou_agora=None if reconferida else len(outras))
     return verificar_guia(bruta, regras, referencia=referencia or hoje(), duplicidade=duplicidades[-1],
                           registros_conhecidos=registros_conhecidos(guias_do_lote), usar_ia=usar_ia,
                           veio_do_sistema=False)

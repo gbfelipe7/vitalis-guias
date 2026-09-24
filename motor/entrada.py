@@ -61,7 +61,7 @@ PADROES = {
     "valor":                 r"R\$\s?(\d+(?:[.,]\d{2})?)|(\d+(?:[.,]\d{2})?)\s?reais", # R$ 62,00 ou 70 reais
 }
 SESSAO = r"sess[aã]o\s*(\d+)\s*(?:/|de)\s*(\d+)"                                       # sessão 7 de 10
-VALIDADE = r"\bval(?:idade)?\.?\s*(?:at[eé]\s*)?(%s)" % _DATA                         # val 25/09/2026 (e não 'aval. 30/09')
+VALIDADE = r"\b(?:val(?:idade)?\.?|v[aá]lid[ao]|vence|vencimento)\s*(?:at[eé]\s*|em\s*)?(%s)" % _DATA   # val 25/09/2026, válida até 30/10 (e não 'aval. 30/09')
 
 
 def _de_csv(texto):

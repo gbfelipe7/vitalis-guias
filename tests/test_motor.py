@@ -96,9 +96,10 @@ class LoteDeAgosto(unittest.TestCase):
         self.assertIn("G-2608-0027", RESULTADOS["G-2608-0057"]["pendencias"][0]["motivo"])
         self.assertIn("duplicidade", tipos("G-2608-0076"))
 
-    def test_mesmo_paciente_em_duas_unidades_fica_para_conferir(self):
+    def test_so_o_codigo_do_paciente_igual_nao_e_repetida(self):
+        # 0017 e 0060: mesmo código de paciente, mas carteirinha, autorização, unidade e profissional diferentes
         for i in ("G-2608-0017", "G-2608-0060"):
-            self.assertEqual(RESULTADOS[i]["gravidade"], "conferir")
+            self.assertEqual(RESULTADOS[i]["decisao"], "OK", i)
 
     def test_medico_em_procedimento_de_fisioterapia(self):
         for i in ("G-2608-0045", "G-2608-0074"):
@@ -220,7 +221,8 @@ class AchadosDaAuditoria(unittest.TestCase):
         nova = dict(self.BOA, id_guia="")
         _, corpo = rota_relatorio([nova, nova])
         self.assertEqual(corpo["relatorio"]["verificadas"], 82)
-        self.assertGreaterEqual(corpo["relatorio"]["pendentes"], 40)      # a segunda é repetida da primeira
+        lote = montar_relatorio(list(RESULTADOS.values()))["pendentes"]
+        self.assertGreaterEqual(corpo["relatorio"]["pendentes"], lote + 1)   # a segunda é repetida da primeira
 
     # ----- observação
     def test_frase_comum_nao_esconde_o_resto(self):
@@ -559,5 +561,19 @@ class TerceiraRodada(unittest.TestCase):
         self.assertEqual(corpo["resultado"]["decisao"], "OK")
         _, rel = rota_relatorio([corrigida])
         self.assertEqual(rel["relatorio"]["verificadas"], 80)
-        self.assertEqual(rel["relatorio"]["pendentes"], 38)
+        self.assertEqual(rel["relatorio"]["pendentes"], 36)
         self.assertEqual([g["origem"] for g in rel["guias"] if g["id_guia"] == "G-2608-0021"], ["corrigida"])
+
+
+    def test_original_reenviada_continua_original(self):
+        from web.rotas import rota_verificar
+        original = next(g for g in GUIAS if g["id_guia"] == "G-2608-0027")
+        _, corpo = rota_verificar({"guia": original, "rascunho": True})
+        self.assertEqual(corpo["resultado"]["decisao"], "OK")
+        self.assertEqual(RESULTADOS["G-2608-0057"]["proximo_passo"], "copia")
+
+    def test_mesma_carteirinha_mesmo_dia_ainda_segura(self):
+        base = dict(next(g for g in GUIAS if g["id_guia"] == "G-2608-0017"))
+        outra = dict(base, id_guia="G-NOVA-9", unidade="Norte", numero_autorizacao="AUT000111", sessao_numero_na_autorizacao="4")
+        r = verificar_nova(outra, GUIAS, REGRAS, usar_ia=False, referencia=date(2026, 8, 22))
+        self.assertTrue(any(p["regra"] == "duplicata_suspeita" for p in r["pendencias"]))

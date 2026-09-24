@@ -93,6 +93,8 @@ def rota_verificar(dados):
     else:
         return 400, {"erro": "Mande 'guia' (os campos) ou 'texto' (o que a recepção escreveu)."}
 
+    if not campos and isinstance(dados.get("guia"), dict):
+        return 422, {"erro": "A guia veio sem nenhum campo."}
     if not campos:
         return 422, {"erro": "Não consegui separar nenhum campo desse texto.",
                      "dica": "Escreva um campo por linha, como 'Convênio: Vitalcard'."}

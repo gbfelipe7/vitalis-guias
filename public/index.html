@@ -19,7 +19,6 @@
 --warn:#b56d12;--warn-soft:rgba(241,163,60,.18);
 --bad:#c2453a;--bad-soft:rgba(194,69,58,.10);
 --sans:'Figtree',system-ui,-apple-system,sans-serif;--serif:'EB Garamond',Georgia,serif;
-/* números na Geist, como no Fibo Hub */
 --num:'Geist',system-ui,sans-serif;--num-w:500;
 --seg:0 1px 2px rgba(28,28,26,.10);
 }
@@ -228,7 +227,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   .zap{grid-template-columns:1fr}
   .grupos-regras{grid-template-columns:1fr}
   #v-guias table{min-width:560px}
-  #v-guias th:nth-child(2),#v-guias td:nth-child(2),#v-guias th:nth-child(4),#v-guias td:nth-child(4),#v-guias th:nth-child(8),#v-guias td:nth-child(8){display:none}
+  #v-guias th:nth-child(2),#v-guias td:nth-child(2),#v-guias th:nth-child(4),#v-guias td:nth-child(4),#v-guias th:nth-child(7),#v-guias td:nth-child(7),#v-guias th:nth-child(8),#v-guias td:nth-child(8){display:none}
   tr.det .detbox{position:sticky;left:0;max-width:calc(100vw - 72px)}
   .decisao{grid-template-columns:1fr}.decisao .q{text-align:left}
   .frase{font-size:19px;padding:18px}
@@ -362,8 +361,8 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
 
       <div class="secao grade2">
         <div class="cartao">
-          <h2>Em produção</h2>
-          <p style="margin:8px 0 0">Numa VPS no Brasil: o conferente, o banco de dados, o n8n e o Nginx em containers. Token na API, backup diário, e o aviso de guia retida entregue no WhatsApp de quem resolve.</p>
+          <h2>Como ficaria em produção</h2>
+          <p style="margin:8px 0 0">Hoje roda na Vercel, sem banco e com a API aberta para a banca testar. Em produção: uma VPS no Brasil com o conferente, o banco de dados, o n8n e o Nginx em containers, token na API e backup diário. O n8n entrega o aviso de guia retida no WhatsApp de quem resolve e manda o relatório ao Dr. Renato toda terça às 7h30.</p>
         </div>
         <div class="cartao">
           <h2>MCP, Skill e código</h2>
@@ -383,7 +382,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
 
       <div class="secao">
         <h2>Como o sistema de gestão chama a conferência</h2>
-        <div class="pergunta">A cada guia lançada, sem ninguém precisar lembrar.</div>
+        <div class="pergunta">O n8n lê as guias novas na API do sistema de gestão a cada poucos minutos e manda cada uma para cá. Se o sistema tiver webhook, ele chama direto. Ninguém precisa lembrar de conferir.</div>
         <pre id="curl"></pre>
       </div>
     </section>
@@ -598,7 +597,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       + (parcial ? `<line x1="${x(pts.length - 2)}" y1="${y(pts[pts.length - 2][s.k])}" x2="${x(pts.length - 1)}" y2="${y(pts[pts.length - 1][s.k])}" stroke="${s.cor}" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round"/>` : '')
       + (pts.length <= 40 ? pts.map((p, i) => `<circle cx="${x(i)}" cy="${y(p[s.k])}" r="${pts.length > 12 ? 2.5 : 4}" fill="${s.cor}"/>`).join('') : '')).join('');
     const ancora = (i) => pts.length > 1 && i === 0 ? 'start' : (pts.length > 1 && i === pts.length - 1 ? 'end' : 'middle');
-    const eixoX = pts.map((p, i) => (i % passo === 0 || i === pts.length - 1) ? `<text x="${x(i)}" y="${H - 8}" text-anchor="${ancora(i)}" class="eixo">${rotuloEvo(p.k, escalaEvo)}${p.parcial ? ' (parcial)' : ''}</text>` : '').join('');
+    const eixoX = pts.map((p, i) => (i % passo === 0 || (i === pts.length - 1 && i % passo >= passo * 0.6)) ? `<text x="${x(i)}" y="${H - 8}" text-anchor="${ancora(i)}" class="eixo">${rotuloEvo(p.k, escalaEvo)}${p.parcial ? ' (parcial)' : ''}</text>` : '').join('');
     const larg = pts.length > 1 ? (W - m.l - m.r) / (pts.length - 1) : W - m.l - m.r;
     const alvos = pts.map((p, i) => `<rect x="${x(i) - larg / 2}" y="${m.t}" width="${larg}" height="${H - m.t - m.b}" fill="transparent"><title>${rotuloEvo(p.k, escalaEvo)}: ${p.lancadas} lançadas, ${p.ok} podem ir, ${p.retidas} retidas</title></rect>`).join('');
     const tot = SERIES.map((s) => pts.reduce((a, p) => a + p[s.k], 0));
@@ -647,13 +646,13 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         <div class="frase"><b>${rel.pendentes}</b> das <b>${rel.verificadas}</b> guias ficaram retidas antes do envio. Elas somam <b>${reaisInt(rel.valor_em_risco)}</b>, e ${pct(conv.em_risco, rel.valor_em_risco)} depende do convênio.</div>
         <div class="emjogo">Na clínica, por mês
           <div class="n">~ R$ 14,5 mil</div>
-          de glosa evitável, pela estimativa da Carla.</div>
+          de glosa por guia errada ou autorização vencida, pela estimativa da Carla.</div>
       </div>
       <div class="kpis">
         <div class="kpi"><div class="r">Conferidas</div><div class="n">${rel.verificadas}</div><div class="d">${guias.some((r) => r.origem && r.origem !== 'lote') ? 'agosto e as lançadas agora' : 'todas de agosto'}</div></div>
         <div class="kpi"><div class="r">Podem enviar</div><div class="n">${rel.ok}</div><div class="d">${rel.ok} de ${rel.verificadas}</div></div>
         <div class="kpi"><div class="r">Retidas</div><div class="n">${rel.pendentes}</div><div class="d">${rel.pendentes} de ${rel.verificadas}</div></div>
-        <div class="kpi"><div class="r">Valor retido</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)}</div></div>
+        <div class="kpi"><div class="r">Em risco</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)}</div></div>
       </div>
 
       <div class="secao grade2">
@@ -709,7 +708,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       <div class="kpi"><div class="r">Guias conferidas</div><div class="n">${rel.verificadas}</div><div class="d">antes do envio</div></div>
       <div class="kpi"><div class="r">Podem enviar</div><div class="n">${rel.ok}</div><div class="d">${pct(rel.ok, rel.verificadas)} das guias</div></div>
       <div class="kpi"><div class="r">Retidas</div><div class="n">${rel.pendentes}</div><div class="d">${pct(rel.pendentes, rel.verificadas)} das guias</div></div>
-      <div class="kpi"><div class="r">Valor retido</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)} conferidos</div></div>
+      <div class="kpi"><div class="r">Em risco</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)} conferidos</div></div>
     </div>`;
   }
   const FRASE_PASSO = {convenio: 'depende do convênio', particular: 'vai ser cobrado do paciente como particular',
@@ -844,20 +843,6 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       </div>`).join('');
   }
 
-  const CONFERENCIAS = [
-    {o: 'O convênio está nas regras', de: 'Regra do convênio', r: ['convenio_desconhecido']},
-    {o: 'Os campos que o convênio exige estão preenchidos', de: 'Regra do convênio', r: ['campo_vazio']},
-    {o: 'Tem número de autorização. Por telefone, só onde o convênio aceita e dentro do prazo', de: 'Regra do convênio', r: ['sem_autorizacao', 'sem_autorizacao_verbal_ok', 'sem_autorizacao_verbal_vencida', 'sem_autorizacao_verbal_nao_aceita']},
-    {o: 'Paciente, procedimento, sessão e valor preenchidos e legíveis', de: 'Cuidado meu', r: ['sem_paciente', 'sem_procedimento', 'sem_sessao', 'sem_valor']},
-    {o: 'Datas legíveis, lançamento depois do atendimento, nada no futuro', de: 'Cuidado meu', r: ['sem_data_atendimento', 'data_ilegivel', 'lancada_antes', 'atendimento_no_futuro']},
-    {o: 'A autorização vale na data do atendimento', de: 'Regra do convênio', r: ['autorizacao_vencida', 'autorizacao_vencida_com_nova', 'nova_tambem_nao_cobre']},
-    {o: 'A sessão cabe no limite da autorização', de: 'Regra do convênio', r: ['sessao_acima', 'sessao_acima_do_declarado']},
-    {o: 'O convênio cobre o procedimento, e código e valor batem com a tabela', de: 'Regra do convênio', r: ['procedimento_desconhecido', 'nao_coberto', 'descricao_divergente', 'valor_divergente']},
-    {o: 'O registro do profissional combina com o procedimento (CREFITO ou CRM)', de: 'Dicionário de dados', r: ['profissional_incompativel']},
-    {o: 'O prazo de envio do convênio não venceu', de: 'Regra do convênio', r: ['prazo_vencido']},
-    {o: 'O que a recepção anotou não muda a guia', de: 'Observação da recepção', ia: true, r: ['particular', 'procedimento_real', 'remarcada', 'verbal_com_numero', 'autorizacao_nova_solta', 'observacao_nao_reconhecida', 'observacao_cortada']},
-    {o: 'A guia não é cópia de outra', de: 'Cuidado meu', r: ['duplicata_exata', 'duplicata_suspeita', 'mesma_sessao']},
-  ];
   // Cada regra do motor (motor/verificar.py), com a única decisão que ela dá. Um teste confere que bate com o código.
   const REGRAS_DA_PAGINA = [
     {g: 'nao_enviar', t: 'A autorização estava vencida no dia do atendimento', r: ['autorizacao_vencida']},
@@ -876,7 +861,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     {g: 'corrigir', t: 'Falta paciente, procedimento, sessão, valor ou data, ou não dá para ler', r: ['sem_paciente', 'sem_procedimento', 'sem_sessao', 'sem_valor', 'sem_data_atendimento', 'data_ilegivel']},
     {g: 'corrigir', t: 'O convênio não está nas regras', r: ['convenio_desconhecido']},
     {g: 'conferir', t: 'O registro do profissional não combina com o procedimento', r: ['profissional_incompativel']},
-    {g: 'conferir', t: 'O mesmo paciente tem o mesmo procedimento no mesmo dia em outra guia', r: ['duplicata_suspeita']},
+    {g: 'conferir', t: 'O mesmo paciente (mesma carteirinha) tem o mesmo procedimento no mesmo dia em outra guia', r: ['duplicata_suspeita']},
     {g: 'conferir', t: 'Outra guia usa a mesma autorização e a mesma sessão', r: ['mesma_sessao']},
     {g: 'conferir', t: 'A sessão foi remarcada e a autorização era da data original', r: ['remarcada']},
     {g: 'conferir', t: 'A sessão passa do limite que a própria guia informa', r: ['sessao_acima_do_declarado']},
@@ -1058,7 +1043,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       ${r.decisao === 'PENDENTE' && r.valor_em_risco > 0 ? `<div class="dinheiro"><b>${reais(r.valor_em_risco)}</b> retidos</div>` : ''}
       ${r.pendencias.length ? `<div class="bloco">${pendencias(r)}</div>` : ''}
       ${r.alertas.length ? `<div class="bloco">${r.alertas.map((a) => `<div class="aviso" style="margin:0 0 6px">Aviso: ${esc(a)}</div>`).join('')}</div>` : ''}
-      ${r.enviar_ate ? `<div class="bloco regra">Enviar ao convênio até <b>${br(r.enviar_ate)}</b>.</div>` : ''}
+      ${r.enviar_ate && r.gravidade !== 'nao_enviar' ? `<div class="bloco regra">Prazo de envio do convênio: <b>${br(r.enviar_ate)}</b>.</div>` : ''}
       ${final && r.aviso ? `<div class="bloco"><h2>Aviso no WhatsApp</h2><div class="nota" style="margin-top:2px">Simulação. Para: ${esc(r.aviso.para)}</div><div class="bolha">${esc(r.aviso.texto)}</div></div>` : ''}
       ${textoRegra()}
       <div class="nota">${final ? `Observação lida por ${esc(r.observacao_lida_por || 'ninguém, estava vazia')}.` : 'Sem IA enquanto você preenche. Ao lançar, a IA lê a observação, se estiver ligada.'}</div>`;
@@ -1152,7 +1137,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   }
 
   /* ---------------- início ---------------- */
-  $('curl').textContent = `curl -X POST ${location.origin}/api/verificar \\\n  -H "Content-Type: application/json" \\\n  -d '{"guia": {"convenio": "Vitalcard", "procedimento_codigo": "50000470", "data_atendimento": "2026-09-02",\n       "numero_autorizacao": "AUT1", "autorizacao_validade": "2026-09-20", "sessao_numero_na_autorizacao": "11",\n       "carteirinha": "111222333", "cid": "M54.5", "profissional_registro": "CREFITO-3 204411-F", "valor": "62.00"}}'`;
+  $('curl').textContent = `curl -X POST ${location.origin}/api/verificar \\\n  -H "Content-Type: application/json" \\\n  -d '{"guia": {"id_guia": "G-2609-0001", "unidade": "Sul", "paciente": "P-1001", "convenio": "Vitalcard", "procedimento_codigo": "50000470", "data_atendimento": "2026-09-02",\n       "numero_autorizacao": "AUT1", "autorizacao_validade": "2026-09-20", "sessao_numero_na_autorizacao": "11",\n       "carteirinha": "111222333", "cid": "M54.5", "profissional_registro": "CREFITO-3 204411-F", "valor": "62.00"}}'`;
   irPara();
   fetch('/api/guias').then((r) => r.json()).then((d) => {
     LOTE = d;
