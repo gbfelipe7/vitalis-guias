@@ -12,7 +12,7 @@ Etapa técnica do processo da Expert Integrado. Caso fictício da Clínica Vital
 | `motor/` | O motor de regras, em Python puro, sem dependência. É ele que decide. |
 | `dados/` | `guias.csv` e `regras_convenio.json` da prova, sem alteração, mais `regras_extras.json` (ver decisão 3). |
 | `api/` e `web/` | A API publicada na Vercel. `web/rotas.py` tem a lógica; `api/*.py` só recebe o pedido. |
-| `public/index.html` | A página. Quatro abas de apresentação (1. O que foi construído, 2. Dados e problemas, 3. Soluções, 4. O que a prova pediu) e o sistema: visão geral com os gráficos de decisão, as guias de agosto, o formulário de lançamento, o relatório de terça (texto e imagem para o WhatsApp) e, em Como funciona, as regras agrupadas pela decisão que dão e a regra de cada convênio. |
+| `public/index.html` | A página. Quatro abas de apresentação (1. O que foi construído, 2. Dados e problemas, 3. Soluções, 4. Entregáveis) e o sistema: visão geral com os gráficos de decisão, as guias de agosto, o formulário de lançamento, o relatório de terça (texto e imagem para o WhatsApp) e, em Como funciona, as regras agrupadas pela decisão que dão e a regra de cada convênio. |
 | `mcp_server/` | O MCP, com quatro ferramentas. |
 | `skills/conferir-guia/` | A Skill para quem opera a clínica. |
 | `tests/` | 83 testes do motor. |

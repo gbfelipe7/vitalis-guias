@@ -217,6 +217,7 @@ svg .nodo{font:12.5px var(--sans)}
 .peca:first-child{border-top:0}
 .peca p{margin:0;color:var(--ink2);font-size:13px}
 .peca .onde{font-size:12.5px;color:var(--ink3)}
+.opcao p{margin:6px 0 0;color:var(--ink2);font-size:13px}
 .perguntas{list-style:none;margin:10px 0 0;padding:0}.perguntas li{padding:6px 0;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}.perguntas li:first-child{border-top:0}
 .perguntas b{font-family:var(--num);font-weight:var(--num-w);color:var(--ink);font-size:15px;margin-right:4px}
 .momentos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
@@ -282,7 +283,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     <a class="nav" href="#construido" data-v="construido">1. O que foi construído</a>
     <a class="nav" href="#problemas" data-v="problemas">2. Dados e problemas</a>
     <a class="nav" href="#solucoes" data-v="solucoes">3. Soluções</a>
-    <a class="nav" href="#entrega" data-v="entrega">4. O que a prova pediu</a>
+    <a class="nav" href="#entrega" data-v="entrega">4. Entregáveis</a>
     <div class="navlab">Conferência</div>
     <a class="nav" href="#visao" data-v="visao">Visão geral</a>
     <a class="nav" href="#guias" data-v="guias">Guias de agosto <span class="qt" id="qtGuias"></span></a>
@@ -304,8 +305,8 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
 
     <!-- ================= 2. dados e problemas ================= -->
     <section class="vista" id="v-entrega">
-      <h1>O que a prova pediu</h1>
-      <div class="sub">Cada item e onde ele está.</div>
+      <h1>Entregáveis</h1>
+      <div class="sub">O que a prova pediu e onde está cada item.</div>
       <div class="cartao secao"><table class="lista entrega"><tbody>
         <tr><td class="k">1</td><td>A solução funcionando com as 80 guias</td><td><a href="#guias">Guias de agosto</a> e <a href="#visao">Visão geral</a></td></tr>
         <tr><td class="k">2</td><td>Como uma guia nova entra e como a decisão sai</td><td><a href="#lancar">Lançar guia</a>, e pela API: <code>POST /api/verificar</code> (exemplo em <a href="#como">Como funciona</a>)</td></tr>
@@ -1441,6 +1442,13 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
           'mensagem e destinatário', 'envio pela API oficial, Z-API ou Evolution')}
         ${sol(3, 'Provar o resultado', 'Toda terça, o relatório mede a semana. O retorno do convênio mostra se a glosa caiu.',
           'relatório de terça', 'ler o retorno de cada convênio')}
+      </div>
+      <div class="secao"><div class="grupo-nome">Para a recepção ver na hora, sem trocar de sistema</div>
+        <div class="solucoes">
+          <div class="cartao opcao"><h2>Painel da recepção</h2><p>Uma aba aberta ao lado mostra as últimas guias salvas com a decisão, atualizando sozinha.</p></div>
+          <div class="cartao opcao"><h2>Extensão de navegador</h2><p>Se o sistema deles roda no navegador, a extensão lê os campos da tela e mostra a conferência enquanto a recepção digita.</p></div>
+        </div>
+        <div class="nota">Um sistema próprio facilitaria muito: mais liberdade e soluções mais rápidas, sem tantas conexões. Como o contrato foi renovado por dois anos, fica para a conversa da próxima renovação.</div>
       </div>`;
     $('solucoesLista').innerHTML = `
       <div class="secao cartao">
