@@ -354,6 +354,20 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       </div>
 
       <div class="secao">
+        <h2>Guia repetida</h2>
+        <div class="pergunta">Antes de comparar, as datas são arrumadas: 26/08/2026 e 2026-08-26 são o mesmo dia. Depois, cada guia é comparada com as outras.</div>
+        <div class="tabela" style="border-top:0"><table class="lista" style="min-width:620px">
+          <thead><tr><th>O que bateu com outra guia</th><th>Decisão</th><th>Por quê</th></tr></thead>
+          <tbody>
+            <tr><td>Tudo: paciente, dia, procedimento, autorização e sessão</td><td><span class="dec nao_enviar"><i></i>Não enviar assim</span></td><td class="vazio">É o mesmo atendimento lançado duas vezes. A primeira vai; a lançada depois é a cópia.</td></tr>
+            <tr><td>A mesma autorização e a mesma sessão, com outro dado diferente</td><td><span class="dec conferir"><i></i>Conferir antes de enviar</span></td><td class="vazio">Pode ser uma correção lançada de novo. Alguém decide qual é a certa.</td></tr>
+            <tr><td>Mesmo paciente (mesma carteirinha), dia e procedimento, outra sessão</td><td><span class="dec conferir"><i></i>Conferir antes de enviar</span></td><td class="vazio">Pode ser erro de digitação no número da sessão.</td></tr>
+            <tr><td>Só o código do paciente igual</td><td><span class="dec ok"><i></i>Pode enviar</span></td><td class="vazio">Carteirinha e autorização diferentes: são pessoas diferentes.</td></tr>
+          </tbody></table></div>
+        <div class="nota">A mesma guia lançada de novo com o mesmo número conta como correção, não como cópia.</div>
+      </div>
+
+      <div class="secao">
         <h2>A regra de cada convênio</h2>
         <div class="pergunta">Do arquivo da Carla. As frases em texto livre eu li uma vez e escrevi como regra.</div>
         <div class="tabela" style="border-top:0"><table class="lista" id="tabConvenios" style="min-width:680px"></table></div>
