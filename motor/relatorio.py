@@ -54,8 +54,21 @@ def montar_relatorio(resultados, gerado_em=None):
                             "em_risco": sum(r["valor_em_risco"] for r in do_passo),
                             "ids": [r["id_guia"] for r in do_passo]}
 
+    # O que dá para fazer antes de virar problema: autorização perto de vencer ou de esgotar
+    # (guias que podem ir, mas cujo paciente vai precisar de renovação) e recibo para confirmar.
+    def perto_do_fim(r):
+        folga = r.get("folga_da_autorizacao") or {}
+        dias, sessoes, limite = folga.get("dias"), folga.get("sessoes"), folga.get("limite")
+        return (dias is not None and dias <= 7) or (sessoes is not None and limite and sessoes <= 0.2 * limite)
+    prontas = [r for r in resultados if r["decisao"] == "OK"]
+    para_renovar = [r["id_guia"] for r in prontas if perto_do_fim(r)]
+    confirmar_recibo = [r["id_guia"] for r in prontas
+                        if "reembolso" in (r["guia"].get("observacao_recepcao") or "").lower()]
+
     return {
         "gerado_em": (gerado_em or date.today()).isoformat(),
+        "para_renovar": para_renovar,
+        "confirmar_recibo": confirmar_recibo,
         "verificadas": len(resultados),
         "ok": len(resultados) - len(pendentes),
         "pendentes": len(pendentes),
@@ -77,35 +90,29 @@ def montar_relatorio(resultados, gerado_em=None):
 
 
 def relatorio_em_texto(rel):
-    """Versão para colar no WhatsApp ou ler na reunião de terça."""
+    """Versão para mandar no WhatsApp: curta, em frases, do jeito que o Dr. Renato lê no celular."""
+    dia = "/".join(reversed(rel["gerado_em"].split("-")))
     linhas = [
-        "Guias de convênio, conferência antes do envio",
-        "Gerado em %s" % "/".join(reversed(rel["gerado_em"].split("-"))),
+        "Guias de convênio, relatório de terça (%s)" % dia,
         "",
-        "Verificadas: %d" % rel["verificadas"],
-        "Podem enviar: %d" % rel["ok"],
-        "Retidas antes do envio: %d de %d" % (rel["pendentes"], rel["verificadas"]),
-        "Valor retido: %s de %s (%s%%)" % (
-            _reais(rel["valor_em_risco"]), _reais(rel["valor_total"]),
-            str(rel["percentual_em_risco"]).replace(".", ",")),
+        "%d guias conferidas antes do envio." % rel["verificadas"],
+        "%d podem ir para o convênio." % rel["ok"],
+        "%d ficaram retidas, somando %s." % (rel["pendentes"], _reais(rel["valor_em_risco"])),
         "",
-        "Por decisão",
+        "Quem resolve as retidas:",
     ]
-    for g in ORDEM_GRAVIDADE:
-        nivel = rel["por_gravidade"][g]
-        linhas.append("- %s: %d guias, %s" % (nivel["nome"], nivel["guias"], _reais(nivel["em_risco"])))
-    linhas += ["", "O que precisa acontecer"]
     for passo in sorted(rel["por_proximo_passo"].values(), key=lambda p: -p["em_risco"]):
         if passo["guias"]:
-            linhas.append("- %s: %d guias, %s%s" % (passo["nome"], passo["guias"], _reais(passo["em_risco"]),
-                                                   "" if passo["e_receita"] else " (não é dinheiro a receber)"))
-    linhas += ["", "Por tipo de problema"]
-    for t in rel["por_tipo"]:
-        linhas.append("- %s: %d guias, %s" % (t["nome"], t["guias"], _reais(t["em_risco"])))
-    linhas += ["", "Por unidade"]
-    for nome, g in sorted(rel["por_unidade"].items()):
-        linhas.append("- %s: %d de %d retidas, %s" % (nome, g["pendentes"], g["guias"], _reais(g["em_risco"])))
-    linhas += ["", "Por convênio"]
-    for nome, g in sorted(rel["por_convenio"].items()):
-        linhas.append("- %s: %d de %d retidas, %s" % (nome, g["pendentes"], g["guias"], _reais(g["em_risco"])))
+            linhas.append("- %s: %d, %s%s" % (passo["nome"], passo["guias"], _reais(passo["em_risco"]),
+                                              "" if passo["e_receita"] else " (não é dinheiro a receber)"))
+    linhas += ["", "Problemas mais comuns:"]
+    for t in rel["por_tipo"][:3]:
+        linhas.append("- %s: %d" % (t["nome"], t["guias"]))
+    decidir = []
+    if rel.get("para_renovar"):
+        decidir.append("- Pedir renovação de %d autorizações perto de vencer ou de esgotar." % len(rel["para_renovar"]))
+    if rel.get("confirmar_recibo"):
+        decidir.append("- Confirmar %d guias com pedido de recibo para reembolso antes de enviar." % len(rel["confirmar_recibo"]))
+    if decidir:
+        linhas += ["", "Para esta semana:"] + decidir
     return "\n".join(linhas)

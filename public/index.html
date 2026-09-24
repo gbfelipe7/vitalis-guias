@@ -8,7 +8,7 @@
 <script>try { if (localStorage.getItem('vitalis-tema') === 'escuro') document.documentElement.dataset.tema = 'escuro'; } catch (e) {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=EB+Garamond:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
 --page:#f0efea;--panel:#fcfcfa;--card:#f6f5f0;--card2:#eeede7;
@@ -19,6 +19,8 @@
 --warn:#b56d12;--warn-soft:rgba(241,163,60,.18);
 --bad:#c2453a;--bad-soft:rgba(194,69,58,.10);
 --sans:'Figtree',system-ui,-apple-system,sans-serif;--serif:'EB Garamond',Georgia,serif;
+/* números na Geist, como no Fibo Hub */
+--num:'Geist',system-ui,sans-serif;--num-w:500;
 --seg:0 1px 2px rgba(28,28,26,.10);
 }
 :root[data-tema="escuro"]{color-scheme:dark;
@@ -34,7 +36,7 @@ body{margin:0;background:var(--page);color:var(--ink);font:13.5px/1.45 var(--san
 a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:2px}
 a:hover{text-decoration-color:var(--ink)}
 button,input,select,textarea{font:inherit;color:inherit}
-.num,td.n{font-variant-numeric:tabular-nums}
+.num,td.n,.barra .v,.contagem{font-family:var(--num);font-variant-numeric:tabular-nums}
 
 /* casca */
 .app{display:grid;grid-template-columns:212px minmax(0,1fr);min-height:100vh}
@@ -66,7 +68,7 @@ h2{font-size:12.5px;font-weight:600;letter-spacing:.02em;margin:0}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:12px}
 .kpi{background:var(--card);border-radius:12px;padding:16px 18px}
 .kpi .r{font-size:12.5px;color:var(--ink3)}
-.kpi .n{font-family:var(--serif);font-size:34px;line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi .n{font-family:var(--num);font-weight:var(--num-w);font-size:32px;line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .kpi .d{font-size:12px;color:var(--muted);margin-top:4px}
 
 /* decisão */
@@ -95,7 +97,7 @@ h2{font-size:12.5px;font-weight:600;letter-spacing:.02em;margin:0}
 .chamada{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:12px;margin-top:22px}
 .chamada .frase{margin-top:0}
 .emjogo{background:var(--card);border-radius:14px;padding:18px 20px;font-size:12.5px;color:var(--ink2);line-height:1.5}
-.emjogo .n{font-family:var(--serif);font-size:30px;line-height:1.1;color:var(--ink);margin:4px 0 6px}
+.emjogo .n{font-family:var(--num);font-weight:var(--num-w);font-size:28px;letter-spacing:-.02em;line-height:1.1;color:var(--ink);margin:4px 0 6px}
 .destaque{font-family:var(--serif);font-size:19px;line-height:1.35;margin:14px 0 0;color:var(--ink)}
 .lista{width:100%;border-collapse:collapse;min-width:0;font-size:13px}
 .lista td{padding:8px 6px;border-bottom:1px solid var(--line)}
@@ -172,7 +174,7 @@ tr.det td{background:var(--card);padding:14px 16px}
 .conf .nome .ponto{width:12px;height:12px}
 .conf .exp{color:var(--ink2);margin-top:6px}
 .conf .dinheiro{margin-top:12px;font-size:13px}
-.conf .dinheiro b{font-family:var(--serif);font-size:20px;font-weight:400}
+.conf .dinheiro b{font-family:var(--num);font-size:18px;font-weight:var(--num-w)}
 .conf .bloco{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .conf .regra{font-size:12.5px;color:var(--ink2);line-height:1.55}
 .vazio{color:var(--ink3)}
@@ -183,12 +185,20 @@ tr.det td{background:var(--card);padding:14px 16px}
 /* como funciona */
 .passos{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 .passo{background:var(--card);border-radius:12px;padding:16px}
-.passo .k{font-family:var(--serif);font-size:26px;line-height:1;color:var(--ink3)}
+.passo .k{font-family:var(--num);font-weight:var(--num-w);font-size:22px;line-height:1;color:var(--ink3)}
 .passo b{display:block;font-weight:500;margin-top:10px}
 .passo p{margin:4px 0 0;color:var(--ink2);font-size:13px}
+.passo{display:flex;flex-direction:column}
+.ia{margin-top:auto;padding-top:10px;font-size:11.5px;color:var(--muted)}
+.ia.sim{color:var(--warn)}
+.ia.sim::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--warn);margin-right:6px;vertical-align:1px}
+.leg{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
+.zap{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:20px;align-items:start}
+.zap img{width:100%;border-radius:12px;display:block;background:var(--card)}
+.bolha{background:var(--good-soft);border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13px;color:var(--ink);margin-top:8px}
 .decisoes{display:grid;gap:10px}
 .decisao{display:grid;grid-template-columns:220px minmax(0,1fr) 90px;gap:16px;align-items:start;background:var(--card);border-radius:12px;padding:14px 18px}
-.decisao .q{font-family:var(--serif);font-size:24px;text-align:right;line-height:1}
+.decisao .q{font-family:var(--num);font-weight:var(--num-w);font-size:22px;letter-spacing:-.02em;text-align:right;line-height:1}
 .decisao .q small{display:block;font-family:var(--sans);font-size:11.5px;color:var(--muted);margin-top:4px}
 .decisao p{margin:0}
 .decisao .ex{font-size:12.5px;color:var(--ink3);margin-top:4px}
@@ -208,6 +218,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   .campos{grid-template-columns:1fr}
   .grade2{grid-template-columns:1fr}
   .kpis{grid-template-columns:1fr 1fr}.kpi .n{font-size:28px}
+  .zap{grid-template-columns:1fr}
   #v-guias table{min-width:560px}
   #v-guias th:nth-child(2),#v-guias td:nth-child(2),#v-guias th:nth-child(4),#v-guias td:nth-child(4),#v-guias th:nth-child(8),#v-guias td:nth-child(8){display:none}
   tr.det .detbox{position:sticky;left:0;max-width:calc(100vw - 72px)}
@@ -314,12 +325,25 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         <h2>O caminho de uma guia</h2>
         <div class="pergunta">O mesmo conferente atende a página, a API e o Claude.</div>
         <div class="passos">
-          <div class="passo"><div class="k">1</div><b>Entra</b><p>Pela página, pela API do sistema de gestão ou pelo Claude.</p></div>
-          <div class="passo"><div class="k">2</div><b>É arrumada</b><p>Datas e valores num formato só. O que não dá para ler segura a guia.</p></div>
-          <div class="passo"><div class="k">3</div><b>A observação é lida</b><p>O que a recepção anotou vira fato. Texto que ninguém entendeu segura a guia.</p></div>
-          <div class="passo"><div class="k">4</div><b>A regra decide</b><p>Campos, validade, sessões, cobertura, valor, profissional, prazo e repetida.</p></div>
-          <div class="passo"><div class="k">5</div><b>Sai a decisão</b><p>Com o motivo, o que fazer e quem resolve.</p></div>
+          <div class="passo"><div class="k">1</div><b>Entra</b><p>Pela página, pela API do sistema de gestão ou pelo Claude.</p><span class="ia sim">IA só em texto corrido, para separar os campos</span></div>
+          <div class="passo"><div class="k">2</div><b>É arrumada</b><p>Datas e valores num formato só. O que não dá para ler segura a guia.</p><span class="ia">sem IA</span></div>
+          <div class="passo"><div class="k">3</div><b>A observação é lida</b><p>Palavras-chave primeiro. Texto que ninguém entendeu segura a guia.</p><span class="ia sim">IA só no que sobrar, e só para segurar</span></div>
+          <div class="passo"><div class="k">4</div><b>As regras conferem</b><p>As 12 conferências da tabela abaixo.</p><span class="ia">sem IA</span></div>
+          <div class="passo"><div class="k">5</div><b>Sai a decisão</b><p>Com o motivo, o que fazer e quem resolve. Se retida, sai o aviso.</p><span class="ia">sem IA</span></div>
         </div>
+      </div>
+
+      <div class="secao">
+        <h2>As conferências</h2>
+        <div class="pergunta">Nesta ordem, em toda guia. Clique no número para ver as guias do lote.</div>
+        <div class="tabela" style="border-top:0"><table class="lista" id="tabConferencias" style="min-width:680px"></table></div>
+        <div class="nota" id="avisosLista"></div>
+      </div>
+
+      <div class="secao">
+        <h2>A regra de cada convênio</h2>
+        <div class="pergunta">Do arquivo da Carla. As frases em texto livre eu li uma vez e escrevi como regra.</div>
+        <div class="tabela" style="border-top:0"><table class="lista" id="tabConvenios" style="min-width:680px"></table></div>
       </div>
 
       <div class="secao">
@@ -330,8 +354,8 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
 
       <div class="secao grade2">
         <div class="cartao">
-          <h2>Onde entra IA</h2>
-          <p style="margin:8px 0 0">Só para ler texto: a guia colada e a observação da recepção. Ela pode segurar uma guia, nunca liberar. O lote de agosto roda sem IA.</p>
+          <h2>Em produção</h2>
+          <p style="margin:8px 0 0">Numa VPS no Brasil: o conferente, o banco de dados, o n8n e o Nginx em containers. Token na API, backup diário, e o aviso de guia retida entregue no WhatsApp de quem resolve.</p>
         </div>
         <div class="cartao">
           <h2>MCP, Skill e código</h2>
@@ -602,6 +626,42 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   const FRASE_PASSO = {convenio: 'depende do convênio', particular: 'vai ser cobrado do paciente como particular',
     financeiro: 'depende de uma decisão do financeiro', recepcao: 'depende da recepção completar ou corrigir a guia',
     confirmar: 'depende de alguém confirmar antes de enviar', copia: 'é cópia e não é dinheiro a receber'};
+  // Imagem de 1080 x 1350 para o WhatsApp: os números da semana e dois mini gráficos.
+  // Sempre no tema claro, com as mesmas fontes da página.
+  async function imagemDoRelatorio(rel) {
+    try { await Promise.all(['500 96px Geist', '600 44px Figtree', '400 26px Figtree'].map((f) => document.fonts.load(f))); } catch (_) {}
+    const W = 1080, H = 1350, P = 84, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const c = cv.getContext('2d'), cor = {fundo: '#f0efea', folha: '#fcfcfa', trilho: '#eeede7', tinta: '#1c1c1a', t3: '#6a6963', claro: '#8f8e87'};
+    const fonte = (peso, tam, fam) => { c.font = `${peso} ${tam}px ${fam === 'num' ? "'Geist', system-ui" : "'Figtree', system-ui"}`; };
+    const ret = (x, y, w, h, r, f) => { c.fillStyle = f; c.beginPath(); c.roundRect(x, y, w, h, r); c.fill(); };
+    ret(0, 0, W, H, 0, cor.fundo); ret(36, 36, W - 72, H - 72, 32, cor.folha);
+    let y = P + 44;
+    c.fillStyle = cor.tinta; fonte(600, 44); c.fillText('Relatório de terça', P, y);
+    y += 46; c.fillStyle = cor.t3; fonte(400, 26); c.fillText('Guias de convênio conferidas antes do envio · ' + br(rel.gerado_em), P, y);
+    y += 130;
+    [[rel.verificadas, 'conferidas'], [rel.ok, 'podem ir'], [rel.pendentes, 'retidas']].forEach(([n, r], i) => {
+      const x = P + i * 300; c.fillStyle = cor.tinta; fonte(500, 96, 'num'); c.fillText(String(n), x, y);
+      c.fillStyle = cor.t3; fonte(400, 26); c.fillText(r, x, y + 40);
+    });
+    y += 130; c.fillStyle = cor.tinta; fonte(500, 60, 'num'); const v = reaisInt(rel.valor_em_risco); c.fillText(v, P, y);
+    const lv = c.measureText(v).width; c.fillStyle = cor.t3; fonte(400, 26); c.fillText('retidos, de ' + reaisInt(rel.valor_total), P + lv + 18, y);
+    const barras = (titulo, itens) => {
+      y += 84; c.fillStyle = cor.tinta; fonte(600, 30); c.fillText(titulo, P, y); y += 16;
+      const max = Math.max(1, ...itens.map((i) => i.v));
+      itens.forEach((i) => {
+        y += 48; c.fillStyle = cor.tinta; fonte(400, 26); c.fillText(i.nome, P, y);
+        fonte(500, 26, 'num'); const txt = i.valor; c.fillText(txt, W - P - c.measureText(txt).width, y);
+        ret(P, y + 12, W - 2 * P, 14, 4, cor.trilho); ret(P, y + 12, Math.max(6, (W - 2 * P) * i.v / max), 14, 4, i.claro ? cor.claro : cor.tinta);
+        y += 14;
+      });
+    };
+    const passos = Object.values(rel.por_proximo_passo).filter((p) => p.guias).sort((a, b) => (a.e_receita ? 0 : 1) - (b.e_receita ? 0 : 1) || b.em_risco - a.em_risco);
+    barras('Quem resolve', passos.map((p) => ({nome: p.nome, valor: reaisInt(p.em_risco), v: p.em_risco, claro: !p.e_receita})));
+    barras('Problemas mais comuns', rel.por_tipo.slice(0, 3).map((t) => ({nome: t.nome, valor: t.guias + ' guias', v: t.guias})));
+    c.fillStyle = cor.claro; fonte(400, 22); c.fillText('Vitalis · conferência de guias antes do envio', P, H - P + 10);
+    return cv;
+  }
+
   async function carregarTerca() {
     try {
       const resp = await fetch('/api/relatorio', novas.length
@@ -633,10 +693,25 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         </div>
         <div class="nota">Com tão poucas guias por grupo, a diferença entre unidades e convênios pode ser acaso.</div>
         <div class="secao">
-          <h2>Texto para o WhatsApp</h2>
-          <div class="exemplos" style="margin:6px 0 10px"><button class="btn2" id="copiar">Copiar texto</button><span id="copiado"></span></div>
-          <pre id="rTexto">${esc(d.texto)}</pre>
+          <h2>Para mandar no WhatsApp</h2>
+          <div class="pergunta">A imagem vai primeiro, o texto logo depois.</div>
+          <div class="zap">
+            <div><img id="rImagem" alt="Resumo do relatório de terça em imagem"><div class="exemplos" style="margin-top:8px"><button class="btn2" id="baixarImg">Baixar imagem</button><button class="quieto" id="copiarImg">Copiar imagem</button></div></div>
+            <div><pre id="rTexto">${esc(d.texto)}</pre><div class="exemplos" style="margin-top:8px"><button class="btn2" id="copiar">Copiar texto</button><span id="copiado"></span></div></div>
+          </div>
         </div>`;
+      imagemDoRelatorio(rel).then((canvas) => {
+        $('rImagem').src = canvas.toDataURL('image/png');
+        const blob = () => new Promise((ok) => canvas.toBlob(ok, 'image/png'));
+        $('baixarImg').addEventListener('click', async () => {
+          const a = document.createElement('a'); a.href = URL.createObjectURL(await blob()); a.download = 'relatorio-de-terca.png'; a.click();
+        });
+        $('copiarImg').addEventListener('click', async () => {
+          try { await navigator.clipboard.write([new ClipboardItem({'image/png': await blob()})]); $('copiado').textContent = 'Imagem copiada.'; }
+          catch (_) { $('copiado').textContent = 'Use Baixar imagem.'; }
+          setTimeout(() => { $('copiado').textContent = ''; }, 2500);
+        });
+      });
       $('copiar').addEventListener('click', async () => {
         try { await navigator.clipboard.writeText(d.texto); $('copiado').textContent = 'Copiado.'; } catch (_) { $('copiado').textContent = 'Selecione o texto e copie.'; }
         setTimeout(() => { $('copiado').textContent = ''; }, 2500);
@@ -664,6 +739,47 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         <div><p>${expl[g]}</p><div class="ex">${ex[g]}</div></div>
         <div class="q">${cont[g]}<small>${reaisInt(val[g])}</small></div>
       </div>`).join('');
+  }
+
+  const CONFERENCIAS = [
+    {o: 'O convênio está nas regras', de: 'Regra do convênio', r: ['convenio_desconhecido']},
+    {o: 'Os campos que o convênio exige estão preenchidos', de: 'Regra do convênio', r: ['campo_vazio']},
+    {o: 'Tem número de autorização. Por telefone, só onde o convênio aceita e dentro do prazo', de: 'Regra do convênio', r: ['sem_autorizacao', 'sem_autorizacao_verbal_ok', 'sem_autorizacao_verbal_vencida', 'sem_autorizacao_verbal_nao_aceita']},
+    {o: 'Paciente, procedimento, sessão e valor preenchidos e legíveis', de: 'Cuidado meu', r: ['sem_paciente', 'sem_procedimento', 'sem_sessao', 'sem_valor']},
+    {o: 'Datas legíveis, lançamento depois do atendimento, nada no futuro', de: 'Cuidado meu', r: ['sem_data_atendimento', 'data_ilegivel', 'lancada_antes', 'atendimento_no_futuro']},
+    {o: 'A autorização vale na data do atendimento', de: 'Regra do convênio', r: ['autorizacao_vencida', 'autorizacao_vencida_com_nova', 'nova_tambem_nao_cobre']},
+    {o: 'A sessão cabe no limite da autorização', de: 'Regra do convênio', r: ['sessao_acima', 'sessao_acima_do_declarado']},
+    {o: 'O convênio cobre o procedimento, e código e valor batem com a tabela', de: 'Regra do convênio', r: ['procedimento_desconhecido', 'nao_coberto', 'descricao_divergente', 'valor_divergente']},
+    {o: 'O registro do profissional combina com o procedimento (CREFITO ou CRM)', de: 'Dicionário de dados', r: ['profissional_incompativel']},
+    {o: 'O prazo de envio do convênio não venceu', de: 'Regra do convênio', r: ['prazo_vencido']},
+    {o: 'O que a recepção anotou não muda a guia', de: 'Observação da recepção', ia: true, r: ['particular', 'procedimento_real', 'remarcada', 'verbal_com_numero', 'autorizacao_nova_solta', 'observacao_nao_reconhecida', 'observacao_cortada']},
+    {o: 'A guia não é cópia de outra', de: 'Cuidado meu', r: ['duplicata_exata', 'duplicata_suspeita', 'mesma_sessao']},
+  ];
+  // A decisão que cada regra dá, do jeito que está em motor/verificar.py.
+  const GRAV_DA_REGRA = {convenio_desconhecido: 'corrigir', campo_vazio: 'corrigir', sem_autorizacao: 'corrigir', sem_autorizacao_verbal_ok: 'corrigir',
+    sem_autorizacao_verbal_vencida: 'nao_enviar', sem_autorizacao_verbal_nao_aceita: 'corrigir', sem_paciente: 'corrigir', sem_procedimento: 'corrigir',
+    sem_sessao: 'corrigir', sem_valor: 'corrigir', sem_data_atendimento: 'corrigir', data_ilegivel: 'corrigir', lancada_antes: 'conferir',
+    atendimento_no_futuro: 'conferir', autorizacao_vencida: 'nao_enviar', autorizacao_vencida_com_nova: 'corrigir', nova_tambem_nao_cobre: 'nao_enviar',
+    sessao_acima: 'nao_enviar', sessao_acima_do_declarado: 'conferir', procedimento_desconhecido: 'corrigir', nao_coberto: 'nao_enviar',
+    descricao_divergente: 'conferir', valor_divergente: 'corrigir', profissional_incompativel: 'conferir', prazo_vencido: 'nao_enviar',
+    particular: 'nao_enviar', procedimento_real: 'corrigir', remarcada: 'conferir', verbal_com_numero: 'conferir', autorizacao_nova_solta: 'conferir',
+    observacao_nao_reconhecida: 'conferir', observacao_cortada: 'conferir', duplicata_exata: 'nao_enviar', duplicata_suspeita: 'conferir', mesma_sessao: 'conferir'};
+  function desenharRegras() {
+    $('tabConferencias').innerHTML = '<thead><tr><th>#</th><th>O que confere</th><th>De onde vem</th><th>Se falhar</th><th class="n">No lote</th></tr></thead><tbody>'
+      + CONFERENCIAS.map((c, i) => {
+        const hits = LOTE.guias.filter((g) => g.pendencias.some((p) => c.r.includes(p.regra)));
+        const graves = ORDEM.filter((g) => c.r.some((k) => GRAV_DA_REGRA[k] === g));
+        return `<tr><td class="num">${i + 1}</td><td>${c.o}${c.ia ? ' <span class="ia sim" style="padding:0">IA pode ajudar a ler</span>' : ''}</td><td class="vazio">${c.de}</td>
+          <td style="white-space:nowrap">${graves.map((g) => `<span class="leg"><i class="ponto ${g}"></i>${CURTO[g]}</span>`).join('<br>')}</td>
+          <td class="n">${hits.length ? `<span class="clicavel" ${filtro({ids: hits.map((g) => g.id_guia), rotulo: c.o})}>${hits.length}</span>` : '<span class="vazio">0</span>'}</td></tr>`;
+      }).join('') + '</tbody>';
+    $('avisosLista').textContent = 'Sem segurar a guia, o conferente também avisa: última sessão da autorização, recibo para reembolso, código achado pela descrição, validade longa demais e prazo de envio chegando.';
+    const R = LOTE.regras, nomeProc = (c) => (R.procedimentos.find((p) => p.codigo === c) || {}).descricao || c;
+    $('tabConvenios').innerHTML = '<thead><tr><th>Convênio</th><th>Exige</th><th>Sessões</th><th>Autorização</th><th>Enviar em</th><th>Não cobre</th></tr></thead><tbody>'
+      + R.convenios.map((c) => `<tr><td>${esc(c.nome)}</td><td class="vazio">${c.campos_obrigatorios.map((k) => NOME_CAMPO[k] || k).join(', ')}</td>
+          <td>${c.limite_sessoes}</td><td>${c.validade_maxima_dias} dias</td><td>${c.prazo_envio_dias} dias</td>
+          <td class="vazio">${R.procedimentos.filter((p) => !c.cobertos.includes(p.codigo)).map((p) => esc(p.descricao.toLowerCase())).join(', ') || 'cobre todos'}</td></tr>
+          <tr><td></td><td colspan="5" class="vazio" style="padding-top:0">${esc(c.observacao)}</td></tr>`).join('') + '</tbody>';
   }
 
   /* ---------------- lançar guia ---------------- */
@@ -824,6 +940,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       ${r.pendencias.length ? `<div class="bloco">${pendencias(r)}</div>` : ''}
       ${r.alertas.length ? `<div class="bloco">${r.alertas.map((a) => `<div class="aviso" style="margin:0 0 6px">Aviso: ${esc(a)}</div>`).join('')}</div>` : ''}
       ${r.enviar_ate ? `<div class="bloco regra">Enviar ao convênio até <b>${br(r.enviar_ate)}</b>.</div>` : ''}
+      ${final && r.aviso ? `<div class="bloco"><h2>Aviso no WhatsApp</h2><div class="nota" style="margin-top:2px">Simulação. Para: ${esc(r.aviso.para)}</div><div class="bolha">${esc(r.aviso.texto)}</div></div>` : ''}
       ${textoRegra()}
       <div class="nota">${final ? `Observação lida por ${esc(r.observacao_lida_por || 'ninguém, estava vazia')}.` : 'Sem IA enquanto você preenche. Ao lançar, a IA lê a observação, se estiver ligada.'}</div>`;
   }
@@ -913,7 +1030,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       const tipo = d.guias.find((r) => r.id_guia === t.ids[0]).tipo_principal;
       $('fTipo').insertAdjacentHTML('beforeend', `<option value="${esc(tipo)}">${esc(t.nome)}</option>`);
     });
-    desenharSegmento(); desenharLinhas(); desenharVisao(); desenharLegenda(); montarForm(); desenharNovas();
+    desenharSegmento(); desenharLinhas(); desenharVisao(); desenharLegenda(); desenharRegras(); montarForm(); desenharNovas();
   }).catch(() => {
     $('visao').innerHTML = '<div class="nota erro">Não consegui carregar as guias. Recarregue a página.</div>';
   });

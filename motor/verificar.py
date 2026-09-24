@@ -16,7 +16,7 @@ from .normalizar import normalizar_guia, sem_acento
 from .observacao import ler_observacao
 from .regras import achar_convenio, achar_procedimento
 from .textos import (ALERTA, CORRIGIR, DECISOES, EXPLICACAO, MOTIVO, NOMES_DOS_CAMPOS, ORDEM_GRAVIDADE,
-                     PROXIMOS_PASSOS, TIPOS, reais)
+                     PROXIMOS_PASSOS, TIPOS, AVISO_PARA, AVISO_TEXTO, reais)
 
 
 def _br(dia):
@@ -57,6 +57,7 @@ def _pendencia(tipo, gravidade, chave, corrigir=None, passo=None, **dados):
         "motivo": MOTIVO[chave].format(**dados),
         "corrigir": CORRIGIR[acao].format(**dados),
         "proximo_passo": passo,
+        "regra": chave,
     }
 
 
@@ -378,6 +379,12 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
         "o_que_significa": EXPLICACAO[gravidade],
         "proximo_passo": passo,
         "proximo_passo_nome": PROXIMOS_PASSOS.get(passo, ""),
+        "aviso": {
+            "para": AVISO_PARA[passo].format(unidade=guia["unidade"] or "sem unidade"),
+            "texto": AVISO_TEXTO.format(guia=guia["id_guia"], unidade=guia["unidade"] or "sem unidade",
+                                        convenio=guia["convenio"] or "sem convênio",
+                                        problema=pendencias[0]["titulo"].lower(), acao=pendencias[0]["corrigir"]),
+        } if pendente else None,
         # Quanto sobra da autorização depois deste atendimento. Serve para pedir a renovação
         # antes da próxima sessão, e não depois que a guia já nasceu errada.
         "folga_da_autorizacao": {

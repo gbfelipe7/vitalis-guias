@@ -45,6 +45,18 @@ EXPLICACAO = {
 }
 GRAVIDADES = {chave: DECISOES[chave] for chave in ("nao_enviar", "corrigir", "conferir")}
 
+# Aviso que sai na hora em que a guia fica retida, para quem resolve. Em produção o n8n só entrega
+# no WhatsApp. Só vai o número da guia, a unidade e o que fazer: nada de nome de paciente nem CID.
+AVISO_PARA = {
+    "recepcao": "Recepção da unidade {unidade}",
+    "copia": "Recepção da unidade {unidade}",
+    "particular": "Recepção da unidade {unidade}",
+    "convenio": "Quem pede autorização aos convênios",
+    "financeiro": "Financeiro",
+    "confirmar": "Carla",
+}
+AVISO_TEXTO = "Guia {guia} ({unidade}, {convenio}) ficou retida: {problema}. O que fazer: {acao}"
+
 # O que precisa acontecer para a guia retida sair do lugar, e quem resolve.
 # É outra forma de olhar as mesmas pendências: a decisão diz se a guia pode ir, o próximo
 # passo diz quem a Carla chama. A ordem vai do mais definitivo para o mais leve.

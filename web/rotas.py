@@ -7,7 +7,7 @@ Assim o que roda na minha máquina é exatamente o que roda publicado.
 from motor import (carregar_guias, carregar_regras, consultar_regra, montar_relatorio,
                    relatorio_em_texto, verificar_lote, verificar_nova)
 from motor.entrada import interpretar_texto
-from motor.normalizar import CAMPOS, ler_data, limpar_texto
+from motor.normalizar import CAMPOS, ler_data, limpar_texto, sem_acento
 
 MAXIMO_DE_NOVAS = 50
 
@@ -43,8 +43,11 @@ def _regras_para_o_formulario(regras):
                        "limite_sessoes": c["limite_sessoes_por_autorizacao"],
                        "prazo_envio_dias": c["prazo_envio_dias"],
                        "validade_maxima_dias": c["validade_maxima_autorizacao_dias"],
-                       "observacao": c.get("observacao", "")}
+                       "observacao": c.get("observacao", ""),
+                       "extra": regras["extras_convenio"].get(sem_acento(c["nome"]), {})}
                       for c in regras["convenios"].values()],
+        "registro_por_procedimento": {k: v for k, v in regras["registro_por_procedimento"].items() if not k.startswith("_")},
+        "dias_de_alerta_prazo": regras["dias_de_alerta_prazo"],
     }
 
 

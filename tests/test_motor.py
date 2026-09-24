@@ -526,3 +526,21 @@ class TerceiraRodada(unittest.TestCase):
     def test_valor_em_reais_no_formato_da_clinica(self):
         r = verificar_nova(self._guia(valor="1200.50"), [], REGRAS, usar_ia=False, referencia=date(2026, 9, 22))
         self.assertTrue(any("R$ 1.200,50" in p["motivo"] for p in r["pendencias"]))
+
+    def test_aviso_vai_para_quem_resolve_sem_dado_do_paciente(self):
+        r = RESULTADOS["G-2608-0021"]
+        self.assertEqual(r["aviso"]["para"], "Recepção da unidade Norte")
+        self.assertNotIn(r["guia"]["paciente"], r["aviso"]["texto"])
+        self.assertIsNone(RESULTADOS["G-2608-0001"]["aviso"])
+        self.assertEqual(RESULTADOS["G-2608-0045"]["aviso"]["para"], "Carla")
+
+    def test_tabela_da_pagina_bate_com_o_codigo(self):
+        # a tela Como funciona mostra a decisão de cada regra: ela tem que ser a mesma do motor
+        import re, os
+        raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        codigo = open(os.path.join(raiz, "motor", "verificar.py"), encoding="utf-8").read()
+        pagina = open(os.path.join(raiz, "public", "index.html"), encoding="utf-8").read()
+        do_motor = {chave: grav for _, grav, chave in re.findall(r'_pendencia\(\s*"(\w+)",\s*"(\w+)",\s*"(\w+)"', codigo)}
+        bloco = re.search(r"const GRAV_DA_REGRA = \{(.*?)\};", pagina, re.S).group(1)
+        da_pagina = dict(re.findall(r"(\w+): '(\w+)'", bloco))
+        self.assertEqual(do_motor, da_pagina)
