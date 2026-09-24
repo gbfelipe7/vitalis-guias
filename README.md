@@ -44,6 +44,8 @@ curl -X POST https://vitalis-guias.vercel.app/api/verificar \
        "carteirinha": "111222333", "cid": "M54.5", "profissional_registro": "CREFITO-3 204411-F", "valor": "62.00"}}'
 ```
 
+Esse exemplo volta "Não enviar assim" de propósito: é a sessão 11 de uma autorização do Vitalcard, que cobre 10.
+
 ## O MCP
 
 Fica em `mcp_server/server.py`. Lê `dados/regras_convenio.json` e `dados/guias.csv` direto do disco e usa o mesmo motor da página.
@@ -53,7 +55,7 @@ Fica em `mcp_server/server.py`. Lê `dados/regras_convenio.json` e `dados/guias.
 | `consultar_regra(convenio, procedimento)` | Se o convênio cobre o procedimento, valor de referência, campos obrigatórios, limite de sessões, prazo de envio. |
 | `verificar_guia(id_guia ou os campos)` | Confere uma guia do lote ou uma guia nova. Devolve decisão, motivo e o que corrigir. |
 | `listar_pendentes(convenio, unidade)` | As guias do lote que não podem ser enviadas ainda. |
-| `relatorio_de_terca()` | O resumo do Dr. Renato. |
+| `relatorio_de_terca(semana)` | O resumo do Dr. Renato. Com `semana` (`ultima` ou uma data, como 2026-08-24), só as guias lançadas de segunda a domingo daquela semana; vazio, o lote inteiro. |
 
 Instalar. O SDK de MCP pede Python 3.10 ou mais novo. No macOS o `python3` do sistema costuma ser 3.9: confira com `python3 --version` e, se for o caso, use `python3.13` (ou outro que você tenha) na linha do venv.
 
@@ -170,11 +172,12 @@ Depois de ver a primeira versão, pedi para refazer quatro coisas: a entrada da 
 - **Envio automático do relatório de terça.** O endereço `GET /api/relatorio` está pronto; o agendamento no n8n (toda terça às 7h30, para o WhatsApp do Dr. Renato) não foi montado para a prova.
 - **Recibo para reembolso.** Oito guias têm a observação "Pediu recibo para reembolso do plano". Pode ser sinal de que o paciente pagou particular, e aí faturar o convênio seria cobrança em dobro. Os dados não confirmam, então o motor avisa e não segura. É pergunta para a Carla.
 - **Ligação real com o sistema de gestão.** O endereço está pronto; ler as guias novas e devolver a decisão ao sistema depende da API da clínica. Hoje a conferência informa, mas não impede o envio: em produção, o lote do convênio sairia só com as guias que podem ir.
+- **CID combinando com o procedimento.** O motor não confere se o CID faz sentido para o procedimento, porque isso não está nas regras dos convênios. Seria um alerta, não um motivo para segurar a guia.
 - **Histórico de autorizações.** As 80 guias são o recorte de agosto, então o motor confere o que a guia declara e não tenta reconstruir a sequência de sessões de cada autorização.
 
 ### Quanto tempo levou
 
-Cerca de 5 horas de trabalho meu, dentro do teto sugerido pela prova.
+Cerca de 5 horas de trabalho meu, espalhadas entre 21 e 24/09, dentro do teto sugerido pela prova. O Claude Code gerou e testou o código nesse tempo.
 
 ### Próximos passos
 

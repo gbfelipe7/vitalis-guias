@@ -113,6 +113,9 @@ def verificar_guia(
             return {"encontrada": False, "motivo": "A guia %s não está no lote de agosto." % id_guia}
         return _enxuto(do_lote)
 
+    base = next((g for g in GUIAS if (g.get("id_guia") or "").strip().upper() == (id_guia or "").strip().upper()), None)
+    if base is not None:                             # número do lote com campos: os campos passados corrigem a guia do lote
+        campos = {**{k: v for k, v in base.items() if v not in (None, "")}, **campos}
     campos["id_guia"] = id_guia
     return _enxuto(verificar_nova(campos, GUIAS, REGRAS, usar_ia=False))
 

@@ -20,9 +20,9 @@ Quem decide é o MCP `vitalis-guias`, não você. Seu trabalho é separar os cam
 
 2. **Se a pessoa só passou o número de uma guia do lote** (formato G-2608-0041), chame `verificar_guia` só com `id_guia`.
 
-3. **Chame `verificar_guia`** com os campos. Faça isso sempre, mesmo que o erro pareça óbvio. Não dê veredito de cabeça.
+3. **Se faltar o convênio, o procedimento ou a data do atendimento**, pergunte antes de chamar. Sem eles a conferência não vale.
 
-4. **Se faltar o convênio, o procedimento ou a data do atendimento**, pergunte antes de chamar. Sem eles a conferência não vale.
+4. **Chame `verificar_guia`** com os campos. Faça isso sempre, mesmo que o erro pareça óbvio. Não dê veredito de cabeça.
 
 5. **Responda neste formato**, curto, sem termo técnico:
 
