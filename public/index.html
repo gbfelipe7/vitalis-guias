@@ -201,6 +201,12 @@ tr.det td{background:var(--card);padding:14px 16px}
 svg .eixo{font:11px var(--num);fill:var(--muted)}
 .tag{display:inline-block;margin-top:3px;font-size:11px;font-family:var(--sans);color:var(--good);background:var(--good-soft);border-radius:5px;padding:0 6px}
 .lista-novas .tag{margin-top:0}
+.grafico{position:relative}
+.cartao .kpi{background:var(--panel)}
+.dica{display:none;position:absolute;top:8px;min-width:150px;background:var(--panel);border:1px solid var(--line2);border-radius:9px;padding:8px 10px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.08);pointer-events:none;z-index:2}
+.dica b{display:block;font-weight:500;margin-bottom:4px;color:var(--ink)}
+.dica div{display:flex;align-items:center;gap:6px;color:var(--ink2);margin-top:2px}
+.dica .num{margin-left:auto;color:var(--ink);font-weight:500;padding-left:12px}
 .bolha{background:var(--good-soft);border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13px;color:var(--ink);margin-top:8px}
 .decisoes{display:grid;gap:10px}
 .decisao{display:grid;grid-template-columns:220px minmax(0,1fr) 90px;gap:16px;align-items:start;background:var(--card);border-radius:12px;padding:14px 18px}
@@ -429,7 +435,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     document.querySelectorAll('.vista').forEach((s) => s.classList.toggle('on', s.id === 'v-' + v));
     document.querySelectorAll('.nav').forEach((a) => a.classList.toggle('on', a.dataset.v === v));
     if (v === 'terca') carregarTerca();
-    if (v === 'visao') desenharEvolucao();
+    if (v === 'visao') { desenharEvolucao(); desenharDiasDaSemana(); }
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', irPara);
@@ -599,12 +605,83 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     const ancora = (i) => pts.length > 1 && i === 0 ? 'start' : (pts.length > 1 && i === pts.length - 1 ? 'end' : 'middle');
     const eixoX = pts.map((p, i) => (i % passo === 0 || (i === pts.length - 1 && i % passo >= passo * 0.6)) ? `<text x="${x(i)}" y="${H - 8}" text-anchor="${ancora(i)}" class="eixo">${rotuloEvo(p.k, escalaEvo)}${p.parcial ? ' (parcial)' : ''}</text>` : '').join('');
     const larg = pts.length > 1 ? (W - m.l - m.r) / (pts.length - 1) : W - m.l - m.r;
-    const alvos = pts.map((p, i) => `<rect x="${x(i) - larg / 2}" y="${m.t}" width="${larg}" height="${H - m.t - m.b}" fill="transparent"><title>${rotuloEvo(p.k, escalaEvo)}: ${p.lancadas} lançadas, ${p.ok} podem ir, ${p.retidas} retidas</title></rect>`).join('');
+    const alvos = `<line id="evoGuia" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="var(--ink3)" stroke-width="1" stroke-dasharray="3 3" style="display:none"/>`
+      + SERIES.map((s) => `<circle class="evoMarca" data-k="${s.k}" r="5" fill="var(--panel)" stroke="${s.cor}" stroke-width="2.5" style="display:none"/>`).join('')
+      + `<rect id="evoAlvo" x="${m.l}" y="0" width="${W - m.l - m.r}" height="${H}" fill="transparent"/>`;
     const tot = SERIES.map((s) => pts.reduce((a, p) => a + p[s.k], 0));
     el.innerHTML = `<div class="legenda" style="margin:10px 0 6px">${SERIES.map((s, i) => `<span><i class="ponto" style="background:${s.cor}"></i>${s.nome} · <b class="num" style="font-weight:500;color:var(--ink)">${tot[i]}</b></span>`).join('')}</div>
-      <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Evolução das guias por ${escalaEvo}">${grade}${linhas}${eixoX}${alvos}</svg>
+      <div class="grafico"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Evolução das guias por ${escalaEvo}">${grade}${linhas}${eixoX}${alvos}</svg><div class="dica" id="evoDica"></div></div>
       <div class="nota" style="margin-top:4px">${escalaEvo === 'mes' && pts.length < 2 ? 'Por enquanto só existe agosto. Cada mês novo vira um ponto e forma a linha.' : (parcial ? 'O último período tem só parte dos dias, por isso a linha tracejada. ' : '') + 'Com poucas guias por período, subir e descer é normal. Tendência de verdade aparece com semanas de uso.'}</div>`;
+    ligarDicaEvolucao(pts, x, y, W);
   }
+  // Ao passar o mouse: linha-guia no ponto mais perto e a caixinha com os três números.
+  function ligarDicaEvolucao(pts, x, y, W) {
+    const svg = $('evolucao').querySelector('svg'), alvo = $('evoAlvo'), dica = $('evoDica'), guia = $('evoGuia');
+    if (!svg || !alvo || !pts.length) return;
+    const mostrar = (e) => {
+      const caixa = svg.getBoundingClientRect(), cx = ((e.touches ? e.touches[0].clientX : e.clientX) - caixa.left) * W / caixa.width;
+      let i = 0, perto = Infinity;
+      pts.forEach((_, k) => { const d = Math.abs(x(k) - cx); if (d < perto) { perto = d; i = k; } });
+      const p = pts[i];
+      guia.setAttribute('x1', x(i)); guia.setAttribute('x2', x(i)); guia.style.display = '';
+      svg.querySelectorAll('.evoMarca').forEach((c) => { c.setAttribute('cx', x(i)); c.setAttribute('cy', y(p[c.dataset.k])); c.style.display = ''; });
+      dica.innerHTML = `<b>${rotuloEvo(p.k, escalaEvo)}${p.parcial ? ' (parcial)' : ''}</b>` + SERIES.map((s) => `<div><i class="ponto" style="background:${s.cor}"></i>${s.nome}<span class="num">${p[s.k]}</span></div>`).join('')
+        + (p.lancadas ? `<div class="vazio">${Math.round(100 * p.retidas / p.lancadas)}% retidas</div>` : '');
+      dica.style.display = 'block';
+      const px = x(i) * caixa.width / W, larg = dica.offsetWidth;
+      dica.style.left = Math.min(Math.max(0, px + 12 + larg > caixa.width ? px - larg - 12 : px + 12), caixa.width - larg) + 'px';
+    };
+    const esconder = () => { dica.style.display = 'none'; guia.style.display = 'none'; svg.querySelectorAll('.evoMarca').forEach((c) => { c.style.display = 'none'; }); };
+    alvo.addEventListener('mousemove', mostrar); alvo.addEventListener('touchstart', mostrar, {passive: true});
+    alvo.addEventListener('mouseleave', esconder);
+  }
+
+  // ---------- por dia da semana: onde está o gargalo
+  let baseSemana = 'lancamento';
+  const DIAS = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
+  function desenharDiasDaSemana() {
+    const el = $('diasSemana'); if (!el || !DADOS) return;
+    const campo = baseSemana === 'lancamento' ? 'data_lancamento' : 'data_atendimento';
+    const d = DIAS.map((nome) => ({nome, n: 0, ret: 0, ids: []}));
+    DADOS.guias.forEach((r) => { const iso = paraISO(r.guia[campo]); if (!iso) return;
+      const k = (new Date(iso + 'T12:00:00').getDay() + 6) % 7; d[k].n++; d[k].ids.push(r.id_guia); if (r.decisao === 'PENDENTE') d[k].ret++; });
+    const com = d.filter((x) => x.n), mais = com.slice().sort((a, b) => b.n - a.n)[0], menos = com.slice().sort((a, b) => a.n - b.n)[0];
+    const maisRet = com.slice().sort((a, b) => b.ret - a.ret || b.n - a.n)[0], taxa = (x) => x.ret / x.n;
+    const pior = com.filter((x) => x.n >= 5).sort((a, b) => taxa(b) - taxa(a))[0] || maisRet;
+    const fds = d[5].n + d[6].n, fdsRet = d[5].ret + d[6].ret;
+    const W = Math.max(300, el.clientWidth || 600), H = 190, m = {l: 8, r: 8, t: 10, b: 28}, max = Math.max(1, ...d.map((x) => x.n));
+    const larg = (W - m.l - m.r) / 7, bw = Math.min(46, larg * 0.6), h = (v) => v * (H - m.t - m.b) / max;
+    const barras = d.map((x, i) => { const cx = m.l + larg * i + larg / 2, base = H - m.b;
+      return `<g class="dia" data-i="${i}"><rect x="${cx - larg / 2}" y="0" width="${larg}" height="${H}" fill="transparent"/>`
+        + `<rect x="${cx - bw / 2}" y="${base - h(x.n)}" width="${bw}" height="${h(x.n - x.ret)}" rx="3" fill="var(--good)" opacity=".85"/>`
+        + `<rect x="${cx - bw / 2}" y="${base - h(x.ret)}" width="${bw}" height="${h(x.ret)}" rx="3" fill="var(--bad)"/>`
+        + `<text x="${cx}" y="${H - 8}" text-anchor="middle" class="eixo">${x.nome.slice(0, 3)}</text></g>`; }).join('');
+    el.innerHTML = `<div class="kpis" style="margin:4px 0 14px">
+        <div class="kpi"><div class="r">Mais guias</div><div class="n" style="font-size:24px">${mais.nome}</div><div class="d">${mais.n} guias</div></div>
+        <div class="kpi"><div class="r">Mais retidas</div><div class="n" style="font-size:24px">${maisRet.nome}</div><div class="d">${maisRet.ret} de ${maisRet.n}</div></div>
+        <div class="kpi"><div class="r">Mais erro proporcional</div><div class="n" style="font-size:24px">${pior.nome}</div><div class="d">${pior.ret} de ${pior.n} retidas</div></div>
+        <div class="kpi"><div class="r">Menos guias</div><div class="n" style="font-size:24px">${menos.nome}</div><div class="d">${menos.n} guias${baseSemana === 'atendimento' && !d[5].n && !d[6].n ? ' · sem atendimento no fim de semana' : ''}</div></div>
+      </div>
+      <div class="legenda" style="margin:0 0 6px"><span><i class="ponto" style="background:var(--good)"></i>Podem ir</span><span><i class="ponto" style="background:var(--bad)"></i>Retidas</span></div>
+      <div class="grafico"><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Guias por dia da semana">${barras}</svg><div class="dica" id="semDica"></div></div>
+      <div class="honesto">${baseSemana === 'lancamento' && fds ? `Chama atenção: não há atendimento no fim de semana, mas ${fds} guias foram lançadas no sábado e no domingo, e ${fdsRet} ficaram retidas. Vale perguntar quem lança e por quê. ` : ''}Com 7 a 18 guias por dia, é pista para investigar, não conclusão.</div>`;
+    const svg = el.querySelector('svg'), dica = $('semDica');
+    svg.querySelectorAll('.dia').forEach((g) => {
+      g.addEventListener('mousemove', () => { const x = d[+g.dataset.i];
+        dica.innerHTML = `<b>${x.nome[0].toUpperCase() + x.nome.slice(1)}</b><div>Lançadas<span class="num">${x.n}</span></div><div>Podem ir<span class="num">${x.n - x.ret}</span></div><div>Retidas<span class="num">${x.ret}</span></div>${x.n ? `<div class="vazio">${Math.round(100 * x.ret / x.n)}% retidas</div>` : ''}`;
+        dica.style.display = 'block'; const caixa = svg.getBoundingClientRect(), cx = (m.l + larg * (+g.dataset.i) + larg / 2) * caixa.width / W, lg = dica.offsetWidth;
+        dica.style.left = Math.min(Math.max(0, cx + 14 + lg > caixa.width ? cx - lg - 14 : cx + 14), caixa.width - lg) + 'px'; });
+      g.addEventListener('mouseleave', () => { dica.style.display = 'none'; });
+      g.addEventListener('click', () => { const x = d[+g.dataset.i]; filtrarGuias({ids: x.ids, rotulo: (baseSemana === 'lancamento' ? 'Lançadas na ' : 'Atendidas na ') + x.nome}); });
+    });
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('#baseSemana button'); if (!b) return;
+    baseSemana = b.dataset.b;
+    document.querySelectorAll('#baseSemana button').forEach((x) => x.classList.toggle('on', x === b));
+    desenharDiasDaSemana();
+  });
+
   document.addEventListener('click', (e) => {
     const b = e.target.closest('#escalaEvo button'); if (!b) return;
     escalaEvo = b.dataset.e;
@@ -612,7 +689,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     desenharEvolucao();
   });
   let esperaEvo = null;
-  window.addEventListener('resize', () => { clearTimeout(esperaEvo); esperaEvo = setTimeout(desenharEvolucao, 150); });
+  window.addEventListener('resize', () => { clearTimeout(esperaEvo); esperaEvo = setTimeout(() => { desenharEvolucao(); desenharDiasDaSemana(); }, 150); });
 
   function desenharVisao() {
     const rel = DADOS.relatorio, guias = DADOS.guias;
@@ -676,6 +753,12 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         <div class="evo-topo"><div><h2>Evolução das guias</h2><div class="pergunta" style="margin-bottom:0">Lançadas, que podem ir e retidas, pela data de lançamento.</div></div>
           <div class="segmento" id="escalaEvo"><button data-e="dia" class="on">Dia</button><button data-e="semana">Semana</button><button data-e="mes">Mês</button></div></div>
         <div id="evolucao"></div>
+      </div>
+
+      <div class="secao cartao">
+        <div class="evo-topo"><div><h2>Por dia da semana</h2><div class="pergunta" style="margin-bottom:0">Onde está o gargalo. Passe o mouse nas barras; clique para ver as guias.</div></div>
+          <div class="segmento" id="baseSemana"><button data-b="lancamento" class="${baseSemana === 'lancamento' ? 'on' : ''}">Dia do lançamento</button><button data-b="atendimento" class="${baseSemana === 'atendimento' ? 'on' : ''}">Dia do atendimento</button></div></div>
+        <div id="diasSemana"></div>
       </div>
 
       <div class="secao cartao">
@@ -1133,7 +1216,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       } catch (_) {}
     }
     $('qtGuias').textContent = DADOS.guias.length;
-    desenharSegmento(); desenharLinhas(); desenharVisao(); desenharEvolucao(); desenharLegenda(); desenharRegras();
+    desenharSegmento(); desenharLinhas(); desenharVisao(); desenharEvolucao(); desenharDiasDaSemana(); desenharLegenda(); desenharRegras();
   }
 
   /* ---------------- início ---------------- */
