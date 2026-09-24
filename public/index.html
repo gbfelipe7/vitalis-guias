@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vitalis · guias antes do envio</title>
 <meta name="robots" content="noindex">
+<script>try { if (localStorage.getItem('vitalis-tema') === 'escuro') document.documentElement.dataset.tema = 'escuro'; } catch (e) {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
@@ -20,13 +21,13 @@
 --sans:'Figtree',system-ui,-apple-system,sans-serif;--serif:'EB Garamond',Georgia,serif;
 --seg:0 1px 2px rgba(28,28,26,.10);
 }
-@media (prefers-color-scheme:dark){:root{color-scheme:dark;
+:root[data-tema="escuro"]{color-scheme:dark;
 --page:#151514;--panel:#1c1c1b;--card:#242423;--card2:#2c2c2a;
 --line:rgba(236,235,230,.08);--line2:rgba(236,235,230,.18);
 --ink:#ecebe6;--ink2:#b3b2ab;--ink3:#a3a29b;--muted:#7d7c76;
 --action:#ecebe6;--action-ink:#1c1c1a;--hover:rgba(236,235,230,.07);
 --good:#63bfb3;--good-soft:rgba(99,191,179,.12);--warn:#f0b35a;--warn-soft:rgba(240,179,90,.14);
---bad:#ef8a7d;--bad-soft:rgba(239,138,125,.12);--seg:0 1px 2px rgba(0,0,0,.3)}}
+--bad:#ef8a7d;--bad-soft:rgba(239,138,125,.12);--seg:0 1px 2px rgba(0,0,0,.3)}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--page);color:var(--ink);font:13.5px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
@@ -45,7 +46,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav:hover{background:var(--hover);color:var(--ink)}
 .nav.on{background:var(--action);color:var(--action-ink)}
 .nav .qt{margin-left:auto;font-size:12px;color:inherit;opacity:.7}
-.rodape{margin-top:auto;padding:0 10px;font-size:12px;color:var(--muted);line-height:1.5}
+.rodape{padding:0 10px;font-size:12px;color:var(--muted);line-height:1.5}
+.tema{margin-top:auto;margin-bottom:12px;align-self:flex-start;height:28px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:var(--ink2);cursor:pointer;font-size:12.5px;white-space:nowrap}
+.tema:hover{background:var(--hover)}
 .folha{margin:10px 10px 10px 0;background:var(--panel);border-radius:16px;padding:36px 40px 56px;min-width:0}
 .vista{display:none;max-width:1180px}.vista.on{display:block}
 h1{font-size:24px;font-weight:500;margin:0;letter-spacing:-.01em}
@@ -190,6 +193,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   .side{position:static;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:14px 16px 6px;gap:4px}
   .marca{font-size:21px;padding:0 10px 0 0;flex:none}
   .marca small,.navlab,.rodape{display:none}
+  .tema{margin:0 0 0 auto;flex:none}
   .nav{flex:none;height:32px}
   .folha{margin:6px 8px 8px;padding:22px 16px 40px}
   .lancar{grid-template-columns:1fr}
@@ -216,6 +220,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     <a class="nav" href="#terca" data-v="terca">Relatório de terça</a>
     <div class="navlab">Sobre</div>
     <a class="nav" href="#como" data-v="como">Como funciona</a>
+    <button class="tema" id="tema" type="button" aria-label="Trocar o tema"></button>
     <div class="rodape">Regras dos convênios de <span id="versao">agosto/2026</span> · dados fictícios<br><a href="https://github.com/gbfelipe7/vitalis-guias">Código no GitHub</a></div>
   </aside>
 
@@ -356,6 +361,17 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   try { novas = JSON.parse(sessionStorage.getItem('vitalis-lancadas') || '[]'); } catch (_) { novas = []; }
   const LIMITE_NOVAS = 50;       // o mesmo MAXIMO_DE_NOVAS de web/rotas.py
   const guardarNovas = () => { novas = novas.slice(0, LIMITE_NOVAS); try { sessionStorage.setItem('vitalis-lancadas', JSON.stringify(novas)); } catch (_) {} };
+
+  /* ---------------- tema ---------------- */
+  // Claro é o padrão. A escolha fica guardada só neste navegador.
+  function mostrarTema() { $('tema').textContent = document.documentElement.dataset.tema === 'escuro' ? '◐ Tema claro' : '◐ Tema escuro'; }
+  $('tema').addEventListener('click', () => {
+    const escuro = document.documentElement.dataset.tema !== 'escuro';
+    if (escuro) document.documentElement.dataset.tema = 'escuro'; else delete document.documentElement.dataset.tema;
+    try { localStorage.setItem('vitalis-tema', escuro ? 'escuro' : 'claro'); } catch (_) {}
+    mostrarTema();
+  });
+  mostrarTema();
 
   /* ---------------- navegação ---------------- */
   const VISTAS = ['visao', 'guias', 'lancar', 'terca', 'como'];
