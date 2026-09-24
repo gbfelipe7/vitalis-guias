@@ -16,6 +16,7 @@ Etapa técnica do processo da Expert Integrado. Caso fictício da Clínica Vital
 | `mcp_server/` | O MCP, com quatro ferramentas. |
 | `skills/conferir-guia/` | A Skill para quem opera a clínica. |
 | `tests/` | 85 testes do motor. |
+| `prompts/` | O prompt mestre: o pedido ao Claude Code num texto só. |
 
 ## Como uma guia entra e como a decisão sai
 
@@ -197,6 +198,8 @@ Os dois lugares em que a IA entra têm o prompt no próprio código:
 - `motor/observacao.py`, função `_por_ia`: lê a observação da recepção e só pode acrescentar motivo para segurar.
 
 Os dois vão ao Gemini por `motor/ia.py`, com resposta em JSON. A Skill (`skills/conferir-guia/SKILL.md`) é o prompt do Claude para quem opera a clínica.
+
+O pedido ao Claude Code foi feito em várias rodadas. O [prompt mestre](prompts/prompt-mestre.md) junta tudo num pedido só: o contexto, as decisões que são minhas, o que construir e como testar. Não é o texto literal da conversa; foi escrito depois, para quem quiser reconstruir a solução.
 
 ### Como testei
 
