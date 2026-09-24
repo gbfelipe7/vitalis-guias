@@ -577,3 +577,12 @@ class TerceiraRodada(unittest.TestCase):
         outra = dict(base, id_guia="G-NOVA-9", unidade="Norte", numero_autorizacao="AUT000111", sessao_numero_na_autorizacao="4")
         r = verificar_nova(outra, GUIAS, REGRAS, usar_ia=False, referencia=date(2026, 8, 22))
         self.assertTrue(any(p["regra"] == "duplicata_suspeita" for p in r["pendencias"]))
+
+    def test_quanto_mais_tarde_lanca_mais_retida(self):
+        rel = montar_relatorio(list(RESULTADOS.values()))
+        faixas = rel["por_atraso"]
+        self.assertEqual(sum(f["guias"] for f in faixas), 80)
+        self.assertEqual((faixas[0]["guias"], faixas[0]["retidas"]), (19, 6))
+        self.assertEqual((faixas[-1]["guias"], faixas[-1]["retidas"]), (19, 11))
+        from motor.relatorio import relatorio_em_texto
+        self.assertIn("Lançar as guias no mesmo dia", relatorio_em_texto(rel))

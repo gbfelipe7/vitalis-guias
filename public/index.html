@@ -380,9 +380,10 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         <h2>Próximos passos</h2>
         <div class="pergunta">O que vem depois de segurar a guia errada.</div>
         <div class="passos">
-          <div class="passo"><div class="k">1</div><b>Conferir na chegada do paciente</b><p>O mesmo conferente no balcão: a autorização vale hoje, sobram sessões, o convênio cobre. Evita o maior bloco de guias retidas.</p></div>
-          <div class="passo"><div class="k">2</div><b>Ler o retorno do convênio</b><p>Casar cada glosa real com a guia. Prova o resultado para o Dr. Renato, e o que escapou vira regra nova.</p></div>
-          <div class="passo"><div class="k">3</div><b>Recurso de glosa assistido</b><p>Para cada guia glosada, o texto do recurso pronto a partir do motivo do convênio, com o prazo controlado.</p></div>
+          <div class="passo"><div class="k">1</div><b>Lançar a guia no mesmo dia</b><p>Quanto mais tarde a guia é lançada, mais ela fica retida. Mudar o processo para lançar na hora do atendimento, com a conferência na hora. Não custa nada.</p></div>
+          <div class="passo"><div class="k">2</div><b>Conferir na chegada do paciente</b><p>O mesmo conferente no balcão: a autorização vale hoje, sobram sessões, o convênio cobre. Evita o maior bloco de guias retidas.</p></div>
+          <div class="passo"><div class="k">3</div><b>Ler o retorno do convênio</b><p>Casar cada glosa real com a guia. Prova o resultado para o Dr. Renato, e o que escapou vira regra nova.</p></div>
+          <div class="passo"><div class="k">4</div><b>Recurso de glosa assistido</b><p>Para cada guia glosada, o texto do recurso pronto a partir do motivo do convênio, com o prazo controlado.</p></div>
         </div>
       </div>
 
@@ -712,6 +713,17 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       f.sessoes != null && f.limite && f.sessoes <= 0.2 * f.limite ? (f.sessoes <= 0 ? `usou as ${f.limite} sessões` : `restam ${f.sessoes} de ${f.limite} sessões`) : ''].filter(Boolean).join(' e ');
 
     const recibo = guias.filter((r) => r.decisao === 'OK' && /reembolso/i.test(r.guia.observacao_recepcao || ''));
+    // Dias entre o atendimento e o lançamento, e quanto fica retido em cada faixa
+    const atraso = [{nome: 'No mesmo dia', n: 0, ret: 0, lanc: 0, ids: []}, {nome: '1 dia depois', n: 0, ret: 0, lanc: 0, ids: []},
+      {nome: '2 dias depois', n: 0, ret: 0, lanc: 0, ids: []}, {nome: '3 dias ou mais', n: 0, ret: 0, lanc: 0, ids: []}];
+    guias.forEach((r) => {
+      const a = paraISO(r.guia.data_atendimento), l = paraISO(r.guia.data_lancamento); if (!a || !l) return;
+      const dias = Math.round((new Date(l + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000); if (dias < 0) return;
+      const f = atraso[Math.min(dias, 3)]; f.n++; f.ids.push(r.id_guia);
+      if (r.decisao === 'PENDENTE') { f.ret++; if (r.proximo_passo !== 'convenio') f.lanc++; }
+    });
+    const txt = (f) => f.n ? Math.round(100 * f.ret / f.n) : 0, comAtraso = atraso.filter((f) => f.n);
+    const primeiro = atraso[0], ultimo = comAtraso[comAtraso.length - 1] || atraso[3], totalAtraso = atraso.reduce((s, f) => s + f.n, 0);
     const maxT = Math.max(1, ...rel.por_tipo.map((t) => t.em_risco));
     const tipoDe = (t) => (guias.find((r) => r.id_guia === t.ids[0]) || {}).tipo_principal;
     const maior = rel.por_tipo[0];
@@ -746,6 +758,19 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
           ${barras(origem.map((o) => ({nome: o.nome, valor: reaisInt(o.v), extra: o.guias + ' guias', v: o.v, filtro: {ids: o.ids, rotulo: o.nome}})), maxO)}
           <div class="destaque">${antes.guias} das ${rel.pendentes} nascem antes da sessão, com a autorização vencida, esgotada ou sem número. Conferir a guia segura o erro. Conferir a autorização na chegada do paciente evita.</div>
           <details class="entenda"><summary>O que cada um quer dizer</summary>${origem.map((o) => `<div><b>${esc(o.nome)}:</b> ${esc(o.explica)}.</div>`).join('')}</details>
+        </div>
+      </div>
+
+      <div class="secao cartao">
+        <h2>Quanto mais tarde a guia é lançada, mais ela fica retida</h2>
+        <div class="pergunta">Guias retidas pelo tempo entre o atendimento e o lançamento. Clique para ver as guias.</div>
+        <div class="grade2" style="gap:24px;align-items:start">
+          <div>${barras(atraso.map((f) => ({nome: f.nome, valor: f.n ? txt(f) + '% retidas' : 'nenhuma', extra: f.ret + ' de ' + f.n, v: 100,
+            partes: [{c: 'nao_enviar', v: txt(f)}], filtro: f.n ? {ids: f.ids, rotulo: 'Lançadas ' + f.nome.toLowerCase()} : null})), 100)}</div>
+          <div>
+            <div class="destaque" style="margin-top:0">Só ${primeiro.n} de ${totalAtraso} guias são lançadas no dia do atendimento. No mesmo dia, ${txt(primeiro)}% ficam retidas. Com ${ultimo.nome.toLowerCase().replace(' depois', '')} de atraso, ${txt(ultimo)}%.</div>
+            <div class="honesto" style="border-top:0;padding-top:6px">A recomendação é mudar o processo: lançar a guia no mesmo dia, de preferência na hora do atendimento, com a conferência na hora. No mesmo dia, quase todo erro é de autorização (${primeiro.ret - primeiro.lanc} de ${primeiro.ret}), que nasce antes da sessão. Com o atraso aparecem os erros de lançamento: dado faltando, código trocado, cópia, particular. Com 80 guias é pista forte: vale medir por 4 semanas com essa meta.</div>
+          </div>
         </div>
       </div>
 

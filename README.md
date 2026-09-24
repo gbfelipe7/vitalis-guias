@@ -133,9 +133,10 @@ Até 6 horas de trabalho meu, dentro do teto sugerido pela prova.
 
 ### Próximos passos
 
-1. **Conferir na chegada do paciente.** O mesmo conferente, chamado no balcão, diz se a autorização vale naquele dia, quantas sessões sobram e se o convênio cobre o procedimento. 21 das 37 guias retidas do lote nasceram antes da sessão, com a autorização vencida, esgotada ou sem número. Conferir a guia depois segura o erro, mas não salva a sessão.
-2. **Ler o retorno do convênio.** Casar cada glosa do demonstrativo com a guia. É o que prova o resultado em dinheiro, e o que o conferente deixou passar vira regra nova.
-3. **Recurso de glosa assistido.** Para cada guia glosada, o texto do recurso pronto a partir do motivo informado pelo convênio, com o prazo de recurso controlado.
+1. **Lançar a guia no mesmo dia.** Só 19 das 80 guias foram lançadas no dia do atendimento. Lançadas no mesmo dia, 32% ficaram retidas; com 3 dias de atraso, 58%. No mesmo dia, quase todo erro é de autorização, que nasce antes da sessão; com o atraso aparecem os erros de lançamento (dado faltando, código trocado, cópia, particular). Mudar o processo para lançar na hora do atendimento, com a conferência na hora, não custa nada. Com 80 guias é pista forte: vale medir por 4 semanas com essa meta.
+2. **Conferir na chegada do paciente.** O mesmo conferente, chamado no balcão, diz se a autorização vale naquele dia, quantas sessões sobram e se o convênio cobre o procedimento. 21 das 37 guias retidas do lote nasceram antes da sessão, com a autorização vencida, esgotada ou sem número. Conferir a guia depois segura o erro, mas não salva a sessão.
+3. **Ler o retorno do convênio.** Casar cada glosa do demonstrativo com a guia. É o que prova o resultado em dinheiro, e o que o conferente deixou passar vira regra nova.
+4. **Recurso de glosa assistido.** Para cada guia glosada, o texto do recurso pronto a partir do motivo informado pelo convênio, com o prazo de recurso controlado.
 
 ### Os prompts
 
