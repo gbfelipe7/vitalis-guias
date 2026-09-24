@@ -401,8 +401,8 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
         "conferida_em": referencia.isoformat(),
         "observacao_lida_por": fatos["lido_por"],
         "guia": {campo: guia[campo] for campo in (
-            "id_guia", "unidade", "data_atendimento", "paciente", "convenio", "procedimento_codigo",
-            "procedimento_descricao", "numero_autorizacao", "autorizacao_validade",
-            "sessao_numero_na_autorizacao", "profissional", "profissional_registro", "valor",
-            "observacao_recepcao", "data_lancamento")},
+            "id_guia", "unidade", "data_atendimento", "paciente", "convenio", "carteirinha", "cid",
+            "procedimento_codigo", "procedimento_descricao", "numero_autorizacao", "autorizacao_validade",
+            "autorizacao_sessoes_limite", "sessao_numero_na_autorizacao", "profissional",
+            "profissional_registro", "valor", "observacao_recepcao", "data_lancamento")},
     }

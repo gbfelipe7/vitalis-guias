@@ -200,6 +200,8 @@ tr.det td{background:var(--card);padding:14px 16px}
 .regra-linha .num{flex:none;min-width:20px;text-align:right}
 .evo-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
 svg .eixo{font:11px var(--num);fill:var(--muted)}
+.tag{display:inline-block;margin-top:3px;font-size:11px;font-family:var(--sans);color:var(--good);background:var(--good-soft);border-radius:5px;padding:0 6px}
+.lista-novas .tag{margin-top:0}
 .bolha{background:var(--good-soft);border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13px;color:var(--ink);margin-top:8px}
 .decisoes{display:grid;gap:10px}
 .decisao{display:grid;grid-template-columns:220px minmax(0,1fr) 90px;gap:16px;align-items:start;background:var(--card);border-radius:12px;padding:14px 18px}
@@ -370,6 +372,16 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       </div>
 
       <div class="secao">
+        <h2>Próximos passos</h2>
+        <div class="pergunta">O que vem depois de segurar a guia errada.</div>
+        <div class="passos">
+          <div class="passo"><div class="k">1</div><b>Conferir na chegada do paciente</b><p>O mesmo conferente no balcão: a autorização vale hoje, sobram sessões, o convênio cobre. Evita o maior bloco de guias retidas.</p></div>
+          <div class="passo"><div class="k">2</div><b>Ler o retorno do convênio</b><p>Casar cada glosa real com a guia. Prova o resultado para o Dr. Renato, e o que escapou vira regra nova.</p></div>
+          <div class="passo"><div class="k">3</div><b>Recurso de glosa assistido</b><p>Para cada guia glosada, o texto do recurso pronto a partir do motivo do convênio, com o prazo controlado.</p></div>
+        </div>
+      </div>
+
+      <div class="secao">
         <h2>Como o sistema de gestão chama a conferência</h2>
         <div class="pergunta">A cada guia lançada, sem ninguém precisar lembrar.</div>
         <pre id="curl"></pre>
@@ -393,7 +405,8 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   const selo = (g) => `<span class="dec ${g}"><i></i>${DECISAO[g]}</span>`;
   const hojeISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 
-  let LOTE = null;          // resposta de /api/guias
+  let LOTE = null;          // resposta de /api/guias: o lote de agosto e as regras
+  let DADOS = null;         // as guias como estão agora: o lote mais o que foi lançado ou corrigido nesta sessão
   let novas = [];           // [{campos, resultado}] lançadas nesta sessão
   try { novas = JSON.parse(sessionStorage.getItem('vitalis-lancadas') || '[]'); } catch (_) { novas = []; }
   const LIMITE_NOVAS = 50;       // o mesmo MAXIMO_DE_NOVAS de web/rotas.py
@@ -433,14 +446,30 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     const alertas = r.alertas.map((a) => `<div class="aviso">Aviso: ${esc(a)}</div>`).join('');
     return `${pendencias(r)}${r.proximo_passo_nome ? `<div class="aviso">Quem resolve: ${esc(r.proximo_passo_nome)}.</div>` : ''}${alertas}
       <div class="aviso">Paciente ${esc(g.paciente)} · atendimento ${esc(br(g.data_atendimento))} · autorização ${esc(g.numero_autorizacao || 'sem número')}${g.autorizacao_validade ? ' válida até ' + esc(br(g.autorizacao_validade)) : ''} · sessão ${esc(g.sessao_numero_na_autorizacao)} · ${esc(g.profissional)} ${esc(g.profissional_registro)} · lançada em ${esc(br(g.data_lancamento))}${r.enviar_ate ? ' · enviar até ' + br(r.enviar_ate) : ''}</div>
-      ${g.observacao_recepcao ? `<div class="aviso">A recepção escreveu: “${esc(g.observacao_recepcao)}”</div>` : ''}`;
+      ${g.observacao_recepcao ? `<div class="aviso">A recepção escreveu: “${esc(g.observacao_recepcao)}”</div>` : ''}
+      ${r.decisao === 'PENDENTE' ? `<div style="margin-top:12px"><button class="btn2" type="button" data-corrigir="${esc(r.id_guia)}">Corrigir esta guia</button></div>` : ''}`;
   }
+
+  // Corrigir: a guia vai para o formulário com o mesmo número e a data de lançamento original.
+  // Ao lançar, ela substitui a original em tudo: guias, visão geral e relatório de terça.
+  let corrigindo = null;
+  const lote = (id) => LOTE && LOTE.guias.some((r) => r.id_guia.toUpperCase() === String(id || '').toUpperCase());
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-corrigir]'); if (!b) return;
+    const r = DADOS.guias.find((x) => x.id_guia === b.dataset.corrigir); if (!r) return;
+    location.hash = 'lancar';
+    $('colar').open = false; $('texto').value = '';
+    preencherForm(r.guia);
+    corrigindo = {id: r.id_guia, data_lancamento: paraISO(r.guia.data_lancamento) || r.guia.data_lancamento};
+    $('lido').innerHTML = '';
+    $('lancAviso').innerHTML = `Corrigindo a ${esc(r.id_guia)}: arrume o que a conferência apontar e lance. Ela entra no lugar da original.`;
+  });
 
   /* ---------------- guias de agosto ---------------- */
   let filtroDecisao = '', filtroExtra = null;   // filtroExtra: {rotulo, passo} ou {rotulo, ids}
   function desenharSegmento() {
-    const cont = {'': LOTE.guias.length, ok: 0, nao_enviar: 0, corrigir: 0, conferir: 0};
-    LOTE.guias.forEach((r) => { cont[r.gravidade]++; });
+    const cont = {'': DADOS.guias.length, ok: 0, nao_enviar: 0, corrigir: 0, conferir: 0};
+    DADOS.guias.forEach((r) => { cont[r.gravidade]++; });
     $('fDecisao').innerHTML = [['', 'Todas'], ['ok', CURTO.ok], ['nao_enviar', CURTO.nao_enviar], ['corrigir', CURTO.corrigir], ['conferir', CURTO.conferir]]
       .map(([v, t]) => `<button data-d="${v}" class="${v === filtroDecisao ? 'on' : ''}">${t} · ${cont[v]}</button>`).join('');
   }
@@ -450,20 +479,20 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   });
   function desenharLinhas() {
     const fu = $('fUnidade').value, fc = $('fConvenio').value, ft = $('fTipo').value, fb = semAcento($('fBusca').value);
-    const vis = LOTE.guias.filter((r) => (!filtroDecisao || r.gravidade === filtroDecisao)
+    const vis = DADOS.guias.filter((r) => (!filtroDecisao || r.gravidade === filtroDecisao)
       && (!filtroExtra || (filtroExtra.passo ? r.proximo_passo === filtroExtra.passo : filtroExtra.ids.includes(r.id_guia)))
       && (!fu || r.guia.unidade === fu) && (!fc || r.guia.convenio === fc)
       && (!ft || r.tipo_principal === ft)
       && (!fb || semAcento(Object.values(r.guia).join(' ')).includes(fb)));
-    $('contagem').textContent = `${vis.length} de ${LOTE.guias.length} guias · ${reais(vis.reduce((s, r) => s + r.valor_em_risco, 0))} retidos`;
-    $('linhas').innerHTML = vis.map((r) => `<tr class="g" tabindex="0" data-id="${esc(r.id_guia)}"><td class="id">${esc(r.id_guia)}</td><td>${esc(r.guia.unidade)}</td><td>${esc(r.guia.convenio)}</td><td>${esc(r.guia.procedimento_descricao)}</td><td class="n">${reais(r.valor)}</td><td>${selo(r.gravidade)}</td><td>${esc(r.pendencias[0] ? r.pendencias[0].motivo : '')}</td><td class="vazio">${esc(r.proximo_passo_nome || '')}</td></tr>`).join('')
+    $('contagem').textContent = `${vis.length} de ${DADOS.guias.length} guias · ${reais(vis.reduce((s, r) => s + r.valor_em_risco, 0))} retidos`;
+    $('linhas').innerHTML = vis.map((r) => `<tr class="g" tabindex="0" data-id="${esc(r.id_guia)}"><td class="id">${esc(r.id_guia)}${r.origem && r.origem !== 'lote' ? `<div class="tag">${r.origem}</div>` : ''}</td><td>${esc(r.guia.unidade)}</td><td>${esc(r.guia.convenio)}</td><td>${esc(r.guia.procedimento_descricao)}</td><td class="n">${reais(r.valor)}</td><td>${selo(r.gravidade)}</td><td>${esc(r.pendencias[0] ? r.pendencias[0].motivo : '')}</td><td class="vazio">${esc(r.proximo_passo_nome || '')}</td></tr>`).join('')
       || '<tr><td colspan="8" class="vazio">Nenhuma guia com esses filtros.</td></tr>';
   }
   $('linhas').addEventListener('click', (e) => {
     const tr = e.target.closest('tr.g'); if (!tr) return;
     const prox = tr.nextElementSibling;
     if (prox && prox.classList.contains('det')) { prox.remove(); return; }
-    const r = LOTE.guias.find((x) => x.id_guia === tr.dataset.id);
+    const r = DADOS.guias.find((x) => x.id_guia === tr.dataset.id);
     tr.insertAdjacentHTML('afterend', `<tr class="det"><td colspan="8"><div class="detbox">${detalhe(r)}</div></td></tr>`);
   });
   ['fUnidade', 'fConvenio', 'fTipo'].forEach((id) => $(id).addEventListener('change', desenharLinhas));
@@ -557,7 +586,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   const rotuloEvo = (k, escala) => escala === 'mes' ? `${MESES[+k.slice(5, 7) - 1]}/${k.slice(2, 4)}` : (escala === 'semana' ? 'sem. ' : '') + br(k).slice(0, 5);
   function desenharEvolucao() {
     const el = $('evolucao'); if (!el || !LOTE) return;
-    const pts = pontosDaEvolucao(LOTE.guias, escalaEvo);
+    const pts = pontosDaEvolucao(DADOS.guias, escalaEvo);
     const W = Math.max(300, el.clientWidth || 600), H = 230, m = {l: 30, r: 12, t: 14, b: 30};
     const max = Math.max(2, ...pts.map((p) => p.lancadas)), topo = max > 10 ? Math.ceil(max / 10) * 10 : Math.ceil(max / 2) * 2;
     const x = (i) => pts.length === 1 ? (m.l + W - m.r) / 2 : m.l + i * (W - m.l - m.r) / (pts.length - 1);
@@ -587,7 +616,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   window.addEventListener('resize', () => { clearTimeout(esperaEvo); esperaEvo = setTimeout(desenharEvolucao, 150); });
 
   function desenharVisao() {
-    const rel = LOTE.relatorio, guias = LOTE.guias;
+    const rel = DADOS.relatorio, guias = DADOS.guias;
     const pp = rel.por_proximo_passo;
     const passos = Object.entries(pp).filter(([, p]) => p.guias).sort((a, b) => (a[0] === 'copia') - (b[0] === 'copia') || b[1].em_risco - a[1].em_risco);
     const maxP = Math.max(1, ...passos.map(([, p]) => p.em_risco));
@@ -615,13 +644,13 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
 
     $('visao').innerHTML = `
       <div class="chamada">
-        <div class="frase"><b>${rel.pendentes}</b> das <b>${rel.verificadas}</b> guias de agosto ficaram retidas antes do envio. Elas somam <b>${reaisInt(rel.valor_em_risco)}</b>, e ${pct(conv.em_risco, rel.valor_em_risco)} depende do convênio.</div>
+        <div class="frase"><b>${rel.pendentes}</b> das <b>${rel.verificadas}</b> guias ficaram retidas antes do envio. Elas somam <b>${reaisInt(rel.valor_em_risco)}</b>, e ${pct(conv.em_risco, rel.valor_em_risco)} depende do convênio.</div>
         <div class="emjogo">Na clínica, por mês
           <div class="n">~ R$ 14,5 mil</div>
           de glosa evitável, pela estimativa da Carla.</div>
       </div>
       <div class="kpis">
-        <div class="kpi"><div class="r">Conferidas</div><div class="n">${rel.verificadas}</div><div class="d">todas de agosto</div></div>
+        <div class="kpi"><div class="r">Conferidas</div><div class="n">${rel.verificadas}</div><div class="d">${guias.some((r) => r.origem && r.origem !== 'lote') ? 'agosto e as lançadas agora' : 'todas de agosto'}</div></div>
         <div class="kpi"><div class="r">Podem enviar</div><div class="n">${rel.ok}</div><div class="d">${rel.ok} de ${rel.verificadas}</div></div>
         <div class="kpi"><div class="r">Retidas</div><div class="n">${rel.pendentes}</div><div class="d">${rel.pendentes} de ${rel.verificadas}</div></div>
         <div class="kpi"><div class="r">Valor retido</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)}</div></div>
@@ -806,7 +835,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     const expl = {ok: 'Cumpre as regras do convênio.', nao_enviar: 'Se for enviada assim, o convênio recusa.',
       corrigir: 'Falta um dado ou ele está errado.', conferir: 'A regra não proíbe, mas algo parece errado.'};
     const cont = {ok: 0, nao_enviar: 0, corrigir: 0, conferir: 0}, val = {ok: 0, nao_enviar: 0, corrigir: 0, conferir: 0};
-    LOTE.guias.forEach((r) => { cont[r.gravidade]++; val[r.gravidade] += r.valor; });
+    DADOS.guias.forEach((r) => { cont[r.gravidade]++; val[r.gravidade] += r.valor; });
     $('legendaDecisoes').innerHTML = ['ok', ...ORDEM].map((g) => `
       <div class="decisao clicavel" ${filtro({decisao: g})} style="margin:0">
         <div>${selo(g)}</div>
@@ -860,7 +889,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   function desenharRegras() {
     $('tabConferencias').innerHTML = ORDEM.map((g) => `<div class="cartao"><div>${selo(g)}</div><div class="pergunta" style="margin:8px 0 6px">${SENTIDO[g]}</div>`
       + REGRAS_DA_PAGINA.filter((x) => x.g === g).map((x) => {
-        const hits = LOTE.guias.filter((guia) => guia.pendencias.some((p) => x.r.includes(p.regra)));
+        const hits = DADOS.guias.filter((guia) => guia.pendencias.some((p) => x.r.includes(p.regra)));
         return `<div class="regra-linha"><span>${x.t}</span>${hits.length ? `<span class="num clicavel" ${filtro({ids: hits.map((guia) => guia.id_guia), rotulo: x.t})}>${hits.length}</span>` : '<span class="num vazio">0</span>'}</div>`;
       }).join('') + '</div>').join('');
     $('avisosLista').textContent = 'A IA só pode ajudar nas regras que dependem do que a recepção anotou. Fora das regras, o conferente também avisa sem segurar a guia: última sessão, recibo para reembolso, validade longa demais e prazo chegando.';
@@ -939,7 +968,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       'procedimento_codigo', 'valor', 'numero_autorizacao', 'autorizacao_validade', 'sessao_numero_na_autorizacao',
       'autorizacao_sessoes_limite', 'observacao_recepcao'].forEach((k) => { const v = ($('c_' + k).value || '').trim(); if (v) guia[k] = v; });
     const p = proc(); if (p) guia.procedimento_descricao = p.descricao;
-    guia.data_lancamento = hojeISO();
+    guia.data_lancamento = corrigindo && corrigindo.id === guia.id_guia ? corrigindo.data_lancamento : hojeISO();
     return guia;
   }
   function paraISO(v) {
@@ -982,7 +1011,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   function limparForm(tudo = true) {
     $('form').querySelectorAll('input,select,textarea').forEach((el) => { el.value = ''; });
     valorEditado = false; opcoesProcedimento(); marcarExigidos(); novoNumero();
-    clearTimeout(espera); pedidoAtual = null; lerAtual = null;
+    clearTimeout(espera); pedidoAtual = null; lerAtual = null; corrigindo = null;
     if (tudo) { $('lido').innerHTML = ''; $('lancAviso').textContent = ''; desenharConf(null); }
   }
   $('limparForm').addEventListener('click', () => limparForm());
@@ -1048,8 +1077,8 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       novas = novas.filter((n) => (n.campos.id_guia || '').toUpperCase() !== (guia.id_guia || '').toUpperCase());
       novas.unshift({campos: d.entrada.campos, resultado: {id_guia: d.resultado.id_guia, gravidade: d.resultado.gravidade, valor: d.resultado.valor,
         convenio: d.resultado.guia.convenio, motivo: d.resultado.pendencias[0] ? d.resultado.pendencias[0].motivo : ''}});
-      guardarNovas(); desenharNovas();
-      $('lancAviso').innerHTML = 'Lançada. <button class="quieto" id="outra" type="button">Lançar outra guia</button>';
+      guardarNovas(); desenharNovas(); atualizarDados(); corrigindo = null;
+      $('lancAviso').innerHTML = (lote(d.resultado.id_guia) ? (d.resultado.decisao === 'OK' ? 'Corrigida: agora pode enviar.' : 'Corrigida, mas ainda retida.') : 'Lançada.') + ' <button class="quieto" id="outra" type="button">Lançar outra guia</button>';
       $('outra').addEventListener('click', () => { limparForm(); $('colar').open = false; $('texto').value = ''; });
     } catch (_) {
       $('lancAviso').innerHTML = '<span class="erro">Sem resposta do servidor. A guia não foi conferida: não envie ainda.</span>';
@@ -1060,10 +1089,10 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     if (!novas.length) { $('novas').className = 'vazio'; $('novas').innerHTML = 'Nenhuma ainda.'; return; }
     $('novas').className = '';
     $('novas').innerHTML = '<div class="lista-novas">' + novas.map((n) => { const r = n.resultado;
-      return `<div>${selo(r.gravidade)}<span class="num">${esc(r.id_guia)}</span><span>${esc(r.convenio || 'sem convênio')}</span><span class="num">${reais(r.valor)}</span><span class="vazio">${esc(r.motivo)}</span></div>`; }).join('')
+      return `<div>${selo(r.gravidade)}<span class="num">${esc(r.id_guia)}</span>${lote(r.id_guia) ? '<span class="tag">corrigida</span>' : ''}<span>${esc(r.convenio || 'sem convênio')}</span><span class="num">${reais(r.valor)}</span><span class="vazio">${esc(r.motivo)}</span></div>`; }).join('')
       + '</div>' + (novas.length >= LIMITE_NOVAS ? `<div class="nota">Limite de ${LIMITE_NOVAS} guias por sessão: as mais antigas saem da lista e do relatório.</div>` : '')
       + '<button class="quieto" id="apagarNovas" style="margin-top:8px">Apagar as lançadas nesta sessão</button>';
-    $('apagarNovas').addEventListener('click', () => { novas = []; guardarNovas(); desenharNovas(); });
+    $('apagarNovas').addEventListener('click', () => { novas = []; guardarNovas(); desenharNovas(); atualizarDados(); });
   }
 
   $('ler').addEventListener('click', async () => {
@@ -1106,6 +1135,22 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     $('colar').open = false; preencherForm(EXEMPLOS[b.dataset.ex]);
   }));
 
+  // Busca as guias como estão agora. Sem nada lançado, é o lote. Com lançadas ou corrigidas, o servidor
+  // confere tudo de novo: a guia corrigida entra no lugar da original e tudo se atualiza.
+  async function atualizarDados() {
+    DADOS = {guias: LOTE.guias.map((r) => ({...r, origem: 'lote'})), relatorio: LOTE.relatorio};
+    if (novas.length) {
+      try {
+        const resp = await fetch('/api/relatorio', {method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({novas: novas.slice().reverse().map((n) => n.campos)})});
+        const d = await resp.json();
+        if (d.guias) DADOS = {guias: d.guias.slice().sort((a, b) => (a.origem === 'nova') - (b.origem === 'nova') || a.id_guia.localeCompare(b.id_guia)), relatorio: d.relatorio};
+      } catch (_) {}
+    }
+    $('qtGuias').textContent = DADOS.guias.length;
+    desenharSegmento(); desenharLinhas(); desenharVisao(); desenharEvolucao(); desenharLegenda(); desenharRegras();
+  }
+
   /* ---------------- início ---------------- */
   $('curl').textContent = `curl -X POST ${location.origin}/api/verificar \\\n  -H "Content-Type: application/json" \\\n  -d '{"guia": {"convenio": "Vitalcard", "procedimento_codigo": "50000470", "data_atendimento": "2026-09-02",\n       "numero_autorizacao": "AUT1", "autorizacao_validade": "2026-09-20", "sessao_numero_na_autorizacao": "11",\n       "carteirinha": "111222333", "cid": "M54.5", "profissional_registro": "CREFITO-3 204411-F", "valor": "62.00"}}'`;
   irPara();
@@ -1120,7 +1165,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       const tipo = d.guias.find((r) => r.id_guia === t.ids[0]).tipo_principal;
       $('fTipo').insertAdjacentHTML('beforeend', `<option value="${esc(tipo)}">${esc(t.nome)}</option>`);
     });
-    desenharSegmento(); desenharLinhas(); desenharVisao(); desenharEvolucao(); desenharLegenda(); desenharRegras(); montarForm(); desenharNovas();
+    montarForm(); desenharNovas(); atualizarDados();
   }).catch(() => {
     $('visao').innerHTML = '<div class="nota erro">Não consegui carregar as guias. Recarregue a página.</div>';
   });

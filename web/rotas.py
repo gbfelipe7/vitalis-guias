@@ -51,6 +51,13 @@ def _regras_para_o_formulario(regras):
     }
 
 
+def _referencia_do_lote(campos, lote_por_id):
+    """Guia de agosto corrigida continua conferida no dia em que foi lançada, como o resto do lote
+    (orientação do recrutador). Guia que não é do lote é conferida hoje."""
+    original = lote_por_id.get((campos.get("id_guia") or "").strip().upper())
+    return ler_data(original.get("data_lancamento", "")) if original else None
+
+
 def rota_guias():
     """GET /api/guias: as 80 guias de agosto conferidas, o relatório do lote e as regras."""
     regras = carregar_regras()
@@ -92,7 +99,10 @@ def rota_verificar(dados):
 
     anteriores = dados.get("anteriores") if isinstance(dados.get("anteriores"), list) else []
     anteriores = [_so_texto(g) for g in anteriores[:MAXIMO_DE_NOVAS] if isinstance(g, dict)]
-    resultado = verificar_nova(campos, carregar_guias() + anteriores, regras, usar_ia=usar_ia)
+    lote = carregar_guias()
+    lote_por_id = {(g.get("id_guia") or "").strip().upper(): g for g in lote}
+    resultado = verificar_nova(campos, lote + anteriores, regras, usar_ia=usar_ia,
+                               referencia=_referencia_do_lote(campos, lote_por_id))
     resultado["alertas"] = entrada.get("avisos", []) + resultado["alertas"]
     return 200, {"entrada": {"lido_por": entrada["lido_por"], "campos": campos,
                              "faltando": entrada["faltando"], "avisos": entrada.get("avisos", [])},
@@ -106,17 +116,22 @@ def rota_relatorio(novas=None):
         return 400, {"erro": "Mande 'novas' como uma lista de guias."}
     regras, guias = carregar_regras(), carregar_guias()
     resultados = verificar_lote(guias, regras)
+    for r in resultados:
+        r["origem"] = "lote"
+    lote_por_id = {(g.get("id_guia") or "").strip().upper(): g for g in guias}
     ja_vistas = list(guias)                  # cada guia nova é comparada com o lote e com as novas anteriores
     for i, nova in enumerate(novas[:MAXIMO_DE_NOVAS]):
         if isinstance(nova, dict):
             campos = _so_texto(nova)
             campos.setdefault("id_guia", "NOVA-%d" % (i + 1))
-            conferida = verificar_nova(campos, ja_vistas, regras, usar_ia=False)
+            conferida = verificar_nova(campos, ja_vistas, regras, usar_ia=False,
+                                       referencia=_referencia_do_lote(campos, lote_por_id))
+            conferida["origem"] = "corrigida" if conferida["id_guia"].upper() in lote_por_id else "nova"
             # guia corrigida e conferida de novo (mesmo número) entra no lugar da antiga, não conta duas vezes
             resultados = [r for r in resultados if r["id_guia"].upper() != conferida["id_guia"].upper()] + [conferida]
             ja_vistas = [g for g in ja_vistas if (g.get("id_guia") or "").strip().upper() != conferida["id_guia"].upper()] + [campos]
     relatorio = montar_relatorio(resultados)
-    return 200, {"relatorio": relatorio, "texto": relatorio_em_texto(relatorio)}
+    return 200, {"relatorio": relatorio, "texto": relatorio_em_texto(relatorio), "guias": resultados}
 
 
 def rota_regra(convenio, procedimento):

@@ -125,6 +125,12 @@ O código foi escrito com o Claude Code. Eu li os dados antes, defini a arquitet
 - **Ligação real com o sistema de gestão.** O endereço está pronto para ser chamado; a chamada em si depende da API do sistema da clínica.
 - **Histórico de autorizações.** As 80 guias são o recorte de agosto, então o motor confere o que a guia declara e não tenta reconstruir a sequência de sessões de cada autorização.
 
+### Próximos passos
+
+1. **Conferir na chegada do paciente.** O mesmo conferente, chamado no balcão, diz se a autorização vale naquele dia, quantas sessões sobram e se o convênio cobre o procedimento. 21 das 39 guias retidas do lote nasceram antes da sessão, com a autorização vencida, esgotada ou sem número. Conferir a guia depois segura o erro, mas não salva a sessão.
+2. **Ler o retorno do convênio.** Casar cada glosa do demonstrativo com a guia. É o que prova o resultado em dinheiro, e o que o conferente deixou passar vira regra nova.
+3. **Recurso de glosa assistido.** Para cada guia glosada, o texto do recurso pronto a partir do motivo informado pelo convênio, com o prazo de recurso controlado.
+
 ### Como testei
 
 - 79 testes automáticos em `tests/test_motor.py`. Os grupos: as guias do lote que têm pegadinha, uma a uma; guias novas chegando tortas (vazia, com lixo nos campos, data em outro formato, convênio que não existe, repetida do lote); e um teste para cada furo que as duas rodadas de auditoria abaixo encontraram.

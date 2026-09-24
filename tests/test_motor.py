@@ -548,3 +548,16 @@ class TerceiraRodada(unittest.TestCase):
                 self.assertNotIn(chave, da_pagina, "regra repetida na página: " + chave)
                 da_pagina[chave] = grav
         self.assertEqual(do_motor, da_pagina)
+
+    def test_guia_de_agosto_corrigida_substitui_a_original(self):
+        from web.rotas import rota_relatorio, rota_verificar
+        original = RESULTADOS["G-2608-0021"]
+        self.assertEqual(original["gravidade"], "corrigir")               # faltava o CID
+        corrigida = dict(original["guia"], cid="M54.5")
+        _, corpo = rota_verificar({"guia": corrigida, "rascunho": True})
+        # conferida na data do lote: o prazo de envio de agosto não vence por causa da correção
+        self.assertEqual(corpo["resultado"]["decisao"], "OK")
+        _, rel = rota_relatorio([corrigida])
+        self.assertEqual(rel["relatorio"]["verificadas"], 80)
+        self.assertEqual(rel["relatorio"]["pendentes"], 38)
+        self.assertEqual([g["origem"] for g in rel["guias"] if g["id_guia"] == "G-2608-0021"], ["corrigida"])
