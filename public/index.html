@@ -606,6 +606,11 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-filtro], tr.g')) { e.preventDefault(); e.target.click(); }
   });
   const filtro = (f) => `tabindex="0" role="button" data-filtro='${esc(JSON.stringify(f))}'`;
+  // Link para fora do site (GitHub, API) abre em outra aba; os links entre as abas da página continuam na mesma.
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[href^="http"]');
+    if (a) { a.target = '_blank'; a.rel = 'noopener'; }
+  }, true);
 
   /* ---------------- barras simples ---------------- */
   function barras(itens, max) {
