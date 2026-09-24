@@ -218,6 +218,7 @@ svg .nodo{font:12.5px var(--sans)}
 .peca p{margin:0;color:var(--ink2);font-size:13px}
 .peca .onde{font-size:12.5px;color:var(--ink3)}
 .opcao p{margin:6px 0 0;color:var(--ink2);font-size:13px}
+.rodape .autor{margin-bottom:10px;color:var(--ink2)}.rodape .autor b{color:var(--ink);font-weight:600}
 .escolha-semana{display:flex;align-items:center;gap:10px;margin:18px 0 4px;font-size:13px;color:var(--ink3)}.escolha-semana select{min-width:0;max-width:100%}
 .perguntas{list-style:none;margin:10px 0 0;padding:0}.perguntas li{padding:6px 0;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}.perguntas li:first-child{border-top:0}
 .perguntas b{font-family:var(--num);font-weight:var(--num-w);color:var(--ink);font-size:15px;margin-right:4px}
@@ -293,7 +294,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     <div class="navlab">Sobre</div>
     <a class="nav" href="#como" data-v="como">Como funciona</a>
     <button class="tema" id="tema" type="button" aria-label="Trocar o tema"></button>
-    <div class="rodape">Regras dos convênios de <span id="versao">agosto/2026</span> · dados fictícios<br><a href="https://github.com/gbfelipe7/vitalis-guias">Código no GitHub</a></div>
+    <div class="rodape"><div class="autor"><b>Gabriel Felipe Monteiro</b><br>IA Manager</div>Regras dos convênios de <span id="versao">agosto/2026</span> · dados fictícios<br><a href="https://github.com/gbfelipe7/vitalis-guias">Código no GitHub</a></div>
   </aside>
 
   <main class="folha">
@@ -413,7 +414,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     <!-- ================= relatório de terça ================= -->
     <section class="vista" id="v-terca">
       <h1>Relatório de terça</h1>
-      <div class="sub">Terça, 7h30: a semana anterior, de segunda a domingo. Em produção, o relatório fica pronto na segunda.</div>
+      <div class="sub">Terça, 7h30: a semana anterior, de segunda a domingo. Abre em agosto inteiro; escolha a semana abaixo. Em produção, o relatório fica pronto na segunda.</div>
       <div id="terca"><div class="nota">Montando o relatório…</div></div>
     </section>
 
@@ -953,8 +954,8 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     return cv;
   }
 
-  // A reunião de terça olha a semana anterior, de segunda a domingo. 'ultima' é a última semana completa do lote.
-  let semanaTerca = 'ultima';
+  // A reunião de terça olha a semana anterior, de segunda a domingo. A aba abre no mês inteiro ('mes') e deixa escolher a semana.
+  let semanaTerca = 'mes';
   const somaDias = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
   const ddmm = (iso) => iso.slice(8, 10) + '/' + iso.slice(5, 7);
   async function carregarTerca() {
@@ -978,7 +979,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         ${barras(fx.map((f, k) => ({nome: nomesFx[k], valor: `${f.guias} ${f.guias === 1 ? 'guia' : 'guias'}`, extra: `${f.retidas} ${f.retidas === 1 ? 'retida' : 'retidas'}`, partes: [{c: 'tinta', v: f.guias}]})), Math.max(1, ...fx.map((f) => f.guias)))}
         <div class="nota">No mesmo dia: ${fx.length ? pct(fx[0].guias, rel.verificadas) : '0%'} das guias. No fim de semana, sem atendimento: ${rel.lancadas_fim_de_semana || 0}.</div></div>`;
       $('terca').innerHTML = `
-        <div class="escolha-semana"><label for="semanaSel">Semana</label><select id="semanaSel">${opcoes}<option value="mes" ${rel.semana ? '' : 'selected'}>Agosto inteiro e as guias desta sessão</option></select></div>
+        <div class="escolha-semana"><label for="semanaSel">Semana</label><select id="semanaSel"><option value="mes" ${rel.semana ? '' : 'selected'}>Agosto inteiro e as guias desta sessão</option>${opcoes}</select></div>
         <div class="frase">${rel.semana ? `De segunda ${ddmm(rel.semana[0])} a domingo ${ddmm(rel.semana[1])}: ` : ''}<b>${rel.pendentes}</b> das <b>${rel.verificadas}</b> guias ficaram retidas, somando <b>${reaisInt(rel.valor_em_risco)}</b>. ${passos.length ? `O maior pedaço, <b>${reaisInt(passos[0][1].em_risco)}</b>, ${FRASE_PASSO[passos[0][0]]}.` : ''}</div>
         ${kpisRelatorio(rel)}
         <div class="secao grade2">

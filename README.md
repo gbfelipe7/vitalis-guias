@@ -119,7 +119,7 @@ flowchart LR
 3. O conferente decide em menos de um segundo e grava a decisão no banco.
 4. Guia que pode ir entra no lote do convênio. Guia retida gera o aviso no WhatsApp de quem resolve (recepção da unidade, quem pede autorização, financeiro ou a Carla), sem nome de paciente nem CID. Se a API permitir, o status também volta para o sistema.
 5. Corrigida no sistema, a guia passa de novo pela conferência e entra no lugar da anterior.
-6. Toda segunda, o n8n monta o relatório da semana anterior (as guias lançadas de segunda a domingo) a partir do banco, para a análise. Na terça, às 7h30, a imagem e o texto vão para a reunião do Dr. Renato. Na página, a aba Relatório de terça abre na última semana completa do lote (24/08 a 30/08) e deixa escolher outra semana ou agosto inteiro; na API, `GET /api/relatorio?semana=2026-08-24`.
+6. Toda segunda, o n8n monta o relatório da semana anterior (as guias lançadas de segunda a domingo) a partir do banco, para a análise. Na terça, às 7h30, a imagem e o texto vão para a reunião do Dr. Renato. Na página, a aba Relatório de terça abre em agosto inteiro e deixa escolher cada semana, como a de 24/08 a 30/08; na API, `GET /api/relatorio?semana=2026-08-24`.
 
 Alguns minutos entre salvar e conferir não atrapalham: o envio ao convênio é feito em lote, depois. O que importa é que nenhuma guia sai sem conferência.
 
