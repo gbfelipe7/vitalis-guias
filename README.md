@@ -92,6 +92,46 @@ python3 -m unittest            # os 79 testes do motor
 
 A chave de IA é opcional. Sem ela tudo funciona: a observação é lida por palavras-chave e o texto corrido por expressão regular. Com `GEMINI_API_KEY` no ambiente (veja `.env.example`), o que eles não alcançam é lido pelo Gemini no nível gratuito. Na Vercel a chave fica nas variáveis de ambiente do projeto. Não existe chave nem senha neste repositório.
 
+## Como fica em produção
+
+Na prova, a guia entra pela página, pela API ou pelo Claude. Na clínica, a recepção continua no sistema de gestão dela, e a conferência entra por trás, sem ninguém precisar lembrar.
+
+```mermaid
+flowchart LR
+  A[Recepção salva a guia no sistema de gestão] --> B{O sistema avisa na hora?}
+  B -- sim, webhook --> C[Conferente: POST /api/verificar]
+  B -- não, só API de leitura --> D[n8n lê as guias novas a cada 5 minutos]
+  D --> C
+  C --> E[(Banco: guarda cada decisão)]
+  C --> F{Decisão}
+  F -- Pode enviar --> G[Entra no lote do convênio]
+  F -- Retida --> H[Aviso no WhatsApp de quem resolve]
+  H --> I[Correção no sistema de gestão]
+  I --> C
+  E --> J[Terça 7h30: n8n monta o relatório e manda ao Dr. Renato]
+```
+
+1. A recepção lança a guia no sistema de gestão, como já faz.
+2. Se o sistema avisa quando uma guia é salva (webhook), ele chama o conferente na hora. Se só permite ler os dados pela API, que é o que o caso garante, o n8n lê as guias novas a cada poucos minutos e manda cada uma para o conferente.
+3. O conferente decide em menos de um segundo e grava a decisão no banco.
+4. Guia que pode ir entra no lote do convênio. Guia retida gera o aviso no WhatsApp de quem resolve (recepção da unidade, quem pede autorização, financeiro ou a Carla), sem nome de paciente nem CID. Se a API permitir, o status também volta para o sistema.
+5. Corrigida no sistema, a guia passa de novo pela conferência e entra no lugar da anterior.
+6. Toda terça às 7h30, o n8n monta o relatório a partir do banco e manda a imagem e o texto no WhatsApp do Dr. Renato.
+
+Alguns minutos entre salvar e conferir não atrapalham: o envio ao convênio é feito em lote, depois. O que importa é que nenhuma guia sai sem conferência.
+
+| Peça | Na prova | Em produção |
+|---|---|---|
+| Onde roda | Vercel, grátis | VPS no Brasil, em containers: conferente, banco, n8n e Nginx |
+| Entrada da guia | Página, API e Claude | Webhook do sistema de gestão ou n8n lendo a API dele |
+| Histórico | Só na aba do navegador | Postgres, com cada conferência e quando foi resolvida |
+| Proteção da API | Aberta, para a banca testar | Token do sistema de gestão, HTTPS pelo Nginx |
+| Aviso de guia retida | Simulado na tela | WhatsApp oficial, num número da clínica |
+| Relatório de terça | Copiado na página | Agendado no n8n |
+| IA | Gemini no nível gratuito | Nível pago que não usa o conteúdo para treinar, rodando no Brasil |
+
+O código do conferente é o mesmo nos dois. Muda onde ele roda e o que fica em volta dele.
+
 ## Como fiz
 
 ### Ferramentas e por quê
