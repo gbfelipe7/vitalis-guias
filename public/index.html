@@ -1458,6 +1458,11 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         ${sol(3, 'Provar o resultado', 'Toda terça, o relatório mede a semana. O retorno do convênio mostra se a glosa caiu.',
           'relatório de terça', 'ler o retorno de cada convênio')}
       </div>
+      <div class="secao"><div class="grupo-nome">Junto com o assistente da primeira prova</div>
+        <div class="cartao opcao"><h2>O assistente de WhatsApp confere antes de confirmar a sessão</h2>
+          <p>Antes de mandar a confirmação, ele chama a conferência. Se a autorização vence ou as sessões acabam, avisa a recepção para pedir a nova, em vez de só confirmar. A clínica já confirma por WhatsApp: ${m.guias.filter((r) => /confirmado pelo whatsapp/i.test(r.guia.observacao_recepcao || '')).length} guias do lote dizem "Confirmado pelo WhatsApp na véspera".</p>
+          ${etq('a conferência pela API e pelo MCP', 'ligar no assistente')}</div>
+      </div>
       <div class="secao"><div class="grupo-nome">Para a recepção ver na hora, sem trocar de sistema</div>
         <div class="solucoes">
           <div class="cartao opcao"><h2>Painel da recepção</h2><p>Uma aba aberta ao lado mostra as últimas guias salvas com a decisão, atualizando sozinha.</p></div>
