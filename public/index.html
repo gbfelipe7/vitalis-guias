@@ -198,6 +198,8 @@ tr.det td{background:var(--card);padding:14px 16px}
 .grupos-regras{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .regra-linha{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:13px}
 .regra-linha .num{flex:none;min-width:20px;text-align:right}
+.evo-topo{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+svg .eixo{font:11px var(--num);fill:var(--muted)}
 .bolha{background:var(--good-soft);border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13px;color:var(--ink);margin-top:8px}
 .decisoes{display:grid;gap:10px}
 .decisao{display:grid;grid-template-columns:220px minmax(0,1fr) 90px;gap:16px;align-items:start;background:var(--card);border-radius:12px;padding:14px 18px}
@@ -415,6 +417,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     document.querySelectorAll('.vista').forEach((s) => s.classList.toggle('on', s.id === 'v-' + v));
     document.querySelectorAll('.nav').forEach((a) => a.classList.toggle('on', a.dataset.v === v));
     if (v === 'terca') carregarTerca();
+    if (v === 'visao') desenharEvolucao();
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', irPara);
@@ -518,11 +521,70 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     confirmar: 'A regra não proíbe, mas tem algo estranho. Alguém confirma antes de enviar.',
     copia: 'A original já está no lote e vai ser paga. Não é dinheiro a receber.',
   };
-  // Janela da reunião de terça: guias lançadas de terça a segunda, antes da reunião.
-  function tercaDaReuniao(iso) {
-    const d = new Date((paraISO(iso) || iso) + 'T12:00:00'); const falta = (2 - d.getDay() + 7) % 7 || 7;
-    d.setDate(d.getDate() + falta); return d.toISOString().slice(0, 10);
+
+  // Evolução no tempo: três linhas pela data de lançamento. Dia, semana (segunda a domingo) ou mês.
+  let escalaEvo = 'dia';
+  const SERIES = [{k: 'lancadas', nome: 'Lançadas', cor: 'var(--ink)'}, {k: 'ok', nome: 'Podem ir', cor: 'var(--good)'}, {k: 'retidas', nome: 'Retidas', cor: 'var(--bad)'}];
+  const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  function pontosDaEvolucao(guias, escala) {
+    const dias = guias.map((r) => ({d: paraISO(r.guia.data_lancamento), ok: r.decisao === 'OK'})).filter((x) => x.d);
+    if (!dias.length) return [];
+    const chave = (iso) => {
+      if (escala === 'mes') return iso.slice(0, 7);
+      if (escala === 'semana') { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.toISOString().slice(0, 10); }
+      return iso;
+    };
+    const mapa = {};
+    dias.forEach((x) => { const k = chave(x.d); (mapa[k] = mapa[k] || {lancadas: 0, ok: 0, retidas: 0}); mapa[k].lancadas++; mapa[k][x.ok ? 'ok' : 'retidas']++; });
+    // preenche os intervalos sem guia com zero, para o eixo do tempo não pular
+    const chaves = Object.keys(mapa).sort(), todas = [];
+    let atual = new Date(chaves[0] + (escala === 'mes' ? '-01' : '') + 'T12:00:00'); const fim = chaves[chaves.length - 1];
+    while (true) {
+      const iso = atual.toISOString().slice(0, 10), k = escala === 'mes' ? iso.slice(0, 7) : iso;
+      if (k > fim) break;
+      todas.push({k, ...(mapa[k] || {lancadas: 0, ok: 0, retidas: 0})});
+      if (escala === 'mes') atual.setMonth(atual.getMonth() + 1); else atual.setDate(atual.getDate() + (escala === 'semana' ? 7 : 1));
+    }
+    // o último período pode estar pela metade: a semana ou o mês continua depois da última guia
+    const ultimaData = dias.map((x) => x.d).sort().pop();
+    if (todas.length && escala !== 'dia') {
+      const ini = new Date((escala === 'mes' ? todas[todas.length - 1].k + '-01' : todas[todas.length - 1].k) + 'T12:00:00');
+      if (escala === 'mes') { ini.setMonth(ini.getMonth() + 1); ini.setDate(0); } else ini.setDate(ini.getDate() + 6);
+      todas[todas.length - 1].parcial = ini.toISOString().slice(0, 10) > ultimaData;
+    }
+    return todas;
   }
+  const rotuloEvo = (k, escala) => escala === 'mes' ? `${MESES[+k.slice(5, 7) - 1]}/${k.slice(2, 4)}` : (escala === 'semana' ? 'sem. ' : '') + br(k).slice(0, 5);
+  function desenharEvolucao() {
+    const el = $('evolucao'); if (!el || !LOTE) return;
+    const pts = pontosDaEvolucao(LOTE.guias, escalaEvo);
+    const W = Math.max(300, el.clientWidth || 600), H = 230, m = {l: 30, r: 12, t: 14, b: 30};
+    const max = Math.max(2, ...pts.map((p) => p.lancadas)), topo = max > 10 ? Math.ceil(max / 10) * 10 : Math.ceil(max / 2) * 2;
+    const x = (i) => pts.length === 1 ? (m.l + W - m.r) / 2 : m.l + i * (W - m.l - m.r) / (pts.length - 1);
+    const y = (v) => H - m.b - v * (H - m.t - m.b) / topo;
+    const passo = Math.max(1, Math.ceil(pts.length / Math.floor((W - m.l) / 58)));
+    const grade = [0, topo / 2, topo].map((v) => `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line2)" stroke-width="1"/><text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end" class="eixo">${v}</text>`).join('');
+    const parcial = pts.length > 1 && pts[pts.length - 1].parcial, cheios = parcial ? pts.slice(0, -1) : pts;
+    const linhas = SERIES.map((s) => (cheios.length > 1 ? `<polyline fill="none" stroke="${s.cor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${cheios.map((p, i) => `${x(i)},${y(p[s.k])}`).join(' ')}"/>` : '')
+      + (parcial ? `<line x1="${x(pts.length - 2)}" y1="${y(pts[pts.length - 2][s.k])}" x2="${x(pts.length - 1)}" y2="${y(pts[pts.length - 1][s.k])}" stroke="${s.cor}" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round"/>` : '')
+      + (pts.length <= 40 ? pts.map((p, i) => `<circle cx="${x(i)}" cy="${y(p[s.k])}" r="${pts.length > 12 ? 2.5 : 4}" fill="${s.cor}"/>`).join('') : '')).join('');
+    const ancora = (i) => pts.length > 1 && i === 0 ? 'start' : (pts.length > 1 && i === pts.length - 1 ? 'end' : 'middle');
+    const eixoX = pts.map((p, i) => (i % passo === 0 || i === pts.length - 1) ? `<text x="${x(i)}" y="${H - 8}" text-anchor="${ancora(i)}" class="eixo">${rotuloEvo(p.k, escalaEvo)}${p.parcial ? ' (parcial)' : ''}</text>` : '').join('');
+    const larg = pts.length > 1 ? (W - m.l - m.r) / (pts.length - 1) : W - m.l - m.r;
+    const alvos = pts.map((p, i) => `<rect x="${x(i) - larg / 2}" y="${m.t}" width="${larg}" height="${H - m.t - m.b}" fill="transparent"><title>${rotuloEvo(p.k, escalaEvo)}: ${p.lancadas} lançadas, ${p.ok} podem ir, ${p.retidas} retidas</title></rect>`).join('');
+    const tot = SERIES.map((s) => pts.reduce((a, p) => a + p[s.k], 0));
+    el.innerHTML = `<div class="legenda" style="margin:10px 0 6px">${SERIES.map((s, i) => `<span><i class="ponto" style="background:${s.cor}"></i>${s.nome} · <b class="num" style="font-weight:500;color:var(--ink)">${tot[i]}</b></span>`).join('')}</div>
+      <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Evolução das guias por ${escalaEvo}">${grade}${linhas}${eixoX}${alvos}</svg>
+      <div class="nota" style="margin-top:4px">${escalaEvo === 'mes' && pts.length < 2 ? 'Por enquanto só existe agosto. Cada mês novo vira um ponto e forma a linha.' : (parcial ? 'O último período tem só parte dos dias, por isso a linha tracejada. ' : '') + 'Com poucas guias por período, subir e descer é normal. Tendência de verdade aparece com semanas de uso.'}</div>`;
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('#escalaEvo button'); if (!b) return;
+    escalaEvo = b.dataset.e;
+    document.querySelectorAll('#escalaEvo button').forEach((x) => x.classList.toggle('on', x === b));
+    desenharEvolucao();
+  });
+  let esperaEvo = null;
+  window.addEventListener('resize', () => { clearTimeout(esperaEvo); esperaEvo = setTimeout(desenharEvolucao, 150); });
 
   function desenharVisao() {
     const rel = LOTE.relatorio, guias = LOTE.guias;
@@ -549,10 +611,6 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     const tipoDe = (t) => (guias.find((r) => r.id_guia === t.ids[0]) || {}).tipo_principal;
     const maior = rel.por_tipo[0];
 
-    const semanas = {};
-    guias.forEach((r) => { const t = tercaDaReuniao(r.guia.data_lancamento); (semanas[t] = semanas[t] || {n: 0, ret: 0, ids: []}); semanas[t].n++; if (r.decisao === 'PENDENTE') semanas[t].ret++; semanas[t].ids.push(r.id_guia); });
-    const listaSemanas = Object.entries(semanas).sort();
-    const maxS = Math.max(1, ...listaSemanas.map(([, w]) => w.n));
     const copia = pp.copia || {em_risco: 0};
 
     $('visao').innerHTML = `
@@ -587,6 +645,12 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       </div>
 
       <div class="secao cartao">
+        <div class="evo-topo"><div><h2>Evolução das guias</h2><div class="pergunta" style="margin-bottom:0">Lançadas, que podem ir e retidas, pela data de lançamento.</div></div>
+          <div class="segmento" id="escalaEvo"><button data-e="dia" class="on">Dia</button><button data-e="semana">Semana</button><button data-e="mes">Mês</button></div></div>
+        <div id="evolucao"></div>
+      </div>
+
+      <div class="secao cartao">
         <h2>${renovar.length} autorizações para renovar</h2>
         <div class="pergunta">Vencem em até 7 dias ou já usaram 80% das sessões. Pedir a renovação agora evita a próxima guia retida.</div>
         <div class="legenda" style="margin:0 0 8px">${Object.entries(porConvRenovar).sort((a, b) => b[1] - a[1]).map(([c, n]) => `<span><b style="font-weight:500;color:var(--ink)">${n}</b>&nbsp;no ${esc(c)}</span>`).join('')}<span class="clicavel" ${filtro({ids: renovar.map((r) => r.id_guia), rotulo: 'Autorizações para renovar'})}>ver as ${renovar.length}</span></div>
@@ -602,18 +666,10 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
           ${barras(rel.por_tipo.map((t) => ({nome: t.nome, valor: reaisInt(t.em_risco), extra: t.guias + (t.guias > 1 ? ' guias' : ' guia'), v: t.em_risco, filtro: {tipo: tipoDe(t)}})), maxT)}
         </div>
         <div class="cartao">
-          <h2>Por semana</h2>
-          <div class="pergunta">Retidas em cada reunião de terça.</div>
-          ${barras(listaSemanas.map(([t, w]) => ({nome: `Reunião de ${br(t).slice(0, 5)}${w.n < 10 ? ' (parcial)' : ''}`, valor: `${w.ret} de ${w.n}`, v: w.n,
-            partes: [{c: 'tinta', v: w.ret}], filtro: {ids: w.ids, rotulo: 'Reunião de ' + br(t).slice(0, 5)}})), maxS)}
-          <div class="honesto">Poucas guias por semana: ainda não dá para ver tendência.</div>
+        <h2>Para confirmar com a Carla</h2>
+        <div class="pergunta" style="margin-bottom:0">${recibo.length ? `<span class="clicavel" ${filtro({ids: recibo.map((r) => r.id_guia), rotulo: 'Pediu recibo para reembolso'})}>${recibo.length} guias prontas</span> dizem "pediu recibo para reembolso". Se o paciente já pagou, enviar ao convênio é cobrar duas vezes.` : 'Nada pendente.'}</div>
         </div>
       </div>
-
-      ${recibo.length ? `<div class="secao cartao">
-        <h2>Para confirmar com a Carla</h2>
-        <div class="pergunta" style="margin-bottom:0"><span class="clicavel" ${filtro({ids: recibo.map((r) => r.id_guia), rotulo: 'Pediu recibo para reembolso'})}>${recibo.length} guias prontas</span> dizem "pediu recibo para reembolso". Se o paciente já pagou, enviar ao convênio é cobrar duas vezes.</div>
-      </div>` : ''}
 
       <div class="nota" style="margin-top:28px;max-width:860px">Retido não é perdido: ${reaisInt(copia.em_risco)} são cópias e o particular só muda de quem paga. A glosa real só aparece no retorno do convênio. O lote de agosto tem erros de propósito, então as taxas dele não valem para a clínica.</div>`;
   }
@@ -701,7 +757,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
           <div class="pergunta">A imagem vai primeiro, o texto logo depois.</div>
           <div class="zap">
             <div><img id="rImagem" alt="Resumo do relatório de terça em imagem"><div class="exemplos" style="margin-top:8px"><button class="btn2" id="baixarImg">Baixar imagem</button><button class="quieto" id="copiarImg">Copiar imagem</button></div></div>
-            <div><pre id="rTexto">${esc(d.texto)}</pre><div class="exemplos" style="margin-top:8px"><button class="btn2" id="copiar">Copiar texto</button><span id="copiado"></span></div></div>
+            <div><pre id="rTexto">${esc(d.texto)}</pre><div class="exemplos" style="margin-top:8px"><button class="btn" id="copiarTudo">Copiar imagem e texto</button><button class="quieto" id="copiar">Só o texto</button><span id="copiado"></span></div></div>
           </div>
         </div>`;
       imagemDoRelatorio(rel).then((canvas) => {
@@ -709,6 +765,20 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         const blob = () => new Promise((ok) => canvas.toBlob(ok, 'image/png'));
         $('baixarImg').addEventListener('click', async () => {
           const a = document.createElement('a'); a.href = URL.createObjectURL(await blob()); a.download = 'relatorio-de-terca.png'; a.click();
+        });
+        // Imagem e texto de uma vez. No celular abre o compartilhar, e o WhatsApp recebe a imagem com o texto de legenda.
+        // No computador vão os dois juntos para a área de transferência.
+        $('copiarTudo').addEventListener('click', async () => {
+          const png = await blob(), arquivo = new File([png], 'relatorio-de-terca.png', {type: 'image/png'});
+          try {
+            if (navigator.canShare && navigator.canShare({files: [arquivo], text: d.texto}) && matchMedia('(pointer: coarse)').matches) {
+              await navigator.share({files: [arquivo], text: d.texto}); return;
+            }
+            await navigator.clipboard.write([new ClipboardItem({'image/png': png, 'text/plain': new Blob([d.texto], {type: 'text/plain'}),
+              'text/html': new Blob([`<img src="${canvas.toDataURL('image/png')}"><pre>${esc(d.texto)}</pre>`], {type: 'text/html'})})]);
+            $('copiado').textContent = 'Imagem e texto copiados.';
+          } catch (_) { $('copiado').textContent = 'Seu navegador não deixou. Use Baixar imagem e Só o texto.'; }
+          setTimeout(() => { $('copiado').textContent = ''; }, 3500);
         });
         $('copiarImg').addEventListener('click', async () => {
           try { await navigator.clipboard.write([new ClipboardItem({'image/png': await blob()})]); $('copiado').textContent = 'Imagem copiada.'; }
@@ -1050,7 +1120,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       const tipo = d.guias.find((r) => r.id_guia === t.ids[0]).tipo_principal;
       $('fTipo').insertAdjacentHTML('beforeend', `<option value="${esc(tipo)}">${esc(t.nome)}</option>`);
     });
-    desenharSegmento(); desenharLinhas(); desenharVisao(); desenharLegenda(); desenharRegras(); montarForm(); desenharNovas();
+    desenharSegmento(); desenharLinhas(); desenharVisao(); desenharEvolucao(); desenharLegenda(); desenharRegras(); montarForm(); desenharNovas();
   }).catch(() => {
     $('visao').innerHTML = '<div class="nota erro">Não consegui carregar as guias. Recarregue a página.</div>';
   });
