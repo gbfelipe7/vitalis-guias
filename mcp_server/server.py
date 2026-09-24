@@ -140,9 +140,15 @@ def listar_pendentes(convenio: str = "", unidade: str = "") -> dict:
 
 
 @mcp.tool()
-def relatorio_de_terca() -> str:
-    """O relatório de terça do Dr. Renato: guias verificadas, com problema, por tipo e dinheiro em risco."""
-    return relatorio_em_texto(montar_relatorio(list(LOTE_CONFERIDO.values())))
+def relatorio_de_terca(semana: str = "") -> str:
+    """O relatório de terça do Dr. Renato: guias verificadas, com problema, por tipo e dinheiro em risco.
+    Sem 'semana', o lote inteiro. Com uma data (2026-08-24) ou 'ultima', só as guias lançadas de segunda
+    a domingo daquela semana, que é o que a reunião de terça olha."""
+    if not semana:
+        return relatorio_em_texto(montar_relatorio(list(LOTE_CONFERIDO.values())))
+    from web.rotas import rota_relatorio
+    codigo, dados = rota_relatorio(semana=semana)
+    return dados["texto"] if codigo == 200 else dados["erro"]
 
 
 if __name__ == "__main__":
