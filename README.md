@@ -161,7 +161,7 @@ Depois de ver a primeira versão, pedi para refazer quatro coisas: a entrada da 
 5. **Guia repetida: a cópia é a lançada depois.** Duas guias do lote são a mesma, mas uma tem a data como 26/08/2026 e a outra como 2026-08-26. Comparando texto, passa. Por isso a guia é arrumada antes de qualquer comparação. Quando tudo bate (paciente, dia, procedimento, autorização e sessão), é o mesmo atendimento lançado duas vezes: a primeira vai e a lançada depois não deve ir. Quando só parte bate, as duas ficam para alguém conferir. Só o código do paciente igual não basta: nesta base ele se repete entre pessoas diferentes.
 6. **Dinheiro em risco é o valor da guia pendente, contado uma vez.** Guia com dois problemas entra no tipo do problema mais grave. Assim a soma por tipo bate com o total e ninguém conta o mesmo dinheiro duas vezes.
 
-7. **O lote é conferido na data de lançamento; a guia nova, hoje.** O recrutador orientou simular a conferência do lote de agosto na data de lançamento, como se a guia tivesse acabado de ser lançada. Por isso nenhuma das 80 aparece com prazo de envio vencido. Já a guia que chega pela página, pela API ou pelo MCP é conferida com a data de hoje: uma guia de junho lançada agora sai com o prazo vencido.
+7. **O lote é conferido na data de lançamento; a guia nova, hoje.** A Expert orientou simular a conferência do lote de agosto na data de lançamento, como se a guia tivesse acabado de ser lançada. Por isso nenhuma das 80 aparece com prazo de envio vencido. Já a guia que chega pela página, pela API ou pelo MCP é conferida com a data de hoje: uma guia de junho lançada agora sai com o prazo vencido.
 
 ### O que ficou de fora e por quê
 

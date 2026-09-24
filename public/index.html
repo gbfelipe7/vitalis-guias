@@ -1431,7 +1431,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       <div class="cartao"><h2>Para perguntar à Carla</h2><ul class="perguntas">
         ${linha(m.fds.n, `guias lançadas no fim de semana, sem atendimento nesses dias (${m.fds.ret} retidas)`, {ids: m.fds.ids, rotulo: 'Lançadas no fim de semana'})}
         ${m.copias.length ? linha(m.copias.length, 'guias lançadas duas vezes', {passo: 'copia', rotulo: 'Descartar a cópia'}) : ''}
-        ${m.recibo.length ? linha(m.recibo.length, 'guias com pedido de recibo para reembolso: podem estar cobrando duas vezes', {ids: m.ids(m.recibo), rotulo: 'Pediu recibo para reembolso'}) : ''}
+        ${m.recibo.length ? linha(m.recibo.length, 'guias que podem ir têm pedido de recibo para reembolso: podem estar cobrando duas vezes', {ids: m.ids(m.recibo), rotulo: 'Pediu recibo para reembolso'}) : ''}
       </ul></div>
     </div>
     <div class="nota" style="margin-top:16px">Com poucas guias por unidade e por convênio, a diferença entre eles pode ser acaso.</div>`;

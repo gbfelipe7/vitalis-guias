@@ -12,7 +12,7 @@ A Vitalis é uma rede de fisioterapia e ortopedia com três unidades. Fatura cer
 
 Materiais: `dados/guias.csv` (80 guias de agosto, fictícias) e `dados/regras_convenio.json` (o que cada convênio exige e cobre).
 
-Esclarecimentos da recrutadora, que valem como regra:
+Esclarecimentos da Expert sobre os dados, que valem como regra:
 - A validade da autorização é conferida contra a data do atendimento. O CSV só tem a data final.
 - O lote de agosto é conferido na data de lançamento: a guia acabou de ser lançada e ainda não foi enviada. O prazo de envio conta da data do atendimento.
 - As 80 guias são um recorte. Confira o que a guia declara, sem tentar reconstruir o histórico da autorização.
