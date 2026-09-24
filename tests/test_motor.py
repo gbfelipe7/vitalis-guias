@@ -541,6 +541,10 @@ class TerceiraRodada(unittest.TestCase):
         codigo = open(os.path.join(raiz, "motor", "verificar.py"), encoding="utf-8").read()
         pagina = open(os.path.join(raiz, "public", "index.html"), encoding="utf-8").read()
         do_motor = {chave: grav for _, grav, chave in re.findall(r'_pendencia\(\s*"(\w+)",\s*"(\w+)",\s*"(\w+)"', codigo)}
-        bloco = re.search(r"const GRAV_DA_REGRA = \{(.*?)\};", pagina, re.S).group(1)
-        da_pagina = dict(re.findall(r"(\w+): '(\w+)'", bloco))
+        bloco = re.search(r"const REGRAS_DA_PAGINA = \[(.*?)\];", pagina, re.S).group(1)
+        da_pagina = {}
+        for grav, chaves in re.findall(r"\{g: '(\w+)', t: '[^']*', r: \[([^\]]*)\]\}", bloco):
+            for chave in re.findall(r"'(\w+)'", chaves):
+                self.assertNotIn(chave, da_pagina, "regra repetida na página: " + chave)
+                da_pagina[chave] = grav
         self.assertEqual(do_motor, da_pagina)

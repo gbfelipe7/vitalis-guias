@@ -195,6 +195,9 @@ tr.det td{background:var(--card);padding:14px 16px}
 .leg{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
 .zap{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:20px;align-items:start}
 .zap img{width:100%;border-radius:12px;display:block;background:var(--card)}
+.grupos-regras{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.regra-linha{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line);font-size:13px}
+.regra-linha .num{flex:none;min-width:20px;text-align:right}
 .bolha{background:var(--good-soft);border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13px;color:var(--ink);margin-top:8px}
 .decisoes{display:grid;gap:10px}
 .decisao{display:grid;grid-template-columns:220px minmax(0,1fr) 90px;gap:16px;align-items:start;background:var(--card);border-radius:12px;padding:14px 18px}
@@ -219,6 +222,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   .grade2{grid-template-columns:1fr}
   .kpis{grid-template-columns:1fr 1fr}.kpi .n{font-size:28px}
   .zap{grid-template-columns:1fr}
+  .grupos-regras{grid-template-columns:1fr}
   #v-guias table{min-width:560px}
   #v-guias th:nth-child(2),#v-guias td:nth-child(2),#v-guias th:nth-child(4),#v-guias td:nth-child(4),#v-guias th:nth-child(8),#v-guias td:nth-child(8){display:none}
   tr.det .detbox{position:sticky;left:0;max-width:calc(100vw - 72px)}
@@ -328,15 +332,15 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
           <div class="passo"><div class="k">1</div><b>Entra</b><p>Pela página, pela API do sistema de gestão ou pelo Claude.</p><span class="ia sim">IA só em texto corrido, para separar os campos</span></div>
           <div class="passo"><div class="k">2</div><b>É arrumada</b><p>Datas e valores num formato só. O que não dá para ler segura a guia.</p><span class="ia">sem IA</span></div>
           <div class="passo"><div class="k">3</div><b>A observação é lida</b><p>Palavras-chave primeiro. Texto que ninguém entendeu segura a guia.</p><span class="ia sim">IA só no que sobrar, e só para segurar</span></div>
-          <div class="passo"><div class="k">4</div><b>As regras conferem</b><p>As 12 conferências da tabela abaixo.</p><span class="ia">sem IA</span></div>
+          <div class="passo"><div class="k">4</div><b>As regras conferem</b><p>As regras da lista abaixo.</p><span class="ia">sem IA</span></div>
           <div class="passo"><div class="k">5</div><b>Sai a decisão</b><p>Com o motivo, o que fazer e quem resolve. Se retida, sai o aviso.</p><span class="ia">sem IA</span></div>
         </div>
       </div>
 
       <div class="secao">
-        <h2>As conferências</h2>
-        <div class="pergunta">Nesta ordem, em toda guia. Clique no número para ver as guias do lote.</div>
-        <div class="tabela" style="border-top:0"><table class="lista" id="tabConferencias" style="min-width:680px"></table></div>
+        <h2>As regras</h2>
+        <div class="pergunta">Cada regra leva a uma decisão só. O número mostra quantas guias de agosto caíram nela. Uma guia pode cair em mais de uma.</div>
+        <div class="grupos-regras" id="tabConferencias"></div>
         <div class="nota" id="avisosLista"></div>
       </div>
 
@@ -755,25 +759,41 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     {o: 'O que a recepção anotou não muda a guia', de: 'Observação da recepção', ia: true, r: ['particular', 'procedimento_real', 'remarcada', 'verbal_com_numero', 'autorizacao_nova_solta', 'observacao_nao_reconhecida', 'observacao_cortada']},
     {o: 'A guia não é cópia de outra', de: 'Cuidado meu', r: ['duplicata_exata', 'duplicata_suspeita', 'mesma_sessao']},
   ];
-  // A decisão que cada regra dá, do jeito que está em motor/verificar.py.
-  const GRAV_DA_REGRA = {convenio_desconhecido: 'corrigir', campo_vazio: 'corrigir', sem_autorizacao: 'corrigir', sem_autorizacao_verbal_ok: 'corrigir',
-    sem_autorizacao_verbal_vencida: 'nao_enviar', sem_autorizacao_verbal_nao_aceita: 'corrigir', sem_paciente: 'corrigir', sem_procedimento: 'corrigir',
-    sem_sessao: 'corrigir', sem_valor: 'corrigir', sem_data_atendimento: 'corrigir', data_ilegivel: 'corrigir', lancada_antes: 'conferir',
-    atendimento_no_futuro: 'conferir', autorizacao_vencida: 'nao_enviar', autorizacao_vencida_com_nova: 'corrigir', nova_tambem_nao_cobre: 'nao_enviar',
-    sessao_acima: 'nao_enviar', sessao_acima_do_declarado: 'conferir', procedimento_desconhecido: 'corrigir', nao_coberto: 'nao_enviar',
-    descricao_divergente: 'conferir', valor_divergente: 'corrigir', profissional_incompativel: 'conferir', prazo_vencido: 'nao_enviar',
-    particular: 'nao_enviar', procedimento_real: 'corrigir', remarcada: 'conferir', verbal_com_numero: 'conferir', autorizacao_nova_solta: 'conferir',
-    observacao_nao_reconhecida: 'conferir', observacao_cortada: 'conferir', duplicata_exata: 'nao_enviar', duplicata_suspeita: 'conferir', mesma_sessao: 'conferir'};
+  // Cada regra do motor (motor/verificar.py), com a única decisão que ela dá. Um teste confere que bate com o código.
+  const REGRAS_DA_PAGINA = [
+    {g: 'nao_enviar', t: 'A autorização estava vencida no dia do atendimento', r: ['autorizacao_vencida']},
+    {g: 'nao_enviar', t: 'A sessão passa do limite do convênio', r: ['sessao_acima']},
+    {g: 'nao_enviar', t: 'O convênio não cobre o procedimento', r: ['nao_coberto']},
+    {g: 'nao_enviar', t: 'A guia é cópia de outra já lançada', r: ['duplicata_exata']},
+    {g: 'nao_enviar', t: 'O paciente quer pagar particular', r: ['particular']},
+    {g: 'nao_enviar', t: 'A autorização nova também não cobre o dia do atendimento', r: ['nova_tambem_nao_cobre']},
+    {g: 'nao_enviar', t: 'A autorização por telefone passou do prazo', r: ['sem_autorizacao_verbal_vencida']},
+    {g: 'nao_enviar', t: 'O prazo de envio do convênio venceu', r: ['prazo_vencido']},
+    {g: 'corrigir', t: 'Falta um campo que o convênio exige', r: ['campo_vazio']},
+    {g: 'corrigir', t: 'Falta o número da autorização', r: ['sem_autorizacao', 'sem_autorizacao_verbal_ok', 'sem_autorizacao_verbal_nao_aceita']},
+    {g: 'corrigir', t: 'O paciente trouxe autorização nova e ela não foi lançada', r: ['autorizacao_vencida_com_nova']},
+    {g: 'corrigir', t: 'O procedimento feito foi outro', r: ['procedimento_real']},
+    {g: 'corrigir', t: 'O código não existe ou o valor não bate com a tabela', r: ['procedimento_desconhecido', 'valor_divergente']},
+    {g: 'corrigir', t: 'Falta paciente, procedimento, sessão, valor ou data, ou não dá para ler', r: ['sem_paciente', 'sem_procedimento', 'sem_sessao', 'sem_valor', 'sem_data_atendimento', 'data_ilegivel']},
+    {g: 'corrigir', t: 'O convênio não está nas regras', r: ['convenio_desconhecido']},
+    {g: 'conferir', t: 'O registro do profissional não combina com o procedimento', r: ['profissional_incompativel']},
+    {g: 'conferir', t: 'O mesmo paciente tem o mesmo procedimento no mesmo dia em outra guia', r: ['duplicata_suspeita']},
+    {g: 'conferir', t: 'Outra guia usa a mesma autorização e a mesma sessão', r: ['mesma_sessao']},
+    {g: 'conferir', t: 'A sessão foi remarcada e a autorização era da data original', r: ['remarcada']},
+    {g: 'conferir', t: 'A sessão passa do limite que a própria guia informa', r: ['sessao_acima_do_declarado']},
+    {g: 'conferir', t: 'A descrição não bate com o código do procedimento', r: ['descricao_divergente']},
+    {g: 'conferir', t: 'A anotação sobre autorização não bate com a guia', r: ['verbal_com_numero', 'autorizacao_nova_solta']},
+    {g: 'conferir', t: 'A observação da recepção não foi entendida', r: ['observacao_nao_reconhecida', 'observacao_cortada']},
+    {g: 'conferir', t: 'Data estranha: lançada antes do atendimento, ou atendimento no futuro', r: ['lancada_antes', 'atendimento_no_futuro']},
+  ];
+  const SENTIDO = {nao_enviar: 'O convênio recusaria.', corrigir: 'Dá para arrumar a guia.', conferir: 'A regra não proíbe, mas algo parece errado.'};
   function desenharRegras() {
-    $('tabConferencias').innerHTML = '<thead><tr><th>#</th><th>O que confere</th><th>De onde vem</th><th>Se falhar</th><th class="n">No lote</th></tr></thead><tbody>'
-      + CONFERENCIAS.map((c, i) => {
-        const hits = LOTE.guias.filter((g) => g.pendencias.some((p) => c.r.includes(p.regra)));
-        const graves = ORDEM.filter((g) => c.r.some((k) => GRAV_DA_REGRA[k] === g));
-        return `<tr><td class="num">${i + 1}</td><td>${c.o}${c.ia ? ' <span class="ia sim" style="padding:0">IA pode ajudar a ler</span>' : ''}</td><td class="vazio">${c.de}</td>
-          <td style="white-space:nowrap">${graves.map((g) => `<span class="leg"><i class="ponto ${g}"></i>${CURTO[g]}</span>`).join('<br>')}</td>
-          <td class="n">${hits.length ? `<span class="clicavel" ${filtro({ids: hits.map((g) => g.id_guia), rotulo: c.o})}>${hits.length}</span>` : '<span class="vazio">0</span>'}</td></tr>`;
-      }).join('') + '</tbody>';
-    $('avisosLista').textContent = 'Sem segurar a guia, o conferente também avisa: última sessão da autorização, recibo para reembolso, código achado pela descrição, validade longa demais e prazo de envio chegando.';
+    $('tabConferencias').innerHTML = ORDEM.map((g) => `<div class="cartao"><div>${selo(g)}</div><div class="pergunta" style="margin:8px 0 6px">${SENTIDO[g]}</div>`
+      + REGRAS_DA_PAGINA.filter((x) => x.g === g).map((x) => {
+        const hits = LOTE.guias.filter((guia) => guia.pendencias.some((p) => x.r.includes(p.regra)));
+        return `<div class="regra-linha"><span>${x.t}</span>${hits.length ? `<span class="num clicavel" ${filtro({ids: hits.map((guia) => guia.id_guia), rotulo: x.t})}>${hits.length}</span>` : '<span class="num vazio">0</span>'}</div>`;
+      }).join('') + '</div>').join('');
+    $('avisosLista').textContent = 'A IA só pode ajudar nas regras que dependem do que a recepção anotou. Fora das regras, o conferente também avisa sem segurar a guia: última sessão, recibo para reembolso, validade longa demais e prazo chegando.';
     const R = LOTE.regras, nomeProc = (c) => (R.procedimentos.find((p) => p.codigo === c) || {}).descricao || c;
     $('tabConvenios').innerHTML = '<thead><tr><th>Convênio</th><th>Exige</th><th>Sessões</th><th>Autorização</th><th>Enviar em</th><th>Não cobre</th></tr></thead><tbody>'
       + R.convenios.map((c) => `<tr><td>${esc(c.nome)}</td><td class="vazio">${c.campos_obrigatorios.map((k) => NOME_CAMPO[k] || k).join(', ')}</td>
