@@ -208,10 +208,18 @@ svg .nodo{font:12.5px var(--sans)}
 .dica b{display:block;font-weight:500;margin-bottom:4px;color:var(--ink)}
 .dica div{display:flex;align-items:center;gap:6px;color:var(--ink2);margin-top:2px}
 .dica .num{margin-left:auto;color:var(--ink);font-weight:500;padding-left:12px}
-.pecas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.peca .faz{margin-top:6px;color:var(--ink)}
-.peca .rotulo{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:12px}
-.peca p{margin:4px 0 0;color:var(--ink2);font-size:13px}
+.etapas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:22px}
+.etapa{background:var(--card);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--ink2);line-height:1.45}
+.etapa .k,.solucao .k{font-family:var(--num);font-weight:var(--num-w);font-size:22px;color:var(--ink);line-height:1.1;margin-bottom:6px}
+.grupo-nome{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px 2px}
+.pecas{padding-top:4px;padding-bottom:4px}
+.peca{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr);gap:28px;padding:16px 0;border-top:1px solid var(--line)}
+.peca:first-child{border-top:0}
+.peca .faz{margin-top:6px;color:var(--ink);font-size:13.5px}
+.peca p{margin:0;color:var(--ink2);font-size:13px}
+.peca .onde{margin-top:8px;font-size:12.5px;color:var(--ink3)}
+.peca .onde>span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+.peca .onde .ver{margin-top:0}
 .ver{display:inline-block;margin-top:8px;font-size:12.5px;color:var(--ink2);text-decoration:underline;text-decoration-color:var(--line2)}
 .achados{display:grid;gap:12px;margin-top:22px}
 .achado{display:grid;grid-template-columns:180px minmax(0,1fr);gap:20px;align-items:start}
@@ -220,8 +228,8 @@ svg .nodo{font:12.5px var(--sans)}
 .achado .barras{margin-top:12px;max-width:520px}
 .solucoes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .solucao{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px}
-.solucao .k{font-family:var(--num);font-weight:var(--num-w);font-size:22px;color:var(--ink3);line-height:1.1}
-.solucao .resolve{font-size:12.5px;color:var(--bad);margin-top:4px}
+.solucao .resolve{font-size:12.5px;color:var(--ink3);margin-top:4px}
+.solucao .resolve b{font-weight:500;color:var(--bad)}
 .solucao p{margin:6px 0 0;color:var(--ink2);font-size:13px}
 .etiquetas{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .etq{font-size:11.5px;border-radius:5px;padding:2px 8px}
@@ -250,7 +258,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   .grade2{grid-template-columns:1fr}
   .kpis{grid-template-columns:1fr 1fr}.kpi .n{font-size:28px}
   .zap{grid-template-columns:1fr}
-  .pecas,.solucoes{grid-template-columns:1fr}.achado{grid-template-columns:1fr;gap:6px}
+  .solucoes{grid-template-columns:1fr}.achado{grid-template-columns:1fr;gap:6px}.peca{grid-template-columns:1fr;gap:8px}.etapas{grid-template-columns:1fr 1fr}
   .grupos-regras{grid-template-columns:1fr}
   #v-guias table{min-width:560px}
   #v-guias th:nth-child(2),#v-guias td:nth-child(2),#v-guias th:nth-child(4),#v-guias td:nth-child(4),#v-guias th:nth-child(7),#v-guias td:nth-child(7),#v-guias th:nth-child(8),#v-guias td:nth-child(8){display:none}
@@ -307,6 +315,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
           <div class="cartao"><h2>Onde roda</h2><p style="margin:8px 0 0">Na prova, na Vercel, sem banco e com a API aberta para a banca testar. Em produção, numa VPS no Brasil, com o conferente, o banco de dados, o n8n e o Nginx em containers, token na API e backup diário. O aviso sai pela API oficial do WhatsApp ou por Z-API ou Evolution, e a IA seria um modelo pequeno pago, como um GPT mini.</p></div>
           <div class="cartao"><h2>MCP, Skill e código</h2><p style="margin:8px 0 0">Em <a href="https://github.com/gbfelipe7/vitalis-guias">github.com/gbfelipe7/vitalis-guias</a>: o conferente em <code>motor/</code>, o MCP em <code>mcp_server/</code> e a Skill em <code>skills/conferir-guia/</code>.</p></div>
         </div>
+      <div id="solucoesLista"></div>
       </div>
 
     </section>
@@ -1323,41 +1332,44 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   function desenharConstruido() {
     const el = $('construido'); if (!el || !DADOS) return;
     const m = metricas();
-    const peca = (titulo, faz, como, onde) => `<div class="cartao peca"><h2>${titulo}</h2><div class="faz">${faz}</div>
-      <div class="rotulo">Como é feito</div><p>${como}</p><div class="rotulo">Onde ver</div><p>${onde}</p></div>`;
+    const peca = (titulo, faz, como, onde) => `<div class="peca"><div><h2>${titulo}</h2><div class="faz">${faz}</div></div>
+      <div><p>${como}</p><div class="onde"><span>Onde ver</span> ${onde}</div></div></div>`;
+    const grupo = (nome, pecas) => `<div class="secao"><div class="grupo-nome">${nome}</div><div class="cartao pecas">${pecas}</div></div>`;
     el.innerHTML = `
-      <div class="kpis">
-        <div class="kpi"><div class="r">Guias conferidas</div><div class="n">${m.rel.verificadas}</div><div class="d">todas de agosto</div></div>
-        <div class="kpi"><div class="r">Podem enviar</div><div class="n">${m.rel.ok}</div><div class="d">${m.rel.ok} de ${m.rel.verificadas}</div></div>
-        <div class="kpi"><div class="r">Retidas antes do envio</div><div class="n">${m.rel.pendentes}</div><div class="d">${m.rel.pendentes} de ${m.rel.verificadas}</div></div>
-        <div class="kpi"><div class="r">Em risco</div><div class="n">${reaisInt(m.rel.valor_em_risco)}</div><div class="d">de ${reaisInt(m.rel.valor_total)}</div></div>
+      <div class="etapas">
+        <div class="etapa"><div class="k">1</div>A recepção lança a guia no sistema de gestão, como já faz.</div>
+        <div class="etapa"><div class="k">2</div>O conferente compara com as regras do convênio: 24 regras, em menos de um segundo.</div>
+        <div class="etapa"><div class="k">3</div>Pode enviar, ou fica retida com o aviso para quem resolve.</div>
+        <div class="etapa"><div class="k">4</div>Na terça, o relatório vai para o Dr. Renato.</div>
       </div>
-      <div class="secao pecas">
-        ${peca('Conferência no lançamento', 'Cada guia é conferida quando é lançada e sai com a decisão, o motivo, o que fazer e quem resolve, em menos de um segundo.',
-          'O motor em Python compara a guia com as regras do convênio: campos exigidos, validade da autorização contra a data do atendimento, limite de sessões, cobertura, valor, profissional, prazo de envio, a observação da recepção e guia repetida. São 24 regras, e cada uma leva a uma decisão só.',
-          `${irVer(['Lançar guia', '#lancar'])} · API <code>POST /api/verificar</code> · MCP <code>verificar_guia</code>`)}
-        ${peca('Consulta de regra', 'Responde, antes do atendimento, se o convênio cobre o procedimento e o que ele exige.',
-          'Lê o arquivo de regras da prova e as frases dos convênios que viraram regra escrita. Para um convênio e um procedimento, devolve se cobre, o que fazer se não cobre, o limite de sessões, a validade máxima da autorização, o prazo de envio e os campos exigidos.',
-          `No formulário, o procedimento não coberto aparece marcado ao escolher o convênio · API <code>GET /api/regra</code> · MCP <code>consultar_regra</code>`)}
-        ${peca('Lista de renovação', `Aponta os pacientes cuja autorização vai vencer ou esgotar antes da próxima sessão. Hoje são ${m.renovar.length}.`,
-          'Para cada guia que pode ir, calcula quantos dias faltam da data do atendimento até a validade da autorização e quantas sessões sobram (o limite menos a sessão atual). Entra na lista quem vence em até 7 dias ou já usou 80% das sessões.',
-          `${irVer(['3. Soluções', '#solucoes'])} · no relatório de terça, em "Para esta semana"`)}
-        ${peca('Relatório de terça', 'O resumo do Dr. Renato: quantas guias, quantas retidas, de que tipo, quanto em risco e o que fazer na semana.',
-          'Junta todas as conferências. Cada guia retida conta uma vez, no problema mais grave, e o valor sai dividido por quem resolve. Gera a imagem e o texto para o WhatsApp.',
-          `${irVer(['Relatório de terça', '#terca'])} · API <code>GET /api/relatorio</code> · MCP <code>relatorio_de_terca</code>`)}
-        ${peca('Aviso para quem resolve', 'Guia retida já sai com a mensagem pronta e o destinatário.',
-          'O próximo passo da guia decide quem recebe: a recepção da unidade, quem pede autorização aos convênios, o financeiro ou a Carla. A mensagem leva só o número da guia, a unidade, o convênio, o problema e o que fazer, sem nome de paciente nem CID.',
-          `${irVer(['Lançar guia', '#lancar'])}, depois de lançar uma guia retida`)}
-        ${peca('Guia repetida e correção', 'Acha a mesma guia lançada duas vezes, e deixa corrigir uma guia retida.',
-          'Arruma as datas antes de comparar. Se tudo bate, é o mesmo atendimento: a lançada depois é a cópia. Se só parte bate, fica para conferir. Uma guia corrigida é conferida de novo e entra no lugar da original.',
-          `${irVer(['Como funciona', '#como'])} · botão "Corrigir esta guia" em ${irVer(['Guias de agosto', '#guias'])}`)}
-        ${peca('MCP e Skill', 'Deixam conferir pelo Claude, colando a guia do jeito que a recepção escreveu.',
-          'O MCP conecta o Claude às regras e às guias, com quatro ferramentas: consultar regra, verificar guia, listar pendentes e relatório de terça. A Skill é o manual que ensina o Claude a separar os dados, perguntar o que falta e responder no mesmo formato.',
-          'No repositório: <code>mcp_server/</code> e <code>skills/conferir-guia/</code>')}
-        ${peca('Onde a IA entra', 'Só para ler texto. Nunca decide e nunca libera uma guia.',
-          'Separa os campos de uma guia colada como texto corrido, e lê o trecho da observação da recepção que as palavras-chave não entenderam. Todo valor que ela devolve tem que estar escrito no texto, e ela só pode segurar a guia.',
-          `${irVer(['Como funciona', '#como'])}`)}
-      </div>`;
+      ${grupo('Na hora do lançamento',
+        peca('Conferência da guia', 'Cada guia sai com a decisão, o motivo, o que fazer e quem resolve.',
+          'O motor em Python compara a guia com a regra do convênio: campos exigidos, validade da autorização na data do atendimento, limite de sessões, cobertura, valor, profissional, prazo de envio, a observação da recepção e guia repetida. Cada regra leva a uma decisão só.',
+          `${irVer(['Lançar guia', '#lancar'])} · <code>POST /api/verificar</code> · MCP <code>verificar_guia</code>`)
+        + peca('Aviso para quem resolve', 'Guia retida já sai com a mensagem pronta e o destinatário.',
+          'O próximo passo da guia escolhe quem recebe: a recepção da unidade, quem pede autorização aos convênios, o financeiro ou a Carla. A mensagem leva o número da guia, a unidade, o convênio, o problema e o que fazer, sem nome de paciente nem CID.',
+          `${irVer(['Lançar guia', '#lancar'])}, depois de lançar uma guia retida`)
+        + peca('Guia repetida e correção', 'Acha a mesma guia lançada duas vezes e deixa corrigir a retida.',
+          'Arruma as datas antes de comparar. Se tudo bate, é o mesmo atendimento e a lançada depois é a cópia. Se só parte bate, fica para conferir. A guia corrigida é conferida de novo e entra no lugar da original.',
+          `botão "Corrigir esta guia" em ${irVer(['Guias de agosto', '#guias'])}`))}
+      ${grupo('Antes do atendimento',
+        peca('Consulta de regra', 'Diz se o convênio cobre o procedimento e o que ele exige.',
+          'Lê a regra do convênio (o arquivo da prova e as frases que viraram regra escrita) e devolve: se cobre, o que fazer se não cobre, o limite de sessões, a validade da autorização, o prazo de envio e os campos exigidos.',
+          `o formulário marca o procedimento não coberto · <code>GET /api/regra</code> · MCP <code>consultar_regra</code>`)
+        + peca('Lista de renovação', `Aponta quem precisa de autorização nova antes da próxima sessão. Hoje são ${m.renovar.length}.`,
+          'Para cada guia que pode ir, conta os dias da data do atendimento até a validade da autorização e as sessões que sobram (limite menos a sessão atual). Entra na lista quem vence em até 7 dias ou já usou 80% das sessões.',
+          `${irVer(['3. Soluções', '#solucoes'])} · relatório de terça, em "Para esta semana"`))}
+      ${grupo('Para o Dr. Renato',
+        peca('Relatório de terça', 'Quantas guias, quantas retidas, quanto em risco e o que fazer na semana.',
+          'Junta as conferências. Cada guia retida conta uma vez, no problema mais grave, e o valor sai dividido por quem resolve. Gera a imagem e o texto para o WhatsApp.',
+          `${irVer(['Relatório de terça', '#terca'])} · <code>GET /api/relatorio</code> · MCP <code>relatorio_de_terca</code>`))}
+      ${grupo('Pelo Claude',
+        peca('MCP e Skill', 'Conferir pelo Claude, colando a guia do jeito que a recepção escreveu.',
+          'O MCP liga o Claude às regras e às guias, com quatro ferramentas: consultar regra, verificar guia, listar pendentes e relatório de terça. A Skill é o manual: ensina o Claude a separar os dados, perguntar o que falta e responder sempre no mesmo formato.',
+          '<code>mcp_server/</code> e <code>skills/conferir-guia/</code> no repositório')
+        + peca('Onde a IA entra', 'Só para ler texto. Nunca decide e nunca libera uma guia.',
+          'Separa os campos de uma guia colada como texto corrido e lê a observação da recepção que as palavras-chave não entenderam. Todo valor que ela devolve tem que estar escrito no texto, e ela só pode segurar a guia.',
+          irVer(['Como funciona', '#como'])))}`;
   }
 
   function desenharProblemas() {
@@ -1395,7 +1407,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     const el = $('solucoes'); if (!el || !DADOS) return;
     const m = metricas(), a = m.atraso;
     const sol = (k, titulo, resolve, frase, pronto, falta) => `<div class="cartao solucao"><div class="k">${k}</div><div>
-      <h2>${titulo}</h2><div class="resolve">Resolve: ${resolve}</div><p>${frase}</p>
+      <h2>${titulo}</h2><div class="resolve"><b>Resolve</b> ${resolve}</div><p>${frase}</p>
       <div class="etiquetas">${pronto ? `<span class="etq ok">Pronto: ${pronto}</span>` : ''}${falta ? `<span class="etq falta">Falta: ${falta}</span>` : ''}</div></div></div>`;
     const urg = (r) => Math.min(r.folga_da_autorizacao.dias == null ? 99 : r.folga_da_autorizacao.dias, r.folga_da_autorizacao.sessoes == null ? 99 : r.folga_da_autorizacao.sessoes * 7);
     const motivo = (f) => [f.dias != null && f.dias <= 7 ? (f.dias === 0 ? 'vence no dia do atendimento' : `vence ${f.dias} dia${f.dias > 1 ? 's' : ''} depois do atendimento`) : '',
@@ -1424,7 +1436,8 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
           'Se o paciente que pede recibo pagou do bolso, a guia não vai ao convênio. Uma resposta da Carla vira regra para todos os meses.', 'o aviso nessas guias', 'a resposta da Carla')}
         ${sol(8, 'Provar o resultado em dinheiro', 'saber se a glosa caiu de verdade',
           'Ler o retorno do convênio e casar cada glosa com a guia. O que escapou vira regra nova, e para cada glosa sai o texto do recurso pronto.', '', 'o demonstrativo de retorno de cada convênio')}
-      </div>
+      </div>`;
+    $('solucoesLista').innerHTML = `
       <div class="secao cartao">
         <h2>${m.renovar.length} autorizações para renovar</h2>
         <div class="pergunta">Vencem em até 7 dias ou já usaram 80% das sessões. As 6 mais urgentes.</div>
