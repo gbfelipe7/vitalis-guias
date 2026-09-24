@@ -20,7 +20,7 @@
 --sans:'Figtree',system-ui,-apple-system,sans-serif;--serif:'EB Garamond',Georgia,serif;
 --seg:0 1px 2px rgba(28,28,26,.10);
 }
-@media (prefers-color-scheme:dark){:root{
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;
 --page:#151514;--panel:#1c1c1b;--card:#242423;--card2:#2c2c2a;
 --line:rgba(236,235,230,.08);--line2:rgba(236,235,230,.18);
 --ink:#ecebe6;--ink2:#b3b2ab;--ink3:#a3a29b;--muted:#7d7c76;
@@ -120,7 +120,7 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--ink);outline-off
 
 /* tabela */
 .tabela{overflow-x:auto;border-top:1px solid var(--line)}
-table{width:100%;border-collapse:collapse;min-width:760px}
+table{width:100%;border-collapse:collapse;min-width:900px}
 th{text-align:left;font-size:12px;font-weight:500;color:var(--ink3);padding:10px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
 tr.g{cursor:pointer}tr.g:hover td{background:var(--hover)}
@@ -196,6 +196,10 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   .conf{position:static}
   .campos{grid-template-columns:1fr}
   .grade2{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr 1fr}.kpi .n{font-size:28px}
+  #v-guias table{min-width:560px}
+  #v-guias th:nth-child(2),#v-guias td:nth-child(2),#v-guias th:nth-child(4),#v-guias td:nth-child(4),#v-guias th:nth-child(8),#v-guias td:nth-child(8){display:none}
+  tr.det .detbox{position:sticky;left:0;max-width:calc(100vw - 72px)}
   .decisao{grid-template-columns:1fr}.decisao .q{text-align:left}
   .frase{font-size:19px;padding:18px}
 }
@@ -240,7 +244,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         <span class="contagem" id="contagem"></span>
       </div>
       <div class="tabela"><table>
-        <thead><tr><th>Guia</th><th>Unidade</th><th>Convênio</th><th>Procedimento</th><th class="n">Valor</th><th>Decisão</th><th>Motivo principal</th></tr></thead>
+        <thead><tr><th>Guia</th><th>Unidade</th><th>Convênio</th><th>Procedimento</th><th class="n">Valor</th><th>Decisão</th><th>Motivo principal</th><th>Próximo passo</th></tr></thead>
         <tbody id="linhas"></tbody>
       </table></div>
       <div class="nota">O lote de agosto é conferido na data de lançamento de cada guia, como se ela tivesse acabado de ser lançada e ainda não tivesse ido para o convênio. Guia nova é conferida com a data de hoje.</div>
@@ -301,8 +305,8 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
           <div class="passo"><div class="k">1</div><b>Entra</b><p>Pelo formulário, pelo endereço que o sistema de gestão chama a cada lançamento, ou pelo Claude com a Skill.</p></div>
           <div class="passo"><div class="k">2</div><b>É arrumada</b><p>Data em dois formatos vira uma só. "Aguardando" e "n/a" contam como vazio. O que não dá para ler segura a guia.</p></div>
           <div class="passo"><div class="k">3</div><b>A observação vira fato</b><p>Particular, autorização por telefone, código errado. Texto que ninguém entendeu segura a guia para uma pessoa ler.</p></div>
-          <div class="passo"><div class="k">4</div><b>A regra decide</b><p>Campos exigidos, validade, limite de sessões, cobertura, profissional, prazo de envio e guia repetida.</p></div>
-          <div class="passo"><div class="k">5</div><b>Sai a decisão</b><p>Com o motivo e o que fazer. Vai para o relatório de terça.</p></div>
+          <div class="passo"><div class="k">4</div><b>A regra decide</b><p>Campos exigidos, validade, limite de sessões, cobertura, valor de referência, profissional, prazo de envio e guia repetida.</p></div>
+          <div class="passo"><div class="k">5</div><b>Sai a decisão</b><p>Com o motivo e o que fazer. A guia lançada pela página entra no relatório de terça. Em produção, toda conferência seria gravada.</p></div>
         </div>
       </div>
 
@@ -315,7 +319,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       <div class="secao grade2">
         <div class="cartao">
           <h2>Onde entra IA</h2>
-          <p style="margin:8px 0 0">Em dois lugares só: separar os campos de uma guia colada como texto corrido, e ler a observação da recepção. Na observação ela só pode acrescentar pendência. No texto, todo valor que ela devolve tem que estar escrito no texto, e a pessoa confere o formulário antes de lançar. Se a IA estiver fora do ar, tudo funciona igual por palavras-chave. O lote de agosto roda sem IA, para dar sempre o mesmo resultado.</p>
+          <p style="margin:8px 0 0">Em dois lugares só: separar os campos de uma guia colada como texto corrido, e ler a observação da recepção. Na observação ela só pode acrescentar pendência. No texto, todo valor que ela devolve tem que estar escrito no texto, e a pessoa confere o formulário antes de lançar. Se a IA estiver fora do ar, nada é liberado: a observação que as palavras-chave não reconhecem segura a guia para uma pessoa ler, e o texto colado é separado só por expressões regulares. O lote de agosto roda sem IA, para dar sempre o mesmo resultado.</p>
         </div>
         <div class="cartao">
           <h2>MCP, Skill e código</h2>
@@ -350,7 +354,8 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   let LOTE = null;          // resposta de /api/guias
   let novas = [];           // [{campos, resultado}] lançadas nesta sessão
   try { novas = JSON.parse(sessionStorage.getItem('vitalis-lancadas') || '[]'); } catch (_) { novas = []; }
-  const guardarNovas = () => { try { sessionStorage.setItem('vitalis-lancadas', JSON.stringify(novas.slice(0, 30))); } catch (_) {} };
+  const LIMITE_NOVAS = 50;       // o mesmo MAXIMO_DE_NOVAS de web/rotas.py
+  const guardarNovas = () => { novas = novas.slice(0, LIMITE_NOVAS); try { sessionStorage.setItem('vitalis-lancadas', JSON.stringify(novas)); } catch (_) {} };
 
   /* ---------------- navegação ---------------- */
   const VISTAS = ['visao', 'guias', 'lancar', 'terca', 'como'];
@@ -372,7 +377,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   function detalhe(r) {
     const g = r.guia;
     const alertas = r.alertas.map((a) => `<div class="aviso">Aviso: ${esc(a)}</div>`).join('');
-    return `${pendencias(r)}${alertas}
+    return `${pendencias(r)}${r.proximo_passo_nome ? `<div class="aviso">Quem resolve: ${esc(r.proximo_passo_nome)}.</div>` : ''}${alertas}
       <div class="aviso">Paciente ${esc(g.paciente)} · atendimento ${esc(br(g.data_atendimento))} · autorização ${esc(g.numero_autorizacao || 'sem número')}${g.autorizacao_validade ? ' válida até ' + esc(br(g.autorizacao_validade)) : ''} · sessão ${esc(g.sessao_numero_na_autorizacao)} · ${esc(g.profissional)} ${esc(g.profissional_registro)} · lançada em ${esc(br(g.data_lancamento))}${r.enviar_ate ? ' · enviar até ' + br(r.enviar_ate) : ''}</div>
       ${g.observacao_recepcao ? `<div class="aviso">A recepção escreveu: “${esc(g.observacao_recepcao)}”</div>` : ''}`;
   }
@@ -394,18 +399,18 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     const vis = LOTE.guias.filter((r) => (!filtroDecisao || r.gravidade === filtroDecisao)
       && (!filtroExtra || (filtroExtra.passo ? r.proximo_passo === filtroExtra.passo : filtroExtra.ids.includes(r.id_guia)))
       && (!fu || r.guia.unidade === fu) && (!fc || r.guia.convenio === fc)
-      && (!ft || r.pendencias.some((p) => p.tipo === ft))
-      && (!fb || semAcento(JSON.stringify(r.guia)).includes(fb)));
-    $('contagem').textContent = `${vis.length} de ${LOTE.guias.length} guias · ${reais(vis.reduce((s, r) => s + r.valor_em_risco, 0))} segurados`;
-    $('linhas').innerHTML = vis.map((r) => `<tr class="g" data-id="${esc(r.id_guia)}"><td class="id">${esc(r.id_guia)}</td><td>${esc(r.guia.unidade)}</td><td>${esc(r.guia.convenio)}</td><td>${esc(r.guia.procedimento_descricao)}</td><td class="n">${reais(r.valor)}</td><td>${selo(r.gravidade)}</td><td>${esc(r.pendencias[0] ? r.pendencias[0].motivo : '')}</td></tr>`).join('')
-      || '<tr><td colspan="7" class="vazio">Nenhuma guia com esses filtros.</td></tr>';
+      && (!ft || r.tipo_principal === ft)
+      && (!fb || semAcento(Object.values(r.guia).join(' ')).includes(fb)));
+    $('contagem').textContent = `${vis.length} de ${LOTE.guias.length} guias · ${reais(vis.reduce((s, r) => s + r.valor_em_risco, 0))} retidos`;
+    $('linhas').innerHTML = vis.map((r) => `<tr class="g" tabindex="0" data-id="${esc(r.id_guia)}"><td class="id">${esc(r.id_guia)}</td><td>${esc(r.guia.unidade)}</td><td>${esc(r.guia.convenio)}</td><td>${esc(r.guia.procedimento_descricao)}</td><td class="n">${reais(r.valor)}</td><td>${selo(r.gravidade)}</td><td>${esc(r.pendencias[0] ? r.pendencias[0].motivo : '')}</td><td class="vazio">${esc(r.proximo_passo_nome || '')}</td></tr>`).join('')
+      || '<tr><td colspan="8" class="vazio">Nenhuma guia com esses filtros.</td></tr>';
   }
   $('linhas').addEventListener('click', (e) => {
     const tr = e.target.closest('tr.g'); if (!tr) return;
     const prox = tr.nextElementSibling;
     if (prox && prox.classList.contains('det')) { prox.remove(); return; }
     const r = LOTE.guias.find((x) => x.id_guia === tr.dataset.id);
-    tr.insertAdjacentHTML('afterend', `<tr class="det"><td colspan="7">${detalhe(r)}</td></tr>`);
+    tr.insertAdjacentHTML('afterend', `<tr class="det"><td colspan="8"><div class="detbox">${detalhe(r)}</div></td></tr>`);
   });
   ['fUnidade', 'fConvenio', 'fTipo'].forEach((id) => $(id).addEventListener('change', desenharLinhas));
   $('fBusca').addEventListener('input', desenharLinhas);
@@ -416,7 +421,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     filtroDecisao = f.decisao || '';
     filtroExtra = (f.passo || f.ids) ? {rotulo: f.rotulo || '', passo: f.passo, ids: f.ids || []} : null;
     $('fExtra').innerHTML = filtroExtra ? `<span class="chip">${esc(filtroExtra.rotulo)}<button type="button" aria-label="Tirar este filtro" id="tiraExtra">×</button></span>` : '';
-    if (filtroExtra) $('tiraExtra').addEventListener('click', () => filtrarGuias({decisao: filtroDecisao, unidade: $('fUnidade').value, convenio: $('fConvenio').value, tipo: $('fTipo').value}));
+    if (filtroExtra) $('tiraExtra').addEventListener('click', () => filtrarGuias({decisao: filtroDecisao, unidade: $('fUnidade').value, convenio: $('fConvenio').value, tipo: $('fTipo').value, busca: $('fBusca').value}));
     $('fUnidade').value = f.unidade || ''; $('fConvenio').value = f.convenio || '';
     $('fTipo').value = f.tipo || ''; $('fBusca').value = f.busca || '';
     desenharSegmento(); desenharLinhas();
@@ -427,7 +432,10 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     e.preventDefault();
     try { filtrarGuias(JSON.parse(el.dataset.filtro)); } catch (_) {}
   });
-  const filtro = (f) => `data-filtro='${esc(JSON.stringify(f))}'`;
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-filtro], tr.g')) { e.preventDefault(); e.target.click(); }
+  });
+  const filtro = (f) => `tabindex="0" role="button" data-filtro='${esc(JSON.stringify(f))}'`;
 
   /* ---------------- barras simples ---------------- */
   function barras(itens, max) {
@@ -440,38 +448,46 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   const legendaDecisao = () => '<div class="legenda">' + ORDEM.map((g) => `<span><i class="ponto ${g}"></i>${DECISAO[g]}</span>`).join('') + '</div>';
 
   /* ---------------- visão geral ---------------- */
-  // Onde cada tipo de problema nasce. A decisão que isso apoia: o que se resolve na guia e o que
-  // só se resolve antes da sessão, conferindo a autorização quando o paciente chega.
+  // Onde cada guia retida nasce. A decisão que isso apoia: o que se resolve na guia e o que só se
+  // resolve antes da sessão, conferindo a autorização quando o paciente chega.
+  // Guia com procedimento que o convênio não cobre conta como consultório, mesmo com outro problema junto.
   const ORIGEM = [
-    {nome: 'Antes da sessão: autorização vencida, esgotada ou sem número', tipos: ['autorizacao_vencida', 'sessao_acima_do_limite', 'sem_autorizacao']},
-    {nome: 'No consultório: procedimento que o convênio não cobre ou profissional que não combina', tipos: ['procedimento_nao_coberto', 'profissional_incompativel']},
-    {nome: 'Na hora de lançar: dado faltando, código errado ou guia lançada duas vezes', tipos: ['campo_obrigatorio', 'duplicidade', 'dado_invalido', 'prazo_de_envio']},
-    {nome: 'Anotado pela recepção: particular, sessão remarcada, procedimento trocado', tipos: ['observacao_recepcao']},
+    {nome: 'Antes da sessão', explica: 'autorização vencida, esgotada ou sem número', tipos: ['autorizacao_vencida', 'sessao_acima_do_limite', 'sem_autorizacao']},
+    {nome: 'No consultório', explica: 'procedimento que o convênio não cobre, ou profissional que não combina', tipos: ['procedimento_nao_coberto', 'profissional_incompativel']},
+    {nome: 'Na hora de lançar', explica: 'dado faltando, código errado ou guia lançada duas vezes', tipos: ['campo_obrigatorio', 'duplicidade', 'dado_invalido', 'prazo_de_envio']},
+    {nome: 'Anotado pela recepção', explica: 'particular, sessão remarcada, procedimento trocado', tipos: ['observacao_recepcao']},
   ];
+  const origemDe = (r) => r.proximo_passo === 'convenio' ? ORIGEM[0] : r.pendencias.some((p) => p.tipo === 'procedimento_nao_coberto') ? ORIGEM[1]
+    : (ORIGEM.slice(1).find((o) => o.tipos.includes(r.tipo_principal)) || ORIGEM[2]);
   const PASSO_EXPLICA = {
-    convenio: 'Autorização vencida, sessões esgotadas ou sem número. Alguém liga para o convênio.',
-    recepcao: 'Dado que falta ou está errado na guia. A recepção arruma e envia.',
+    convenio: 'Autorização vencida, sessões esgotadas, ou falta o número que o convênio dá. Alguém fala com o convênio.',
+    recepcao: 'Dado que falta na guia, ou autorização nova que o paciente já trouxe. A recepção arruma e envia.',
     particular: 'O convênio não cobre ou o paciente quer pagar. Sai do lote e vai para o paciente.',
-    financeiro: 'O convênio não cobre e não existe regra de particular. O financeiro decide como cobrar.',
+    financeiro: 'O convênio não cobre e não existe regra de particular, ou o procedimento nem está na tabela. O financeiro decide como cobrar.',
     confirmar: 'A regra não proíbe, mas tem algo estranho. Alguém confirma antes de enviar.',
     copia: 'A original já está no lote e vai ser paga. Não é dinheiro a receber.',
   };
+  // Janela da reunião de terça: guias lançadas de terça a segunda, antes da reunião.
+  function tercaDaReuniao(iso) {
+    const d = new Date((paraISO(iso) || iso) + 'T12:00:00'); const falta = (2 - d.getDay() + 7) % 7 || 7;
+    d.setDate(d.getDate() + falta); return d.toISOString().slice(0, 10);
+  }
 
   function desenharVisao() {
     const rel = LOTE.relatorio, guias = LOTE.guias;
-    const passos = Object.entries(rel.por_proximo_passo).filter(([, p]) => p.guias).sort((a, b) => b[1].em_risco - a[1].em_risco);
-    const doConvenio = rel.por_proximo_passo.convenio ? rel.por_proximo_passo.convenio.em_risco : 0;
+    const pp = rel.por_proximo_passo;
+    const passos = Object.entries(pp).filter(([, p]) => p.guias).sort((a, b) => (a[0] === 'copia') - (b[0] === 'copia') || b[1].em_risco - a[1].em_risco);
     const maxP = Math.max(1, ...passos.map(([, p]) => p.em_risco));
+    const conv = pp.convenio || {em_risco: 0, guias: 0};
 
-    const pendentes = guias.filter((r) => r.decisao === 'PENDENTE');
-    const origem = ORIGEM.map((o) => { const g = pendentes.filter((r) => o.tipos.includes(r.tipo_principal));
-      return {nome: o.nome, guias: g.length, v: g.reduce((s, r) => s + r.valor_em_risco, 0), ids: g.map((r) => r.id_guia)}; });
+    const retidas = guias.filter((r) => r.decisao === 'PENDENTE');
+    const origem = ORIGEM.map((o) => { const g = retidas.filter((r) => origemDe(r) === o);
+      return {nome: o.nome, explica: o.explica, guias: g.length, v: g.reduce((s, r) => s + r.valor_em_risco, 0), ids: g.map((r) => r.id_guia)}; });
     const maxO = Math.max(1, ...origem.map((o) => o.v)), antes = origem[0];
+    const retroativas = retidas.filter((r) => r.proximo_passo === 'convenio' && ['autorizacao_vencida', 'sessao_acima_do_limite'].includes(r.tipo_principal)).length;
 
     const renovar = guias.filter((r) => { const f = r.folga_da_autorizacao || {};
-      return r.decisao === 'OK' && ((f.dias != null && f.dias <= 7) || (f.sessoes != null && f.limite && f.sessoes <= 0.2 * f.limite)); })
-      .sort((a, b) => a.guia.convenio.localeCompare(b.guia.convenio) || (a.folga_da_autorizacao.dias - b.folga_da_autorizacao.dias));
-    // urgência: dias até vencer, ou sessões que sobram contadas como uma semana cada
+      return r.decisao === 'OK' && ((f.dias != null && f.dias <= 7) || (f.sessoes != null && f.limite && f.sessoes <= 0.2 * f.limite)); });
     const urgencia = (r) => Math.min(r.folga_da_autorizacao.dias == null ? 99 : r.folga_da_autorizacao.dias, r.folga_da_autorizacao.sessoes == null ? 99 : r.folga_da_autorizacao.sessoes * 7);
     const porConvRenovar = {};
     renovar.forEach((r) => { porConvRenovar[r.guia.convenio] = (porConvRenovar[r.guia.convenio] || 0) + 1; });
@@ -480,70 +496,79 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
 
     const recibo = guias.filter((r) => r.decisao === 'OK' && /reembolso/i.test(r.guia.observacao_recepcao || ''));
     const maxT = Math.max(1, ...rel.por_tipo.map((t) => t.em_risco));
-    const grupos = (o) => Object.entries(o).sort((a, b) => a[0].localeCompare(b[0]));
-    const maxU = Math.max(1, ...Object.values(rel.por_unidade).map((g) => g.guias)), maxC = Math.max(1, ...Object.values(rel.por_convenio).map((g) => g.guias));
     const tipoDe = (t) => (guias.find((r) => r.id_guia === t.ids[0]) || {}).tipo_principal;
+    const maior = rel.por_tipo[0];
+
+    const semanas = {};
+    guias.forEach((r) => { const t = tercaDaReuniao(r.guia.data_lancamento); (semanas[t] = semanas[t] || {n: 0, ret: 0, ids: []}); semanas[t].n++; if (r.decisao === 'PENDENTE') semanas[t].ret++; semanas[t].ids.push(r.id_guia); });
+    const listaSemanas = Object.entries(semanas).sort();
+    const maxS = Math.max(1, ...listaSemanas.map(([, w]) => w.n));
+    const verbal = retidas.filter((r) => r.pendencias.some((p) => p.tipo === 'sem_autorizacao' && /telefone/i.test(p.motivo)));
+    const copia = pp.copia || {em_risco: 0};
 
     $('visao').innerHTML = `
       <div class="chamada">
-        <div class="frase">Das <b>${rel.verificadas}</b> guias lançadas em agosto, <b>${rel.ok}</b> podem ir para o convênio. As outras <b>${rel.pendentes}</b> ficaram seguradas antes do envio e somam <b>${reaisInt(rel.valor_em_risco)}</b>. ${pct(doConvenio, rel.valor_em_risco)} desse valor só sai do lugar se o convênio autorizar.</div>
+        <div class="frase">Em agosto, <b>${rel.pendentes}</b> das <b>${rel.verificadas}</b> guias ficaram retidas antes de ir ao convênio, somando <b>${reaisInt(rel.valor_em_risco)}</b>. O maior pedaço, <b>${reaisInt(conv.em_risco)}</b> em ${conv.guias} guias, depende do convênio.</div>
         <div class="emjogo">Por mês, na clínica toda
           <div class="n">~ R$ 14,5 mil</div>
-          de glosa que dá para evitar. É 40% dos 8% glosados sobre os R$ 452 mil de convênio, pela estimativa da Carla. O lote de agosto tem erros de propósito: a taxa dele não vale para a clínica.</div>
+          de glosa que dá para evitar: 40% dos 8% glosados sobre os R$ 452 mil de convênio, pela estimativa da Carla. O lote de agosto tem erros de propósito, então a taxa dele não vale para a clínica.</div>
       </div>
       <div class="kpis">
-        <div class="kpi"><div class="r">Guias conferidas</div><div class="n">${rel.verificadas}</div><div class="d">antes do envio</div></div>
-        <div class="kpi"><div class="r">Podem enviar</div><div class="n">${rel.ok}</div><div class="d">${pct(rel.ok, rel.verificadas)} das guias</div></div>
-        <div class="kpi"><div class="r">Seguradas</div><div class="n">${rel.pendentes}</div><div class="d">${pct(rel.pendentes, rel.verificadas)} das guias</div></div>
-        <div class="kpi"><div class="r">Valor segurado</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)} no lote</div></div>
+        <div class="kpi"><div class="r">Guias conferidas</div><div class="n">${rel.verificadas}</div><div class="d">todas as lançadas em agosto</div></div>
+        <div class="kpi"><div class="r">Podem enviar</div><div class="n">${rel.ok}</div><div class="d">${rel.ok} de ${rel.verificadas}${recibo.length ? ` · ${recibo.length} com aviso de recibo` : ''}</div></div>
+        <div class="kpi"><div class="r">Retidas antes do envio</div><div class="n">${rel.pendentes}</div><div class="d">${rel.pendentes} de ${rel.verificadas} guias</div></div>
+        <div class="kpi"><div class="r">Valor retido</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)}${copia.em_risco ? ` · ${reaisInt(copia.em_risco)} são cópias` : ''}</div></div>
       </div>
 
       <div class="secao grade2">
         <div class="cartao">
-          <h2>O que precisa acontecer com os ${reaisInt(rel.valor_em_risco)}</h2>
-          <div class="pergunta">Quem a Carla chama esta semana, e quanto dinheiro cada um destrava. Clique para ver as guias.</div>
-          ${barras(passos.map(([k, p]) => ({nome: p.nome, valor: reais(p.em_risco), extra: p.guias + (p.guias > 1 ? ' guias' : ' guia'), v: p.em_risco,
+          <h2>${pct(conv.em_risco, rel.valor_em_risco)} do valor retido depende do convênio</h2>
+          <div class="pergunta">Quem precisa agir para cada real retido sair do lugar. Clique para ver as guias.</div>
+          ${barras(passos.map(([k, p]) => ({nome: p.nome, valor: reaisInt(p.em_risco), extra: p.guias + (p.guias > 1 ? ' guias' : ' guia'), v: p.em_risco,
             partes: [{c: k === 'copia' ? 'conferir' : 'tinta', v: p.em_risco}], filtro: {passo: k, rotulo: p.nome}})), maxP)}
-          <div class="honesto">${passos.map(([k]) => `<div style="margin-top:4px"><b style="font-weight:500">${esc(rel.por_proximo_passo[k].nome)}.</b> ${PASSO_EXPLICA[k]}</div>`).join('')}</div>
+          <div class="honesto">${passos.map(([k]) => `<div style="margin-top:4px"><b style="font-weight:500">${esc(pp[k].nome)}.</b> ${PASSO_EXPLICA[k]}</div>`).join('')}</div>
         </div>
         <div class="cartao">
-          <h2>Onde o problema nasce</h2>
-          <div class="pergunta">O que a conferência da guia resolve e o que precisa ser pego antes, no balcão.</div>
-          ${barras(origem.map((o) => ({nome: o.nome, valor: reais(o.v), extra: o.guias + ' guias', v: o.v, filtro: {ids: o.ids, rotulo: o.nome.split(':')[0]}})), maxO)}
-          <div class="destaque">${antes.guias} das ${rel.pendentes} guias seguradas nasceram antes da sessão: o paciente foi atendido com a autorização vencida, esgotada ou sem número. Conferir a guia depois segura o erro, mas não salva a sessão. O que salva é conferir a autorização quando o paciente chega.</div>
+          <h2>${antes.guias} das ${rel.pendentes} retidas nasceram antes da sessão</h2>
+          <div class="pergunta">Onde cada erro nasce. O que a conferência da guia resolve e o que precisa ser pego antes, no balcão.</div>
+          ${barras(origem.map((o) => ({nome: `${o.nome}: ${o.explica}`, valor: reaisInt(o.v), extra: o.guias + ' guias', v: o.v, filtro: {ids: o.ids, rotulo: o.nome}})), maxO)}
+          <div class="destaque">Em todas elas a sessão já aconteceu. Em ${retroativas} a autorização estava vencida ou esgotada, e o dinheiro só volta se o convênio aceitar autorizar depois do fato. Conferir a guia segura o erro, mas não salva a sessão. O que evita o erro é conferir a autorização quando o paciente chega.</div>
         </div>
       </div>
 
       <div class="secao cartao">
-        <h2>Autorizações para renovar antes da próxima sessão</h2>
-        <div class="pergunta">Guias que podem ir, mas de pacientes cuja autorização vence em até 7 dias ou já usou 80% das sessões. Se ninguém pedir a renovação, a próxima guia desse paciente nasce segurada.</div>
-        <div class="legenda" style="margin:0 0 8px">${Object.entries(porConvRenovar).map(([c, n]) => `<span><b style="font-weight:500;color:var(--ink)">${n}</b>&nbsp;no ${esc(c)}</span>`).join('')}<span class="clicavel" ${filtro({ids: renovar.map((r) => r.id_guia), rotulo: 'Autorizações para renovar'})}>ver as ${renovar.length} guias</span></div>
+        <h2>${renovar.length} autorizações para renovar antes da próxima sessão</h2>
+        <div class="pergunta">Guias que podem ir, mas de pacientes cuja autorização vence em até 7 dias ou já usou 80% das sessões. Se ninguém pedir a renovação, uma das próximas guias desse paciente vai nascer retida.</div>
+        <div class="legenda" style="margin:0 0 8px">${Object.entries(porConvRenovar).sort((a, b) => b[1] - a[1]).map(([c, n]) => `<span><b style="font-weight:500;color:var(--ink)">${n}</b>&nbsp;no ${esc(c)}</span>`).join('')}<span class="clicavel" ${filtro({ids: renovar.map((r) => r.id_guia), rotulo: 'Autorizações para renovar'})}>ver as ${renovar.length} guias</span></div>
         <div class="tabela" style="border-top:0"><table class="lista" style="min-width:560px"><tbody>
           ${renovar.slice().sort((a, b) => urgencia(a) - urgencia(b)).slice(0, 6).map((r) => `<tr><td class="id">${esc(r.id_guia)}</td><td>${esc(r.guia.paciente)}</td><td>${esc(r.guia.convenio)}</td><td>${esc(r.guia.unidade)}</td><td>${esc(motivoRenovar(r.folga_da_autorizacao))}</td></tr>`).join('')}
         </tbody></table></div>
-        <div class="nota">As 6 mais urgentes. Pedir em lote, por convênio, uma vez por semana, custa menos do que descobrir no balcão. Conta feita a partir da data do atendimento de cada guia.</div>
+        <div class="nota">As 6 mais urgentes. Pedir em lote, por convênio, uma vez por semana, custa menos do que descobrir no balcão. A conta é feita no dia do atendimento de cada guia, como o resto do lote.</div>
       </div>
 
       <div class="secao grade2">
         <div class="cartao">
-          <h2>Por tipo de problema</h2>
-          <div class="pergunta">Cada guia conta uma vez, no problema mais grave. Clique para ver as guias.</div>
-          ${barras(rel.por_tipo.map((t) => ({nome: t.nome, valor: reais(t.em_risco), extra: t.guias + (t.guias > 1 ? ' guias' : ' guia'), v: t.em_risco, filtro: {tipo: tipoDe(t)}})), maxT)}
+          <h2>${maior ? esc(maior.nome) + ' é o problema mais comum' : 'Por tipo de problema'}</h2>
+          <div class="pergunta">Por tipo de problema. Cada guia conta uma vez, no problema mais grave. Clique para ver as guias.</div>
+          ${barras(rel.por_tipo.map((t) => ({nome: t.nome, valor: reaisInt(t.em_risco), extra: t.guias + (t.guias > 1 ? ' guias' : ' guia'), v: t.em_risco, filtro: {tipo: tipoDe(t)}})), maxT)}
         </div>
         <div class="cartao">
-          <h2>Unidades e convênios</h2>
-          <div class="pergunta">Guias seguradas de cada unidade e de cada convênio.</div>
-          ${barras(grupos(rel.por_unidade).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), filtro: {unidade: n}, partes: [{c: 'tinta', v: g.pendentes}, {c: 'ok', v: 0}]})), maxU)}
-          <div style="height:14px"></div>
-          ${barras(grupos(rel.por_convenio).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), filtro: {convenio: n}, partes: [{c: 'tinta', v: g.pendentes}]})), maxC)}
-          <div class="honesto">Com 23 a 40 guias em cada grupo, a diferença entre unidades e entre convênios pode ser acaso. Não dá para dizer que uma unidade erra mais. O que muda de verdade é o tipo de erro: no Plano Bem é consulta que ele não cobre, no Saúde Interior é autorização sem número, no Vitalcard é CID e registro em branco.</div>
+          <h2>Semanas de agosto, ainda sem tendência</h2>
+          <div class="pergunta">Guias retidas em cada reunião de terça, contando as lançadas de terça a segunda.</div>
+          ${barras(listaSemanas.map(([t, w]) => ({nome: `Reunião de ${br(t).slice(0, 5)}${w.n < 10 ? ' (parcial)' : ''}`, valor: `${w.ret} de ${w.n}`, v: w.n,
+            partes: [{c: 'tinta', v: w.ret}], filtro: {ids: w.ids, rotulo: 'Reunião de ' + br(t).slice(0, 5)}})), maxS)}
+          <div class="honesto">Com 16 a 27 guias por semana, a diferença entre elas pode ser acaso. A linha de base vem das primeiras semanas de uso real, não deste lote de teste.</div>
+          <h2 style="margin-top:18px">Prazo de envio</h2>
+          <div class="pergunta" style="margin-bottom:0">No dia do lançamento, nenhuma guia chega perto do prazo do convênio: a menor folga é de 27 dias. O prazo curto é outro. O Saúde Interior aceita autorização por telefone, mas só por 5 dias úteis${verbal.length ? `, e a <span class="clicavel" ${filtro({ids: verbal.map((r) => r.id_guia), rotulo: 'Autorização por telefone'})}>${esc(verbal.map((r) => r.id_guia).join(', '))}</span> está nessa situação` : ''}. Esse caso pede aviso diário, não semanal.</div>
         </div>
       </div>
 
       ${recibo.length ? `<div class="secao cartao">
         <h2>Para confirmar com a Carla</h2>
-        <div class="pergunta" style="margin-bottom:0"><span class="clicavel" ${filtro({ids: recibo.map((r) => r.id_guia), rotulo: 'Pediu recibo para reembolso'})}>${recibo.length} guias prontas para enviar</span> (${reais(recibo.reduce((s, r) => s + r.valor, 0))}) têm a anotação "pediu recibo para reembolso do plano". Se o paciente pagou a sessão do próprio bolso, enviar ao convênio é cobrar duas vezes. Os dados não dizem. Por isso a guia passa com aviso, e a pergunta fica para a Carla.</div>
-      </div>` : ''}`;
+        <div class="pergunta" style="margin-bottom:0"><span class="clicavel" ${filtro({ids: recibo.map((r) => r.id_guia), rotulo: 'Pediu recibo para reembolso'})}>${recibo.length} guias que podem ir</span> (${reaisInt(recibo.reduce((s, r) => s + r.valor, 0))}) têm a anotação "pediu recibo para reembolso do plano". Se o paciente pagou a sessão do próprio bolso, enviar ao convênio é cobrar duas vezes. Os dados não dizem. Por isso a guia passa com aviso, e a pergunta fica para a Carla.</div>
+      </div>` : ''}
+
+      <div class="nota" style="margin-top:28px;max-width:860px">O que este painel não mostra. A glosa real: ela só chega no demonstrativo do convênio, de 45 a 90 dias depois do envio. Retido não é perdido: a cópia nunca foi receita, o particular só muda de quem paga e o resto depende de alguém agir. O conferente compara o valor com a referência do procedimento, mas não confere a tabela do contrato nem faz auditoria técnica. Cada linha do lote é uma sessão.</div>`;
   }
 
   /* ---------------- relatório de terça ---------------- */
@@ -551,34 +576,43 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     return `<div class="kpis">
       <div class="kpi"><div class="r">Guias conferidas</div><div class="n">${rel.verificadas}</div><div class="d">antes do envio</div></div>
       <div class="kpi"><div class="r">Podem enviar</div><div class="n">${rel.ok}</div><div class="d">${pct(rel.ok, rel.verificadas)} das guias</div></div>
-      <div class="kpi"><div class="r">Seguradas</div><div class="n">${rel.pendentes}</div><div class="d">${pct(rel.pendentes, rel.verificadas)} das guias</div></div>
-      <div class="kpi"><div class="r">Valor segurado</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)} conferidos</div></div>
+      <div class="kpi"><div class="r">Retidas</div><div class="n">${rel.pendentes}</div><div class="d">${pct(rel.pendentes, rel.verificadas)} das guias</div></div>
+      <div class="kpi"><div class="r">Valor retido</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)} conferidos</div></div>
     </div>`;
   }
+  const FRASE_PASSO = {convenio: 'depende do convênio', particular: 'vai ser cobrado do paciente como particular',
+    financeiro: 'depende de uma decisão do financeiro', recepcao: 'depende da recepção completar ou corrigir a guia',
+    confirmar: 'depende de alguém confirmar antes de enviar', copia: 'é cópia e não é dinheiro a receber'};
   async function carregarTerca() {
     try {
       const resp = await fetch('/api/relatorio', novas.length
-        ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({novas: novas.map((n) => n.campos)})} : undefined);
+        ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({novas: novas.slice().reverse().map((n) => n.campos)})} : undefined);
       const d = await resp.json(), rel = d.relatorio;
-      const pg = rel.por_gravidade;
+      const pg = rel.por_gravidade, pp = rel.por_proximo_passo;
+      const passos = Object.entries(pp).filter(([, p]) => p.guias).sort((a, b) => (a[0] === 'copia') - (b[0] === 'copia') || b[1].em_risco - a[1].em_risco);
+      const maxP = Math.max(1, ...passos.map(([, p]) => p.em_risco));
       const maxG = Math.max(1, ...ORDEM.map((g) => pg[g].em_risco));
       const maxT = Math.max(1, ...rel.por_tipo.map((t) => t.em_risco));
       const grupo = (o) => Object.entries(o).sort((a, b) => b[1].em_risco - a[1].em_risco);
       const maxU = Math.max(1, ...Object.values(rel.por_unidade).map((g) => g.guias));
       const maxC = Math.max(1, ...Object.values(rel.por_convenio).map((g) => g.guias));
       $('terca').innerHTML = `
-        <div class="frase">Foram conferidas <b>${rel.verificadas}</b> guias. <b>${rel.pendentes}</b> ficaram seguradas antes do envio, somando <b>${reaisInt(rel.valor_em_risco)}</b>. Se fossem enviadas assim, o convênio recusaria com certeza <b>${reaisInt(pg.nao_enviar.em_risco)}</b>.</div>
+        <div class="frase">Foram conferidas <b>${rel.verificadas}</b> guias. <b>${rel.pendentes}</b> ficaram retidas antes do envio, somando <b>${reaisInt(rel.valor_em_risco)}</b>. ${passos.length ? `O maior pedaço, <b>${reaisInt(passos[0][1].em_risco)}</b> em ${passos[0][1].guias} guias, ${FRASE_PASSO[passos[0][0]]}.` : ''}</div>
         ${kpisRelatorio(rel)}
         <div class="secao grade2">
-          <div class="cartao"><h2>Por decisão</h2><div class="pergunta">Quanto do valor segurado é perda certa e quanto dá para salvar.</div>
+          <div class="cartao"><h2>O que precisa acontecer</h2><div class="pergunta">Quem age para cada real retido sair do lugar.</div>
+            ${barras(passos.map(([k, p]) => ({nome: p.nome, valor: reais(p.em_risco), extra: p.guias + (p.guias > 1 ? ' guias' : ' guia'), v: p.em_risco, partes: [{c: k === 'copia' ? 'conferir' : 'tinta', v: p.em_risco}]})), maxP)}
+            <div class="nota">A cópia não é dinheiro a receber: a original já vai ser paga.</div></div>
+          <div class="cartao"><h2>Por decisão</h2><div class="pergunta">Quantas guias em cada decisão.</div>
             ${barras(ORDEM.map((g) => ({nome: DECISAO[g], valor: reais(pg[g].em_risco), extra: pg[g].guias + ' guias', v: pg[g].em_risco, partes: [{c: g, v: pg[g].em_risco}]})), maxG)}</div>
           <div class="cartao"><h2>Por tipo de problema</h2><div class="pergunta">Cada guia conta uma vez, no problema mais grave.</div>
             ${barras(rel.por_tipo.map((t) => ({nome: t.nome, valor: reais(t.em_risco), extra: t.guias + ' guias', v: t.em_risco})), maxT)}</div>
-          <div class="cartao"><h2>Por unidade</h2><div class="pergunta">Guias conferidas e quantas ficaram seguradas.</div>
-            ${barras(grupo(rel.por_unidade).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), partes: [{c: 'nao_enviar', v: g.pendentes}, {c: 'ok', v: g.guias - g.pendentes}]})), maxU)}</div>
-          <div class="cartao"><h2>Por convênio</h2><div class="pergunta">Guias conferidas e quantas ficaram seguradas.</div>
-            ${barras(grupo(rel.por_convenio).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), partes: [{c: 'nao_enviar', v: g.pendentes}, {c: 'ok', v: g.guias - g.pendentes}]})), maxC)}</div>
+          <div class="cartao"><h2>Por unidade</h2><div class="pergunta">Guias conferidas e quantas ficaram retidas.</div>
+            ${barras(grupo(rel.por_unidade).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), partes: [{c: 'tinta', v: g.pendentes}]})), maxU)}</div>
+          <div class="cartao"><h2>Por convênio</h2><div class="pergunta">Guias conferidas e quantas ficaram retidas.</div>
+            ${barras(grupo(rel.por_convenio).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), partes: [{c: 'tinta', v: g.pendentes}]})), maxC)}</div>
         </div>
+        <div class="nota">Unidades e convênios: com 15 a 40 guias em cada grupo, a diferença entre eles pode ser acaso. Não dá para dizer que uma unidade erra mais. O que muda de verdade é o tipo de erro, e ele segue a regra escrita de cada convênio.</div>
         <div class="secao">
           <h2>Texto para mandar no WhatsApp</h2>
           <div class="exemplos" style="margin:6px 0 10px"><button class="btn2" id="copiar">Copiar texto</button><span id="copiado"></span></div>
@@ -596,7 +630,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   /* ---------------- como funciona ---------------- */
   function desenharLegenda() {
     const ex = {
-      ok: 'Tudo dentro da regra do convênio.',
+      ok: 'Por exemplo, G-2608-0001 e G-2608-0003.',
       nao_enviar: 'Autorização vencida (G-2608-0004), sessão acima do limite (G-2608-0006), convênio que não cobre o procedimento (G-2608-0002), guia repetida (G-2608-0057).',
       corrigir: 'CID vazio (G-2608-0021), autorização nova que o paciente trouxe e não foi lançada (G-2608-0030), código trocado (G-2608-0069).',
       conferir: 'Reavaliação de fisioterapia lançada por médico (G-2608-0045), mesmo paciente no mesmo dia em duas guias (G-2608-0017), sessão remarcada (G-2608-0034).',
@@ -629,9 +663,9 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     ['Observação da recepção', [['observacao_recepcao', 'O que a recepção anotou', 'textarea', 'Opcional']]],
   ];
   const SEMPRE = ['unidade', 'data_atendimento', 'paciente', 'convenio', 'procedimento_codigo', 'valor', 'sessao'];
-  const NOME_CAMPO = {numero_autorizacao: 'número da autorização', autorizacao_validade: 'validade da autorização',
+  const NOME_CAMPO = {convenio: 'convênio', procedimento_codigo: 'procedimento', data_atendimento: 'data do atendimento', numero_autorizacao: 'número da autorização', autorizacao_validade: 'validade da autorização',
     profissional_registro: 'registro do profissional', carteirinha: 'carteirinha', cid: 'CID'};
-  let valorEditado = false, conferencia = null, pedidoAtual = null, espera = null;
+  let valorEditado = false, conferencia = null, pedidoAtual = null, lerAtual = null, espera = null;
 
   const conv = () => LOTE && LOTE.regras.convenios.find((c) => c.nome === $('c_convenio').value);
   const proc = () => LOTE && LOTE.regras.procedimentos.find((p) => p.codigo === $('c_procedimento_codigo').value);
@@ -647,7 +681,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       else if (tipo === 'sessao') ctl = `<div class="dupla"><input type="text" id="c_sessao_numero_na_autorizacao" inputmode="numeric" placeholder="nº"><span>de</span><input type="text" id="c_autorizacao_sessoes_limite" inputmode="numeric" placeholder="autorizadas" aria-label="Sessões autorizadas"></div>`;
       else if (tipo === 'textarea') ctl = `<textarea id="c_${k}" rows="2" placeholder="${ph}"></textarea>`;
       else ctl = `<input type="${tipo}" id="c_${k}" ${ph ? `placeholder="${esc(ph)}"` : ''}>`;
-      return `<div class="campo ${tipo === 'textarea' ? 'largo' : ''}">${lab}${ctl}</div>`;
+      return `<div class="campo ${tipo === 'textarea' || tipo === 'procedimento' ? 'largo' : ''}">${lab}${ctl}</div>`;
     }).join('')}</div></div>`).join('');
     novoNumero();
     $('form').addEventListener('input', (e) => { if (e.target.id === 'c_valor') valorEditado = true; agendar(); });
@@ -686,8 +720,11 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   function paraISO(v) {
     v = String(v || '').trim();
     if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-    const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
-    return m ? `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : '';
+    const m = v.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})$/);
+    if (!m) return '';
+    const iso = `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+    const d = new Date(iso + 'T12:00:00');       // 31/02 não existe: devolve vazio para avisar
+    return (d.getDate() === +m[1] && d.getMonth() + 1 === +m[2]) ? iso : '';
   }
   function preencherForm(campos) {
     limparForm(false);
@@ -712,6 +749,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       if (p) $('c_procedimento_codigo').value = p.codigo;
     }
     if (campos && campos.procedimento_codigo && !$('c_procedimento_codigo').value) avisos.push(`O código "${campos.procedimento_codigo}" não está na tabela de procedimentos.`);
+    if (!valorEditado) { const p = proc(); if (p) $('c_valor').value = p.valor.toFixed(2).replace('.', ','); }
     if (!$('c_id_guia').value) novoNumero();
     agendar(0);
     return avisos;
@@ -719,6 +757,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   function limparForm(tudo = true) {
     $('form').querySelectorAll('input,select,textarea').forEach((el) => { el.value = ''; });
     valorEditado = false; opcoesProcedimento(); marcarExigidos(); novoNumero();
+    clearTimeout(espera); pedidoAtual = null; lerAtual = null;
     if (tudo) { $('lido').innerHTML = ''; $('lancAviso').textContent = ''; desenharConf(null); }
   }
   $('limparForm').addEventListener('click', () => limparForm());
@@ -727,6 +766,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     clearTimeout(espera);
     espera = setTimeout(conferirRascunho, ms);
   }
+  const anteriores = (guia) => novas.map((n) => n.campos).filter((c) => (c.id_guia || '').toUpperCase() !== (guia.id_guia || '').toUpperCase());
   async function pedir(corpo) {
     const resp = await fetch('/api/verificar', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(corpo)});
     return {ok: resp.ok, d: await resp.json()};
@@ -735,7 +775,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     if (!$('c_convenio').value) { desenharConf(null); return; }
     const guia = lerForm(), meu = pedidoAtual = Symbol('pedido');
     try {
-      const {ok, d} = await pedir({guia, rascunho: true});
+      const {ok, d} = await pedir({guia, rascunho: true, anteriores: anteriores(guia)});
       if (meu !== pedidoAtual) return;
       if (ok) desenharConf(d.resultado, false); else desenharConf({erro: d.erro});
     } catch (_) { if (meu === pedidoAtual) desenharConf({erro: 'Sem resposta do servidor.'}); }
@@ -759,20 +799,21 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       <div class="estado">${final ? 'Lançada e conferida' : 'Conferindo enquanto você preenche'}</div>
       <div class="nome"><i class="ponto ${g}"></i>${DECISAO[g]}</div>
       <div class="exp">${esc(r.o_que_significa || '')}</div>
-      ${r.decisao === 'PENDENTE' ? `<div class="dinheiro"><b>${reais(r.valor_em_risco)}</b> segurados nesta guia</div>` : ''}
+      ${r.decisao === 'PENDENTE' && r.valor_em_risco > 0 ? `<div class="dinheiro"><b>${reais(r.valor_em_risco)}</b> retidos nesta guia</div>` : ''}
       ${r.pendencias.length ? `<div class="bloco">${pendencias(r)}</div>` : ''}
       ${r.alertas.length ? `<div class="bloco">${r.alertas.map((a) => `<div class="aviso" style="margin:0 0 6px">Aviso: ${esc(a)}</div>`).join('')}</div>` : ''}
       ${r.enviar_ate ? `<div class="bloco regra">Enviar ao convênio até <b>${br(r.enviar_ate)}</b>.</div>` : ''}
       ${textoRegra()}
-      <div class="nota">${final ? `Observação lida por ${esc(r.observacao_lida_por || 'ninguém, estava vazia')}.` : 'Rascunho: a observação é lida por palavras-chave. Ao lançar, a IA também lê.'}</div>`;
+      <div class="nota">${final ? `Observação lida por ${esc(r.observacao_lida_por || 'ninguém, estava vazia')}.` : 'Rascunho: a observação é lida só por palavras-chave. Ao lançar, o que elas não reconhecerem vai para a IA, se ela estiver ligada.'}</div>`;
   }
 
   $('lancarBtn').addEventListener('click', async () => {
     if (!$('c_convenio').value) { $('lancAviso').textContent = 'Escolha o convênio.'; return; }
+    if (!$('c_id_guia').value.trim()) novoNumero();
     const guia = lerForm();
     $('lancarBtn').disabled = true; $('lancAviso').textContent = 'Conferindo…';
     try {
-      const {ok, d} = await pedir({guia});
+      const {ok, d} = await pedir({guia, anteriores: anteriores(guia)});
       if (!ok) { $('lancAviso').innerHTML = `<span class="erro">${esc(d.erro || 'Erro ao conferir.')}</span>`; return; }
       pedidoAtual = null; clearTimeout(espera);
       desenharConf(d.resultado, true);
@@ -792,7 +833,8 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     $('novas').className = '';
     $('novas').innerHTML = '<div class="lista-novas">' + novas.map((n) => { const r = n.resultado;
       return `<div>${selo(r.gravidade)}<span class="num">${esc(r.id_guia)}</span><span>${esc(r.convenio || 'sem convênio')}</span><span class="num">${reais(r.valor)}</span><span class="vazio">${esc(r.motivo)}</span></div>`; }).join('')
-      + '</div><button class="quieto" id="apagarNovas" style="margin-top:8px">Apagar as lançadas nesta sessão</button>';
+      + '</div>' + (novas.length >= LIMITE_NOVAS ? `<div class="nota">Limite de ${LIMITE_NOVAS} guias por sessão: as mais antigas saem da lista e do relatório.</div>` : '')
+      + '<button class="quieto" id="apagarNovas" style="margin-top:8px">Apagar as lançadas nesta sessão</button>';
     $('apagarNovas').addEventListener('click', () => { novas = []; guardarNovas(); desenharNovas(); });
   }
 
@@ -800,12 +842,16 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     const texto = $('texto').value.trim(); if (!texto) return;
     $('ler').disabled = true; $('lendo').textContent = 'Lendo…'; $('lido').innerHTML = '';
     try {
-      const {ok, d} = await pedir({texto});
+      const meu = lerAtual = Symbol('ler');
+      const {ok, d} = await pedir({texto, so_ler: true});
+      if (meu !== lerAtual) return;
       if (!ok) { $('lido').innerHTML = `<div class="aviso erro">${esc(d.erro || 'Não consegui ler.')} ${esc(d.dica || '')}</div>`; return; }
       const avisos = preencherForm(d.entrada.campos).concat(d.entrada.avisos || []);
       const faltou = (d.entrada.faltando || []).length ? [`Não achei no texto: ${d.entrada.faltando.map((k) => NOME_CAMPO[k] || k.replace(/_/g, ' ')).join(', ')}.`] : [];
       const como = {'linha do sistema': 'como linha do sistema', "campos 'nome: valor'": 'campo a campo'}[d.entrada.lido_por] || 'por ' + d.entrada.lido_por;
-      $('lido').innerHTML = `<div class="aviso">Li o texto ${esc(como)} e preenchi o formulário abaixo. Confira os campos antes de lançar.</div>`
+      const soObs = Object.keys(d.entrada.campos).every((k) => k === 'observacao_recepcao');
+      $('lido').innerHTML = (soObs ? `<div class="aviso">Não reconheci nenhum campo nesse texto e ele foi para a observação. Preencha o formulário, ou escreva um campo por linha, como "Convênio: Vitalcard".</div>`
+        : `<div class="aviso">Li o texto ${esc(como)} e preenchi o formulário abaixo. Confira os campos antes de lançar.</div>`)
         + avisos.concat(faltou).map((a) => `<div class="aviso">${esc(a)}</div>`).join('');
     } catch (_) {
       $('lido').innerHTML = '<div class="aviso erro">Sem resposta do servidor. Tente de novo.</div>';

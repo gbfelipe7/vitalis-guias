@@ -16,7 +16,7 @@ from .normalizar import normalizar_guia, sem_acento
 from .observacao import ler_observacao
 from .regras import achar_convenio, achar_procedimento
 from .textos import (ALERTA, CORRIGIR, DECISOES, EXPLICACAO, MOTIVO, NOMES_DOS_CAMPOS, ORDEM_GRAVIDADE,
-                     PROXIMOS_PASSOS, TIPOS)
+                     PROXIMOS_PASSOS, TIPOS, reais)
 
 
 def _br(dia):
@@ -46,10 +46,10 @@ PASSO_POR_ACAO = {
 PASSO_DA_GRAVIDADE = {"nao_enviar": "financeiro", "corrigir": "recepcao", "conferir": "confirmar"}
 
 
-def _pendencia(tipo, gravidade, chave, corrigir=None, **dados):
+def _pendencia(tipo, gravidade, chave, corrigir=None, passo=None, **dados):
     """Monta uma pendência buscando as frases em textos.py."""
     acao = corrigir or chave
-    passo = "confirmar" if gravidade == "conferir" else PASSO_POR_ACAO.get(acao, PASSO_DA_GRAVIDADE[gravidade])
+    passo = passo or ("confirmar" if gravidade == "conferir" else PASSO_POR_ACAO.get(acao, PASSO_DA_GRAVIDADE[gravidade]))
     return {
         "tipo": tipo,
         "titulo": TIPOS[tipo],
@@ -153,6 +153,12 @@ def _validade_da_autorizacao(guia, fatos):
                        dias=(atendimento - validade).days)]
 
 
+def _limite_efetivo(guia, regra):
+    """A autorização pode cobrir menos que o máximo do convênio: vale o menor dos dois."""
+    limite = regra["limite_sessoes_por_autorizacao"]
+    return min(limite, guia["_limite_declarado"] or limite)
+
+
 def _limite_de_sessoes(guia, regra, extra):
     sessao, limite = guia["_sessao"], regra["limite_sessoes_por_autorizacao"]
     if sessao is None:
@@ -195,8 +201,8 @@ def _procedimento(guia, regras, regra, extra):
 
     if guia["_valor"] and abs(guia["_valor"] - proc["valor_referencia"]) > 0.005:
         pendencias.append(_pendencia("dado_invalido", "corrigir", "valor_divergente",
-                                     lancado="%.2f" % guia["_valor"],
-                                     referencia="%.2f" % proc["valor_referencia"]))
+                                     lancado=reais(guia["_valor"]),
+                                     referencia=reais(proc["valor_referencia"])))
     return pendencias
 
 
@@ -231,7 +237,7 @@ def _prazo_de_envio(guia, regra, referencia, dias_de_alerta):
     return [], alertas, limite
 
 
-def _observacao(guia, fatos, regras, ja_tratou_autorizacao_nova):
+def _observacao(guia, fatos, regras, regra, ja_tratou_autorizacao_nova):
     pendencias = []
     if fatos["particular"]:
         # Mesma ação de um procedimento que o convênio não cobre: a guia sai do lote e vira particular.
@@ -240,10 +246,16 @@ def _observacao(guia, fatos, regras, ja_tratou_autorizacao_nova):
     if fatos["procedimento_real"]:
         proc = regras["procedimentos"].get(guia["procedimento_codigo"], {})
         real = fatos["procedimento_real"]
-        na_tabela = any(sem_acento(real) in sem_acento(p["descricao"]) for p in regras["procedimentos"].values())
-        cobertura = "" if na_tabela else \
-            " '%s' não está na tabela de procedimentos dos convênios: conferir cobertura antes de enviar." % real
-        pendencias.append(_pendencia("observacao_recepcao", "corrigir", "procedimento_real",
+        # O procedimento feito está na tabela? E este convênio cobre? Isso decide quem resolve:
+        # coberto, a recepção troca o código; fora da tabela ou sem cobertura, o financeiro decide.
+        feito = achar_procedimento(regras, real)
+        if feito is None:
+            passo, cobertura = "financeiro", " '%s' não está na tabela de procedimentos dos convênios: conferir cobertura antes de enviar." % real
+        elif feito["codigo"] in regra["procedimentos_cobertos"]:
+            passo, cobertura = "recepcao", ""
+        else:
+            passo, cobertura = "financeiro", " %s não cobre %s." % (regra["nome"], feito["descricao"].lower())
+        pendencias.append(_pendencia("observacao_recepcao", "corrigir", "procedimento_real", passo=passo,
                                      real=real, descricao=proc.get("descricao", guia["procedimento_descricao"]),
                                      cobertura=cobertura))
 
@@ -325,10 +337,10 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
             guia, regra, referencia, regras["dias_de_alerta_prazo"])
         pendencias += do_prazo
         alertas += alertas_prazo
-        pendencias += _observacao(guia, fatos, regras, ja_tratou_autorizacao_nova=bool(vencida))
+        pendencias += _observacao(guia, fatos, regras, regra, ja_tratou_autorizacao_nova=bool(vencida))
 
         limite = regra["limite_sessoes_por_autorizacao"]
-        if guia["_sessao"] == limite:
+        if guia["_sessao"] == _limite_efetivo(guia, regra):
             alertas.append(ALERTA["ultima_sessao"])
         if guia["_limite_declarado"] and guia["_limite_declarado"] != limite:
             alertas.append(ALERTA["limite_diferente"].format(declarado=guia["_limite_declarado"],
@@ -337,20 +349,26 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
             alertas.append(ALERTA["limite_ilegivel"].format(valor=guia["autorizacao_sessoes_limite"]))
         if fatos["recibo_reembolso"]:
             alertas.append(ALERTA["recibo_reembolso"])
+        maximo = regra["validade_maxima_autorizacao_dias"]
+        if guia["_validade"] and guia["_atendimento"] and (guia["_validade"] - guia["_atendimento"]).days > maximo:
+            alertas.append(ALERTA["validade_longa"].format(validade=_br(guia["_validade"]), maximo=maximo,
+                                                           convenio=regra["nome"]))
         nova = fatos["nova_validade"]
         if nova and guia["_atendimento"] and (nova - guia["_atendimento"]).days > regra["validade_maxima_autorizacao_dias"]:
             alertas.append(ALERTA["nova_validade_longa"].format(
                 nova=_br(nova), maximo=regra["validade_maxima_autorizacao_dias"], convenio=regra["nome"]))
 
     pendencias += _duplicidade(duplicidade)
-    pendencias.sort(key=lambda p: ORDEM_GRAVIDADE.index(p["gravidade"]))
+    # Empate de gravidade: fica na frente o passo mais definitivo. Sessão acima do limite numa
+    # infiltração que o convênio nem cobre é, antes de tudo, procedimento não coberto.
+    passos = list(PROXIMOS_PASSOS)
+    pendencias.sort(key=lambda p: (ORDEM_GRAVIDADE.index(p["gravidade"]), passos.index(p["proximo_passo"])))
 
     pendente = bool(pendencias)
     valor = guia["_valor"] or 0.0
     gravidade = pendencias[0]["gravidade"] if pendente else "ok"
     # Guia com dois problemas fica com o passo mais definitivo: sessão acima do limite num procedimento
     # que o convênio nem cobre não se resolve pedindo autorização.
-    passos = list(PROXIMOS_PASSOS)
     passo = min((p["proximo_passo"] for p in pendencias), key=passos.index) if pendente else ""
     return {
         "id_guia": guia["id_guia"],
@@ -364,8 +382,8 @@ def verificar_guia(bruta, regras, referencia=None, duplicidade=None,
         # antes da próxima sessão, e não depois que a guia já nasceu errada.
         "folga_da_autorizacao": {
             "dias": (guia["_validade"] - guia["_atendimento"]).days if guia["_validade"] and guia["_atendimento"] else None,
-            "sessoes": (regra["limite_sessoes_por_autorizacao"] - guia["_sessao"]) if regra and guia["_sessao"] else None,
-            "limite": regra["limite_sessoes_por_autorizacao"] if regra else None,
+            "sessoes": (_limite_efetivo(guia, regra) - guia["_sessao"]) if regra and guia["_sessao"] else None,
+            "limite": _limite_efetivo(guia, regra) if regra else None,
         },
         "tipo_principal": pendencias[0]["tipo"] if pendente else "",
         "pendencias": pendencias,

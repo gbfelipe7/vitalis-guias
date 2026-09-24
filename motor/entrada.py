@@ -255,6 +255,12 @@ def interpretar_texto(texto, regras, usar_ia=True):
             avisos += avisos_ia
             lido_por = "IA e expressões regulares"
 
+    # 'Procedimento: 50000470' ou só um pedaço do nome: o código sai da tabela de procedimentos
+    if not campos.get("procedimento_codigo") and campos.get("procedimento_descricao"):
+        achado = achar_procedimento(regras, campos["procedimento_descricao"])
+        if achado:
+            campos["procedimento_codigo"], campos["procedimento_descricao"] = achado["codigo"], achado["descricao"]
+
     essenciais = ("convenio", "procedimento_codigo", "data_atendimento")
     return {"campos": campos, "lido_por": lido_por, "avisos": avisos, "precisa_confirmar": precisa_confirmar,
             "faltando": [c for c in essenciais if not campos.get(c)]}

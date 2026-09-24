@@ -2,16 +2,7 @@
 
 from datetime import date
 
-from .textos import GRAVIDADES, ORDEM_GRAVIDADE, PROXIMOS_PASSOS, TIPOS
-
-
-def _reais(valor):
-    inteiro, centavos = ("%.2f" % valor).split(".")
-    grupos = []
-    while inteiro:
-        grupos.insert(0, inteiro[-3:])
-        inteiro = inteiro[:-3]
-    return "R$ %s,%s" % (".".join(grupos), centavos)
+from .textos import GRAVIDADES, ORDEM_GRAVIDADE, PROXIMOS_PASSOS, TIPOS, reais as _reais
 
 
 def _agrupar(resultados, chave_de):
@@ -54,7 +45,7 @@ def montar_relatorio(resultados, gerado_em=None):
         por_gravidade[g] = {"nome": GRAVIDADES[g], "guias": len(do_nivel),
                             "em_risco": sum(r["valor_em_risco"] for r in do_nivel)}
 
-    # O mesmo valor segurado, dividido pelo que precisa acontecer. Soma o total em risco.
+    # O mesmo valor retido, dividido pelo que precisa acontecer. Soma o total em risco.
     # Cópia de outra guia entra à parte: não é dinheiro a receber, a original é que vale.
     por_passo = {}
     for chave, nome in PROXIMOS_PASSOS.items():
@@ -92,9 +83,9 @@ def relatorio_em_texto(rel):
         "Gerado em %s" % "/".join(reversed(rel["gerado_em"].split("-"))),
         "",
         "Verificadas: %d" % rel["verificadas"],
-        "Prontas para enviar: %d" % rel["ok"],
-        "Com problema: %d (%s%% das guias)" % (rel["pendentes"], str(rel["percentual_pendente"]).replace(".", ",")),
-        "Dinheiro em risco: %s de %s (%s%%)" % (
+        "Podem enviar: %d" % rel["ok"],
+        "Retidas antes do envio: %d de %d" % (rel["pendentes"], rel["verificadas"]),
+        "Valor retido: %s de %s (%s%%)" % (
             _reais(rel["valor_em_risco"]), _reais(rel["valor_total"]),
             str(rel["percentual_em_risco"]).replace(".", ",")),
         "",
@@ -113,8 +104,8 @@ def relatorio_em_texto(rel):
         linhas.append("- %s: %d guias, %s" % (t["nome"], t["guias"], _reais(t["em_risco"])))
     linhas += ["", "Por unidade"]
     for nome, g in sorted(rel["por_unidade"].items()):
-        linhas.append("- %s: %d de %d com problema, %s" % (nome, g["pendentes"], g["guias"], _reais(g["em_risco"])))
+        linhas.append("- %s: %d de %d retidas, %s" % (nome, g["pendentes"], g["guias"], _reais(g["em_risco"])))
     linhas += ["", "Por convênio"]
     for nome, g in sorted(rel["por_convenio"].items()):
-        linhas.append("- %s: %d de %d com problema, %s" % (nome, g["pendentes"], g["guias"], _reais(g["em_risco"])))
+        linhas.append("- %s: %d de %d retidas, %s" % (nome, g["pendentes"], g["guias"], _reais(g["em_risco"])))
     return "\n".join(linhas)

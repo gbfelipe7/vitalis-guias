@@ -439,7 +439,8 @@ class SegundaRodadaDeAtaque(unittest.TestCase):
 
     def test_a_ordem_das_pendencias_e_fixa(self):
         # G-0006 tem dois problemas de mesma gravidade: o relatório conta a guia no primeiro
-        self.assertEqual(RESULTADOS["G-2608-0006"]["tipo_principal"], "sessao_acima_do_limite")
+        # empate de gravidade: vem na frente o passo mais definitivo (o Vitalcard nem cobre infiltração)
+        self.assertEqual(RESULTADOS["G-2608-0006"]["tipo_principal"], "procedimento_nao_coberto")
         self.assertEqual(RESULTADOS["G-2608-0056"]["tipo_principal"], "sessao_acima_do_limite")
 
 
@@ -459,7 +460,8 @@ class NomesEProximoPasso(unittest.TestCase):
         self.assertAlmostEqual(sum(p["em_risco"] for p in passos.values()), rel["valor_em_risco"])
         self.assertEqual(sum(p["guias"] for p in passos.values()), rel["pendentes"])
         self.assertEqual(passos["convenio"]["em_risco"], 1378.0)
-        self.assertEqual(passos["recepcao"]["em_risco"], 382.0)
+        self.assertEqual(passos["recepcao"]["em_risco"], 292.0)
+        self.assertEqual(passos["financeiro"]["em_risco"], 370.0)
         self.assertEqual(sorted(passos["copia"]["ids"]), ["G-2608-0057", "G-2608-0076"])
         self.assertFalse(passos["copia"]["e_receita"])
 
@@ -469,4 +471,58 @@ class NomesEProximoPasso(unittest.TestCase):
         # autorização vencida, mas o paciente trouxe uma nova: é a recepção que lança
         self.assertEqual(RESULTADOS["G-2608-0030"]["proximo_passo"], "recepcao")
         self.assertEqual(RESULTADOS["G-2608-0039"]["proximo_passo"], "particular")
+        # 'drenagem linfática' não está na tabela de nenhum convênio: trocar o código não resolve
+        self.assertEqual(RESULTADOS["G-2608-0069"]["proximo_passo"], "financeiro")
         self.assertEqual(RESULTADOS["G-2608-0001"]["proximo_passo"], "")
+
+
+class TerceiraRodada(unittest.TestCase):
+    """Achados da verificação da página nova e das mudanças do motor."""
+
+    def _guia(self, **mudar):
+        base = {"convenio": "Vitalcard", "unidade": "Sul", "paciente": "P-9", "data_atendimento": "2026-09-21",
+                "procedimento_codigo": "50000470", "numero_autorizacao": "AUT123456", "autorizacao_validade": "2026-10-10",
+                "sessao_numero_na_autorizacao": "3", "carteirinha": "123456789", "cid": "M54.5",
+                "profissional_registro": "CREFITO-3 204411-F", "valor": "62.00"}
+        base.update(mudar)
+        return base
+
+    def test_mesma_guia_lancada_duas_vezes_na_sessao(self):
+        from web.rotas import rota_verificar
+        primeira = self._guia(id_guia="G-NOVA-1")
+        _, corpo = rota_verificar({"guia": self._guia(id_guia="G-NOVA-2"), "rascunho": True, "anteriores": [primeira]})
+        self.assertEqual(corpo["resultado"]["gravidade"], "nao_enviar")
+        self.assertEqual(corpo["resultado"]["proximo_passo"], "copia")
+
+    def test_so_ler_nao_confere(self):
+        from web.rotas import rota_verificar
+        _, corpo = rota_verificar({"texto": "Convênio: Vitalcard\nProcedimento: 50000470\nData: 21-09-2026\nPaciente: P-1",
+                                   "so_ler": True, "rascunho": True})
+        self.assertTrue(corpo["confirmar"])
+        self.assertEqual(corpo["entrada"]["campos"]["procedimento_codigo"], "50000470")
+        self.assertEqual(corpo["entrada"]["campos"]["data_atendimento"], "2026-09-21")
+
+    def test_avisos_de_leitura_voltam_para_a_pagina(self):
+        from web.rotas import rota_verificar
+        _, corpo = rota_verificar({"texto": "Convênio: Vitalcard\nConvênio: Plano Bem\nCódigo: 50000470\nData: 21/09/2026\nPaciente: P-1\nSessão: 1 de 10",
+                                   "rascunho": True})
+        self.assertTrue(corpo["entrada"]["avisos"])
+
+    def test_limite_declarado_menor_entra_na_folga(self):
+        r = verificar_nova(self._guia(sessao_numero_na_autorizacao="5", autorizacao_sessoes_limite="5"), [], REGRAS,
+                           usar_ia=False, referencia=date(2026, 9, 22))
+        self.assertEqual(r["folga_da_autorizacao"]["sessoes"], 0)
+
+    def test_validade_longa_demais_gera_aviso(self):
+        r = verificar_nova(self._guia(autorizacao_validade="2062-10-10"), [], REGRAS, usar_ia=False,
+                           referencia=date(2026, 9, 22))
+        self.assertTrue(any("Conferir se o ano está certo" in a for a in r["alertas"]))
+
+    def test_procedimento_real_coberto_e_com_a_recepcao(self):
+        r = verificar_nova(self._guia(observacao_recepcao="O procedimento realizado foi fisioterapia neurofuncional."),
+                           [], REGRAS, usar_ia=False, referencia=date(2026, 9, 22))
+        self.assertEqual(r["proximo_passo"], "recepcao")
+
+    def test_valor_em_reais_no_formato_da_clinica(self):
+        r = verificar_nova(self._guia(valor="1200.50"), [], REGRAS, usar_ia=False, referencia=date(2026, 9, 22))
+        self.assertTrue(any("R$ 1.200,50" in p["motivo"] for p in r["pendencias"]))

@@ -5,6 +5,16 @@ mudar uma frase sem mexer em regra nenhuma. As chaves entre chaves {assim} são
 preenchidas pelo motor.
 """
 
+def reais(valor):
+    """R$ 1.234,56, do jeito que a clínica escreve."""
+    inteiro, centavos = ("%.2f" % valor).split(".")
+    grupos = []
+    while inteiro:
+        grupos.insert(0, inteiro[-3:])
+        inteiro = inteiro[:-3]
+    return "R$ %s,%s" % (".".join(grupos), centavos)
+
+
 # Nome que aparece no relatório para cada tipo de problema.
 TIPOS = {
     "autorizacao_vencida": "Autorização vencida",
@@ -35,14 +45,14 @@ EXPLICACAO = {
 }
 GRAVIDADES = {chave: DECISOES[chave] for chave in ("nao_enviar", "corrigir", "conferir")}
 
-# O que precisa acontecer para a guia segurada sair do lugar, e quem resolve.
+# O que precisa acontecer para a guia retida sair do lugar, e quem resolve.
 # É outra forma de olhar as mesmas pendências: a decisão diz se a guia pode ir, o próximo
 # passo diz quem a Carla chama. A ordem vai do mais definitivo para o mais leve.
 PROXIMOS_PASSOS = {
     "copia": "Descartar a cópia",
     "particular": "Cobrar do paciente como particular",
     "financeiro": "Decidir com o financeiro",
-    "convenio": "Pedir autorização ao convênio",
+    "convenio": "Resolver com o convênio",
     "recepcao": "Recepção completa ou corrige a guia",
     "confirmar": "Confirmar antes de enviar",
 }
@@ -70,7 +80,7 @@ MOTIVO = {
     "procedimento_desconhecido": "O código '{codigo}' não está na tabela de procedimentos.",
     "nao_coberto": "{convenio} não cobre {descricao} ({codigo}).",
     "descricao_divergente": "O código {codigo} é '{certa}', mas a guia diz '{lancada}'.",
-    "valor_divergente": "O valor lançado é R$ {lancado} e a referência do procedimento é R$ {referencia}.",
+    "valor_divergente": "O valor lançado é {lancado} e a referência do procedimento é {referencia}.",
     "profissional_incompativel": "{descricao} pede registro {exigido}, mas a guia tem {registro}.",
     "prazo_vencido": "O prazo de {prazo} dias do {convenio} para enviar venceu em {limite}.",
     "lancada_antes": "A guia foi lançada em {lancamento}, antes do atendimento de {atendimento}.",
@@ -111,7 +121,7 @@ CORRIGIR = {
     "descricao_divergente": "Conferir qual procedimento foi feito e acertar código e descrição.",
     "valor_divergente": "Acertar o valor para a referência do procedimento.",
     "profissional_incompativel": "Conferir quem atendeu e qual procedimento foi feito de verdade.{extra}",
-    "prazo_vencido": "Falar com o convênio antes de enviar: fora do prazo ele recusa.",
+    "prazo_vencido": "Levar ao financeiro: fora do prazo o convênio recusa. Ele decide se pede exceção ao convênio ou dá baixa na guia.",
     "lancada_antes": "Conferir a data do atendimento e a data de lançamento.",
     "particular": "Tirar do lote do convênio e faturar como particular.",
     "procedimento_real": "Trocar o código pelo do procedimento feito.{cobertura}",
@@ -141,5 +151,6 @@ ALERTA = {
     "limite_diferente": "A guia diz que a autorização cobre {declarado} sessões; a regra do {convenio} diz {limite}.",
     "limite_ilegivel": "O limite de sessões da autorização veio como '{valor}' e não foi lido. Vale o limite do convênio.",
     "recibo_reembolso": "A recepção anotou pedido de recibo para reembolso do plano. Se o paciente pagou a sessão como particular, não enviar ao convênio.",
+    "validade_longa": "A autorização vale até {validade}, mais que os {maximo} dias que o {convenio} costuma dar a partir do atendimento. Conferir se o ano está certo.",
     "nova_validade_longa": "A validade anotada para a autorização nova ({nova}) passa dos {maximo} dias que o {convenio} costuma dar. Conferir a data no documento.",
 }

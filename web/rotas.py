@@ -7,7 +7,7 @@ Assim o que roda na minha máquina é exatamente o que roda publicado.
 from motor import (carregar_guias, carregar_regras, consultar_regra, montar_relatorio,
                    relatorio_em_texto, verificar_lote, verificar_nova)
 from motor.entrada import interpretar_texto
-from motor.normalizar import CAMPOS, limpar_texto
+from motor.normalizar import CAMPOS, ler_data, limpar_texto
 
 MAXIMO_DE_NOVAS = 50
 
@@ -17,6 +17,19 @@ def _so_texto(campos):
     return {c: limpar_texto(campos[c], 1000 if c == "observacao_recepcao" else 200)
             for c in CAMPOS if isinstance(campos.get(c), (str, int, float)) and not isinstance(campos.get(c), bool)
             and limpar_texto(campos[c])}
+
+
+def _datas_em_iso(campos):
+    """As datas que o motor entende voltam em AAAA-MM-DD, para o formulário conseguir mostrar.
+    Data que ele não entende volta como veio, e a pessoa corrige no formulário."""
+    campos = dict(campos)
+    atendimento = ler_data(campos.get("data_atendimento", ""))
+    for chave, depois_de in (("data_atendimento", None), ("autorizacao_validade", atendimento)):
+        if campos.get(chave):
+            lida = ler_data(campos[chave], depois_de=depois_de)
+            if lida:
+                campos[chave] = lida.isoformat()
+    return campos
 
 
 def _regras_para_o_formulario(regras):
@@ -47,9 +60,14 @@ def rota_verificar(dados):
     """POST /api/verificar: confere uma guia nova. Aceita {"guia": {...}} ou {"texto": "..."}.
 
     Com "rascunho": true a conferência roda sem IA. É o que o formulário usa enquanto a pessoa
-    preenche: rápido, sem gastar a cota do modelo. O botão Conferir manda sem rascunho."""
+    preenche: rápido, sem gastar a cota do modelo. O botão Conferir manda sem rascunho.
+
+    Com "so_ler": true o texto só é lido e os campos voltam para a pessoa conferir, sem conferência.
+    "anteriores" são as guias já lançadas nesta sessão: a nova também é comparada com elas, para
+    a mesma guia lançada duas vezes não sair como Pode enviar nas duas."""
     regras = carregar_regras()
     usar_ia = dados.get("rascunho") is not True
+    so_ler = dados.get("so_ler") is True
     entrada = {"lido_por": "campos enviados", "faltando": [], "avisos": []}
 
     if isinstance(dados.get("guia"), dict):
@@ -57,10 +75,10 @@ def rota_verificar(dados):
     elif isinstance(dados.get("texto"), str) and dados["texto"].strip():
         entrada = interpretar_texto(dados["texto"], regras, usar_ia=usar_ia)
         campos = _so_texto(entrada["campos"])
-        if entrada["precisa_confirmar"] and campos:
+        if (entrada["precisa_confirmar"] or so_ler) and campos:
             # Texto corrido é leitura, não é dado: devolve os campos lidos para a pessoa conferir.
             # A conferência de verdade acontece quando eles voltarem em "guia".
-            return 200, {"confirmar": True, "entrada": {"lido_por": entrada["lido_por"], "campos": campos,
+            return 200, {"confirmar": True, "entrada": {"lido_por": entrada["lido_por"], "campos": _datas_em_iso(campos),
                                                         "faltando": entrada["faltando"], "avisos": entrada["avisos"]}}
     else:
         return 400, {"erro": "Mande 'guia' (os campos) ou 'texto' (o que a recepção escreveu)."}
@@ -69,10 +87,12 @@ def rota_verificar(dados):
         return 422, {"erro": "Não consegui separar nenhum campo desse texto.",
                      "dica": "Escreva um campo por linha, como 'Convênio: Vitalcard'."}
 
-    resultado = verificar_nova(campos, carregar_guias(), regras, usar_ia=usar_ia)
+    anteriores = dados.get("anteriores") if isinstance(dados.get("anteriores"), list) else []
+    anteriores = [_so_texto(g) for g in anteriores[:MAXIMO_DE_NOVAS] if isinstance(g, dict)]
+    resultado = verificar_nova(campos, carregar_guias() + anteriores, regras, usar_ia=usar_ia)
     resultado["alertas"] = entrada.get("avisos", []) + resultado["alertas"]
     return 200, {"entrada": {"lido_por": entrada["lido_por"], "campos": campos,
-                             "faltando": entrada["faltando"]},
+                             "faltando": entrada["faltando"], "avisos": entrada.get("avisos", [])},
                  "resultado": resultado}
 
 
