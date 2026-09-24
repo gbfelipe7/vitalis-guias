@@ -1382,7 +1382,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         + peca('Guia repetida e correção', 'Tudo igual é cópia. A guia corrigida é conferida de novo e entra no lugar da original.', irVer(['Guias de agosto', '#guias'])))}
       ${grupo('Antes do atendimento',
         peca('Consulta de regra', 'Diz se o convênio cobre o procedimento e o que ele exige.', '<code>GET /api/regra</code> · MCP')
-        + peca('Lista de renovação', `Quem vai ficar sem autorização: vence em até 7 dias ou já usou 80% das sessões. Hoje, ${m.renovar.length}.`, irVer(['3. Soluções', '#solucoes'])))}
+        + peca('Lista de renovação', `Pacientes que podem chegar sem autorização na próxima sessão. Hoje, ${m.renovar.length}.`, irVer(['3. Soluções', '#solucoes'])))}
       ${grupo('Para o Dr. Renato',
         peca('Relatório de terça', 'Guias, retidas, tipo e dinheiro em risco, em imagem e texto para o WhatsApp.', irVer(['Relatório de terça', '#terca'])))}
       ${grupo('Pelo Claude',
@@ -1453,7 +1453,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     $('solucoesLista').innerHTML = `
       <div class="secao cartao">
         <h2>Na semana: ${m.renovar.length} autorizações para pedir</h2>
-        <div class="pergunta">Pelo que a guia declara: vencem em até 7 dias ou já usaram 80% das sessões. As 6 mais urgentes.</div>
+        <div class="pergunta">Pacientes que podem chegar sem autorização na próxima sessão: a autorização vence em até 7 dias ou sobram poucas sessões. Pelo que a guia declara.</div>
         <div class="tabela" style="border-top:0"><table class="lista" style="min-width:560px"><tbody>
           ${m.renovar.slice().sort((x, y) => urg(x) - urg(y)).slice(0, 6).map((r) => `<tr><td class="id">${esc(r.id_guia)}</td><td>${esc(r.guia.paciente)}</td><td>${esc(r.guia.convenio)}</td><td>${esc(r.guia.unidade)}</td><td>${esc(motivo(r.folga_da_autorizacao))}</td></tr>`).join('')}
         </tbody></table></div>
