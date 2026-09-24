@@ -107,6 +107,13 @@ h2{font-size:12.5px;font-weight:600;letter-spacing:.02em;margin:0}
 .honesto{font-size:12.5px;color:var(--ink3);margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
 @media (max-width:900px){.chamada{grid-template-columns:1fr}}
 
+.entenda{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3)}
+.entenda summary{cursor:pointer;color:var(--ink2);list-style:none}
+.entenda summary::-webkit-details-marker{display:none}
+.entenda summary::before{content:"▶ ";font-size:9px}
+.entenda[open] summary::before{content:"▼ "}
+.entenda div{margin-top:6px}.entenda b{font-weight:500;color:var(--ink2)}
+
 /* controles */
 .btn{height:34px;padding:0 14px;border-radius:9px;border:0;background:var(--action);color:var(--action-ink);font-weight:500;cursor:pointer;white-space:nowrap}
 .btn:disabled{opacity:.45;cursor:default}
@@ -228,14 +235,14 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     <!-- ================= visão geral ================= -->
     <section class="vista" id="v-visao">
       <h1>Visão geral</h1>
-      <div class="sub">Lote de agosto: 80 guias conferidas antes de irem para o convênio.</div>
+      <div class="sub">As 80 guias de agosto, conferidas antes do envio.</div>
       <div id="visao"><div class="nota">Carregando as guias…</div></div>
     </section>
 
     <!-- ================= guias ================= -->
     <section class="vista" id="v-guias">
       <h1>Guias de agosto</h1>
-      <div class="sub">Cada guia com a decisão, o motivo e o que fazer. Clique numa guia para ver tudo.</div>
+      <div class="sub">Clique numa guia para ver o motivo e o que fazer.</div>
       <div class="filtros">
         <div class="segmento" id="fDecisao"></div>
       </div>
@@ -252,19 +259,19 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
         <thead><tr><th>Guia</th><th>Unidade</th><th>Convênio</th><th>Procedimento</th><th class="n">Valor</th><th>Decisão</th><th>Motivo principal</th><th>Próximo passo</th></tr></thead>
         <tbody id="linhas"></tbody>
       </table></div>
-      <div class="nota">O lote de agosto é conferido na data de lançamento de cada guia, como se ela tivesse acabado de ser lançada e ainda não tivesse ido para o convênio. Guia nova é conferida com a data de hoje.</div>
+      <div class="nota">Cada guia de agosto é conferida no dia em que foi lançada. Guia nova, no dia de hoje.</div>
     </section>
 
     <!-- ================= lançar guia ================= -->
     <section class="vista" id="v-lancar">
       <h1>Lançar guia</h1>
-      <div class="sub">Faz o papel da tela do sistema de gestão. A guia é conferida enquanto você preenche, e de novo ao lançar.</div>
+      <div class="sub">Simula a tela do sistema de gestão. A conferência aparece ao lado enquanto você preenche.</div>
       <div class="lancar">
         <div>
           <details class="colar" id="colar">
-            <summary>Colar o que a recepção escreveu <span>preenche o formulário para você</span></summary>
+            <summary>Colar o que a recepção escreveu <span>preenche o formulário</span></summary>
             <div class="dentro">
-              <textarea id="texto" placeholder="Pode ser uma linha do sistema, um campo por linha (Convênio: Vitalcard) ou texto corrido."></textarea>
+              <textarea id="texto" placeholder="Linha do sistema, um campo por linha ou texto corrido."></textarea>
               <div class="exemplos" style="margin-top:8px"><button class="btn2" id="ler">Ler e preencher</button><span id="lendo"></span></div>
               <div id="lido"></div>
             </div>
@@ -286,7 +293,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       </div>
       <div class="secao">
         <h2>Lançadas nesta sessão</h2>
-        <div class="pergunta">Entram também no relatório de terça.</div>
+        <div class="pergunta">Entram no relatório de terça.</div>
         <div id="novas" class="vazio">Nenhuma ainda.</div>
       </div>
     </section>
@@ -294,24 +301,24 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     <!-- ================= relatório de terça ================= -->
     <section class="vista" id="v-terca">
       <h1>Relatório de terça</h1>
-      <div class="sub">O que o Dr. Renato vê na reunião das 7h30. Lote de agosto mais as guias lançadas nesta sessão.</div>
+      <div class="sub">O que o Dr. Renato vê às 7h30. Agosto mais as guias lançadas nesta sessão.</div>
       <div id="terca"><div class="nota">Montando o relatório…</div></div>
     </section>
 
     <!-- ================= como funciona ================= -->
     <section class="vista" id="v-como">
       <h1>Como funciona</h1>
-      <div class="sub">Uma regra escrita decide. A IA só ajuda a ler texto, e nunca libera uma guia.</div>
+      <div class="sub">A regra decide. A IA só ajuda a ler texto e nunca libera uma guia.</div>
 
       <div class="secao">
         <h2>O caminho de uma guia</h2>
-        <div class="pergunta">O mesmo conferente atende a página, o endereço de API e o Claude.</div>
+        <div class="pergunta">O mesmo conferente atende a página, a API e o Claude.</div>
         <div class="passos">
-          <div class="passo"><div class="k">1</div><b>Entra</b><p>Pelo formulário, pelo endereço que o sistema de gestão chama a cada lançamento, ou pelo Claude com a Skill.</p></div>
-          <div class="passo"><div class="k">2</div><b>É arrumada</b><p>Data em dois formatos vira uma só. "Aguardando" e "n/a" contam como vazio. O que não dá para ler segura a guia.</p></div>
-          <div class="passo"><div class="k">3</div><b>A observação vira fato</b><p>Particular, autorização por telefone, código errado. Texto que ninguém entendeu segura a guia para uma pessoa ler.</p></div>
-          <div class="passo"><div class="k">4</div><b>A regra decide</b><p>Campos exigidos, validade, limite de sessões, cobertura, valor de referência, profissional, prazo de envio e guia repetida.</p></div>
-          <div class="passo"><div class="k">5</div><b>Sai a decisão</b><p>Com o motivo e o que fazer. A guia lançada pela página entra no relatório de terça. Em produção, toda conferência seria gravada.</p></div>
+          <div class="passo"><div class="k">1</div><b>Entra</b><p>Pela página, pela API do sistema de gestão ou pelo Claude.</p></div>
+          <div class="passo"><div class="k">2</div><b>É arrumada</b><p>Datas e valores num formato só. O que não dá para ler segura a guia.</p></div>
+          <div class="passo"><div class="k">3</div><b>A observação é lida</b><p>O que a recepção anotou vira fato. Texto que ninguém entendeu segura a guia.</p></div>
+          <div class="passo"><div class="k">4</div><b>A regra decide</b><p>Campos, validade, sessões, cobertura, valor, profissional, prazo e repetida.</p></div>
+          <div class="passo"><div class="k">5</div><b>Sai a decisão</b><p>Com o motivo, o que fazer e quem resolve.</p></div>
         </div>
       </div>
 
@@ -324,17 +331,17 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       <div class="secao grade2">
         <div class="cartao">
           <h2>Onde entra IA</h2>
-          <p style="margin:8px 0 0">Em dois lugares só: separar os campos de uma guia colada como texto corrido, e ler a observação da recepção. Na observação ela só pode acrescentar pendência. No texto, todo valor que ela devolve tem que estar escrito no texto, e a pessoa confere o formulário antes de lançar. Se a IA estiver fora do ar, nada é liberado: a observação que as palavras-chave não reconhecem segura a guia para uma pessoa ler, e o texto colado é separado só por expressões regulares. O lote de agosto roda sem IA, para dar sempre o mesmo resultado.</p>
+          <p style="margin:8px 0 0">Só para ler texto: a guia colada e a observação da recepção. Ela pode segurar uma guia, nunca liberar. O lote de agosto roda sem IA.</p>
         </div>
         <div class="cartao">
           <h2>MCP, Skill e código</h2>
-          <p style="margin:8px 0 0">Tudo em <a href="https://github.com/gbfelipe7/vitalis-guias">github.com/gbfelipe7/vitalis-guias</a>. O conferente está em <code>motor/</code>, o MCP em <code>mcp_server/</code> com quatro ferramentas (consultar regra, verificar guia, listar pendentes, relatório de terça) e a Skill em <code>skills/conferir-guia/</code>.</p>
+          <p style="margin:8px 0 0">Em <a href="https://github.com/gbfelipe7/vitalis-guias">github.com/gbfelipe7/vitalis-guias</a>: o conferente em <code>motor/</code>, o MCP em <code>mcp_server/</code> e a Skill em <code>skills/conferir-guia/</code>.</p>
         </div>
       </div>
 
       <div class="secao">
-        <h2>Para o sistema de gestão chamar a cada guia lançada</h2>
-        <div class="pergunta">É isso que tira a conferência da memória de alguém: a guia é conferida no lançamento, antes do envio.</div>
+        <h2>Como o sistema de gestão chama a conferência</h2>
+        <div class="pergunta">A cada guia lançada, sem ninguém precisar lembrar.</div>
         <pre id="curl"></pre>
       </div>
     </section>
@@ -500,7 +507,6 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     const origem = ORIGEM.map((o) => { const g = retidas.filter((r) => origemDe(r) === o);
       return {nome: o.nome, explica: o.explica, guias: g.length, v: g.reduce((s, r) => s + r.valor_em_risco, 0), ids: g.map((r) => r.id_guia)}; });
     const maxO = Math.max(1, ...origem.map((o) => o.v)), antes = origem[0];
-    const retroativas = retidas.filter((r) => r.proximo_passo === 'convenio' && ['autorizacao_vencida', 'sessao_acima_do_limite'].includes(r.tipo_principal)).length;
 
     const renovar = guias.filter((r) => { const f = r.folga_da_autorizacao || {};
       return r.decisao === 'OK' && ((f.dias != null && f.dias <= 7) || (f.sessoes != null && f.limite && f.sessoes <= 0.2 * f.limite)); });
@@ -519,72 +525,69 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
     guias.forEach((r) => { const t = tercaDaReuniao(r.guia.data_lancamento); (semanas[t] = semanas[t] || {n: 0, ret: 0, ids: []}); semanas[t].n++; if (r.decisao === 'PENDENTE') semanas[t].ret++; semanas[t].ids.push(r.id_guia); });
     const listaSemanas = Object.entries(semanas).sort();
     const maxS = Math.max(1, ...listaSemanas.map(([, w]) => w.n));
-    const verbal = retidas.filter((r) => r.pendencias.some((p) => p.tipo === 'sem_autorizacao' && /telefone/i.test(p.motivo)));
     const copia = pp.copia || {em_risco: 0};
 
     $('visao').innerHTML = `
       <div class="chamada">
-        <div class="frase">Em agosto, <b>${rel.pendentes}</b> das <b>${rel.verificadas}</b> guias ficaram retidas antes de ir ao convênio, somando <b>${reaisInt(rel.valor_em_risco)}</b>. O maior pedaço, <b>${reaisInt(conv.em_risco)}</b> em ${conv.guias} guias, depende do convênio.</div>
-        <div class="emjogo">Por mês, na clínica toda
+        <div class="frase"><b>${rel.pendentes}</b> das <b>${rel.verificadas}</b> guias de agosto ficaram retidas antes do envio. Elas somam <b>${reaisInt(rel.valor_em_risco)}</b>, e ${pct(conv.em_risco, rel.valor_em_risco)} depende do convênio.</div>
+        <div class="emjogo">Na clínica, por mês
           <div class="n">~ R$ 14,5 mil</div>
-          de glosa que dá para evitar: 40% dos 8% glosados sobre os R$ 452 mil de convênio, pela estimativa da Carla. O lote de agosto tem erros de propósito, então a taxa dele não vale para a clínica.</div>
+          de glosa evitável, pela estimativa da Carla.</div>
       </div>
       <div class="kpis">
-        <div class="kpi"><div class="r">Guias conferidas</div><div class="n">${rel.verificadas}</div><div class="d">todas as lançadas em agosto</div></div>
-        <div class="kpi"><div class="r">Podem enviar</div><div class="n">${rel.ok}</div><div class="d">${rel.ok} de ${rel.verificadas}${recibo.length ? ` · ${recibo.length} com aviso de recibo` : ''}</div></div>
-        <div class="kpi"><div class="r">Retidas antes do envio</div><div class="n">${rel.pendentes}</div><div class="d">${rel.pendentes} de ${rel.verificadas} guias</div></div>
-        <div class="kpi"><div class="r">Valor retido</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)}${copia.em_risco ? ` · ${reaisInt(copia.em_risco)} são cópias` : ''}</div></div>
+        <div class="kpi"><div class="r">Conferidas</div><div class="n">${rel.verificadas}</div><div class="d">todas de agosto</div></div>
+        <div class="kpi"><div class="r">Podem enviar</div><div class="n">${rel.ok}</div><div class="d">${rel.ok} de ${rel.verificadas}</div></div>
+        <div class="kpi"><div class="r">Retidas</div><div class="n">${rel.pendentes}</div><div class="d">${rel.pendentes} de ${rel.verificadas}</div></div>
+        <div class="kpi"><div class="r">Valor retido</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)}</div></div>
       </div>
 
       <div class="secao grade2">
         <div class="cartao">
-          <h2>${pct(conv.em_risco, rel.valor_em_risco)} do valor retido depende do convênio</h2>
-          <div class="pergunta">Quem precisa agir para cada real retido sair do lugar. Clique para ver as guias.</div>
+          <h2>Quem resolve</h2>
+          <div class="pergunta">Clique para ver as guias.</div>
           ${barras(passos.map(([k, p]) => ({nome: p.nome, valor: reaisInt(p.em_risco), extra: p.guias + (p.guias > 1 ? ' guias' : ' guia'), v: p.em_risco,
             partes: [{c: k === 'copia' ? 'conferir' : 'tinta', v: p.em_risco}], filtro: {passo: k, rotulo: p.nome}})), maxP)}
-          <div class="honesto">${passos.map(([k]) => `<div style="margin-top:4px"><b style="font-weight:500">${esc(pp[k].nome)}.</b> ${PASSO_EXPLICA[k]}</div>`).join('')}</div>
+          <details class="entenda"><summary>O que cada um quer dizer</summary>${passos.map(([k]) => `<div><b>${esc(pp[k].nome)}.</b> ${PASSO_EXPLICA[k]}</div>`).join('')}</details>
         </div>
         <div class="cartao">
-          <h2>${antes.guias} das ${rel.pendentes} retidas nasceram antes da sessão</h2>
-          <div class="pergunta">Onde cada erro nasce. O que a conferência da guia resolve e o que precisa ser pego antes, no balcão.</div>
-          ${barras(origem.map((o) => ({nome: `${o.nome}: ${o.explica}`, valor: reaisInt(o.v), extra: o.guias + ' guias', v: o.v, filtro: {ids: o.ids, rotulo: o.nome}})), maxO)}
-          <div class="destaque">Em todas elas a sessão já aconteceu. Em ${retroativas} a autorização estava vencida ou esgotada, e o dinheiro só volta se o convênio aceitar autorizar depois do fato. Conferir a guia segura o erro, mas não salva a sessão. O que evita o erro é conferir a autorização quando o paciente chega.</div>
+          <h2>Onde o erro nasce</h2>
+          <div class="pergunta">Clique para ver as guias.</div>
+          ${barras(origem.map((o) => ({nome: o.nome, valor: reaisInt(o.v), extra: o.guias + ' guias', v: o.v, filtro: {ids: o.ids, rotulo: o.nome}})), maxO)}
+          <div class="destaque">${antes.guias} das ${rel.pendentes} nascem antes da sessão, com a autorização vencida, esgotada ou sem número. Conferir a guia segura o erro. Conferir a autorização na chegada do paciente evita.</div>
+          <details class="entenda"><summary>O que cada um quer dizer</summary>${origem.map((o) => `<div><b>${esc(o.nome)}:</b> ${esc(o.explica)}.</div>`).join('')}</details>
         </div>
       </div>
 
       <div class="secao cartao">
-        <h2>${renovar.length} autorizações para renovar antes da próxima sessão</h2>
-        <div class="pergunta">Guias que podem ir, mas de pacientes cuja autorização vence em até 7 dias ou já usou 80% das sessões. Se ninguém pedir a renovação, uma das próximas guias desse paciente vai nascer retida.</div>
-        <div class="legenda" style="margin:0 0 8px">${Object.entries(porConvRenovar).sort((a, b) => b[1] - a[1]).map(([c, n]) => `<span><b style="font-weight:500;color:var(--ink)">${n}</b>&nbsp;no ${esc(c)}</span>`).join('')}<span class="clicavel" ${filtro({ids: renovar.map((r) => r.id_guia), rotulo: 'Autorizações para renovar'})}>ver as ${renovar.length} guias</span></div>
+        <h2>${renovar.length} autorizações para renovar</h2>
+        <div class="pergunta">Vencem em até 7 dias ou já usaram 80% das sessões. Pedir a renovação agora evita a próxima guia retida.</div>
+        <div class="legenda" style="margin:0 0 8px">${Object.entries(porConvRenovar).sort((a, b) => b[1] - a[1]).map(([c, n]) => `<span><b style="font-weight:500;color:var(--ink)">${n}</b>&nbsp;no ${esc(c)}</span>`).join('')}<span class="clicavel" ${filtro({ids: renovar.map((r) => r.id_guia), rotulo: 'Autorizações para renovar'})}>ver as ${renovar.length}</span></div>
         <div class="tabela" style="border-top:0"><table class="lista" style="min-width:560px"><tbody>
           ${renovar.slice().sort((a, b) => urgencia(a) - urgencia(b)).slice(0, 6).map((r) => `<tr><td class="id">${esc(r.id_guia)}</td><td>${esc(r.guia.paciente)}</td><td>${esc(r.guia.convenio)}</td><td>${esc(r.guia.unidade)}</td><td>${esc(motivoRenovar(r.folga_da_autorizacao))}</td></tr>`).join('')}
         </tbody></table></div>
-        <div class="nota">As 6 mais urgentes. Pedir em lote, por convênio, uma vez por semana, custa menos do que descobrir no balcão. A conta é feita no dia do atendimento de cada guia, como o resto do lote.</div>
       </div>
 
       <div class="secao grade2">
         <div class="cartao">
-          <h2>${maior ? esc(maior.nome) + ' é o problema mais comum' : 'Por tipo de problema'}</h2>
-          <div class="pergunta">Por tipo de problema. Cada guia conta uma vez, no problema mais grave. Clique para ver as guias.</div>
+          <h2>Por tipo de problema</h2>
+          <div class="pergunta">Cada guia conta uma vez, no problema mais grave.</div>
           ${barras(rel.por_tipo.map((t) => ({nome: t.nome, valor: reaisInt(t.em_risco), extra: t.guias + (t.guias > 1 ? ' guias' : ' guia'), v: t.em_risco, filtro: {tipo: tipoDe(t)}})), maxT)}
         </div>
         <div class="cartao">
-          <h2>Semanas de agosto, ainda sem tendência</h2>
-          <div class="pergunta">Guias retidas em cada reunião de terça, contando as lançadas de terça a segunda.</div>
+          <h2>Por semana</h2>
+          <div class="pergunta">Retidas em cada reunião de terça.</div>
           ${barras(listaSemanas.map(([t, w]) => ({nome: `Reunião de ${br(t).slice(0, 5)}${w.n < 10 ? ' (parcial)' : ''}`, valor: `${w.ret} de ${w.n}`, v: w.n,
             partes: [{c: 'tinta', v: w.ret}], filtro: {ids: w.ids, rotulo: 'Reunião de ' + br(t).slice(0, 5)}})), maxS)}
-          <div class="honesto">Com 16 a 27 guias por semana, a diferença entre elas pode ser acaso. A linha de base vem das primeiras semanas de uso real, não deste lote de teste.</div>
-          <h2 style="margin-top:18px">Prazo de envio</h2>
-          <div class="pergunta" style="margin-bottom:0">No dia do lançamento, nenhuma guia chega perto do prazo do convênio: a menor folga é de 27 dias. O prazo curto é outro. O Saúde Interior aceita autorização por telefone, mas só por 5 dias úteis${verbal.length ? `, e a <span class="clicavel" ${filtro({ids: verbal.map((r) => r.id_guia), rotulo: 'Autorização por telefone'})}>${esc(verbal.map((r) => r.id_guia).join(', '))}</span> está nessa situação` : ''}. Esse caso pede aviso diário, não semanal.</div>
+          <div class="honesto">Poucas guias por semana: ainda não dá para ver tendência.</div>
         </div>
       </div>
 
       ${recibo.length ? `<div class="secao cartao">
         <h2>Para confirmar com a Carla</h2>
-        <div class="pergunta" style="margin-bottom:0"><span class="clicavel" ${filtro({ids: recibo.map((r) => r.id_guia), rotulo: 'Pediu recibo para reembolso'})}>${recibo.length} guias que podem ir</span> (${reaisInt(recibo.reduce((s, r) => s + r.valor, 0))}) têm a anotação "pediu recibo para reembolso do plano". Se o paciente pagou a sessão do próprio bolso, enviar ao convênio é cobrar duas vezes. Os dados não dizem. Por isso a guia passa com aviso, e a pergunta fica para a Carla.</div>
+        <div class="pergunta" style="margin-bottom:0"><span class="clicavel" ${filtro({ids: recibo.map((r) => r.id_guia), rotulo: 'Pediu recibo para reembolso'})}>${recibo.length} guias prontas</span> dizem "pediu recibo para reembolso". Se o paciente já pagou, enviar ao convênio é cobrar duas vezes.</div>
       </div>` : ''}
 
-      <div class="nota" style="margin-top:28px;max-width:860px">O que este painel não mostra. A glosa real: ela só chega no demonstrativo do convênio, de 45 a 90 dias depois do envio. Retido não é perdido: a cópia nunca foi receita, o particular só muda de quem paga e o resto depende de alguém agir. O conferente compara o valor com a referência do procedimento, mas não confere a tabela do contrato nem faz auditoria técnica. Cada linha do lote é uma sessão.</div>`;
+      <div class="nota" style="margin-top:28px;max-width:860px">Retido não é perdido: ${reaisInt(copia.em_risco)} são cópias e o particular só muda de quem paga. A glosa real só aparece no retorno do convênio. O lote de agosto tem erros de propósito, então as taxas dele não valem para a clínica.</div>`;
   }
 
   /* ---------------- relatório de terça ---------------- */
@@ -613,24 +616,24 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
       const maxU = Math.max(1, ...Object.values(rel.por_unidade).map((g) => g.guias));
       const maxC = Math.max(1, ...Object.values(rel.por_convenio).map((g) => g.guias));
       $('terca').innerHTML = `
-        <div class="frase">Foram conferidas <b>${rel.verificadas}</b> guias. <b>${rel.pendentes}</b> ficaram retidas antes do envio, somando <b>${reaisInt(rel.valor_em_risco)}</b>. ${passos.length ? `O maior pedaço, <b>${reaisInt(passos[0][1].em_risco)}</b> em ${passos[0][1].guias} guias, ${FRASE_PASSO[passos[0][0]]}.` : ''}</div>
+        <div class="frase"><b>${rel.pendentes}</b> das <b>${rel.verificadas}</b> guias ficaram retidas, somando <b>${reaisInt(rel.valor_em_risco)}</b>. ${passos.length ? `O maior pedaço, <b>${reaisInt(passos[0][1].em_risco)}</b>, ${FRASE_PASSO[passos[0][0]]}.` : ''}</div>
         ${kpisRelatorio(rel)}
         <div class="secao grade2">
-          <div class="cartao"><h2>O que precisa acontecer</h2><div class="pergunta">Quem age para cada real retido sair do lugar.</div>
+          <div class="cartao"><h2>Quem resolve</h2><div class="pergunta">Valor retido por próximo passo.</div>
             ${barras(passos.map(([k, p]) => ({nome: p.nome, valor: reais(p.em_risco), extra: p.guias + (p.guias > 1 ? ' guias' : ' guia'), v: p.em_risco, partes: [{c: k === 'copia' ? 'conferir' : 'tinta', v: p.em_risco}]})), maxP)}
-            <div class="nota">A cópia não é dinheiro a receber: a original já vai ser paga.</div></div>
-          <div class="cartao"><h2>Por decisão</h2><div class="pergunta">Quantas guias em cada decisão.</div>
+            <div class="nota">Cópia não é dinheiro a receber.</div></div>
+          <div class="cartao"><h2>Por decisão</h2><div class="pergunta" style="margin-bottom:12px"></div>
             ${barras(ORDEM.map((g) => ({nome: DECISAO[g], valor: reais(pg[g].em_risco), extra: pg[g].guias + ' guias', v: pg[g].em_risco, partes: [{c: g, v: pg[g].em_risco}]})), maxG)}</div>
-          <div class="cartao"><h2>Por tipo de problema</h2><div class="pergunta">Cada guia conta uma vez, no problema mais grave.</div>
+          <div class="cartao"><h2>Por tipo de problema</h2><div class="pergunta">Cada guia conta uma vez.</div>
             ${barras(rel.por_tipo.map((t) => ({nome: t.nome, valor: reais(t.em_risco), extra: t.guias + ' guias', v: t.em_risco})), maxT)}</div>
-          <div class="cartao"><h2>Por unidade</h2><div class="pergunta">Guias conferidas e quantas ficaram retidas.</div>
+          <div class="cartao"><h2>Por unidade</h2><div class="pergunta">Retidas de cada grupo.</div>
             ${barras(grupo(rel.por_unidade).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), partes: [{c: 'tinta', v: g.pendentes}]})), maxU)}</div>
-          <div class="cartao"><h2>Por convênio</h2><div class="pergunta">Guias conferidas e quantas ficaram retidas.</div>
+          <div class="cartao"><h2>Por convênio</h2><div class="pergunta">Retidas de cada grupo.</div>
             ${barras(grupo(rel.por_convenio).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), partes: [{c: 'tinta', v: g.pendentes}]})), maxC)}</div>
         </div>
-        <div class="nota">Unidades e convênios: com 15 a 40 guias em cada grupo, a diferença entre eles pode ser acaso. Não dá para dizer que uma unidade erra mais. O que muda de verdade é o tipo de erro, e ele segue a regra escrita de cada convênio.</div>
+        <div class="nota">Com tão poucas guias por grupo, a diferença entre unidades e convênios pode ser acaso.</div>
         <div class="secao">
-          <h2>Texto para mandar no WhatsApp</h2>
+          <h2>Texto para o WhatsApp</h2>
           <div class="exemplos" style="margin:6px 0 10px"><button class="btn2" id="copiar">Copiar texto</button><span id="copiado"></span></div>
           <pre id="rTexto">${esc(d.texto)}</pre>
         </div>`;
@@ -646,13 +649,13 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   /* ---------------- como funciona ---------------- */
   function desenharLegenda() {
     const ex = {
-      ok: 'Por exemplo, G-2608-0001 e G-2608-0003.',
-      nao_enviar: 'Autorização vencida (G-2608-0004), sessão acima do limite (G-2608-0006), convênio que não cobre o procedimento (G-2608-0002), guia repetida (G-2608-0057).',
-      corrigir: 'CID vazio (G-2608-0021), autorização nova que o paciente trouxe e não foi lançada (G-2608-0030), código trocado (G-2608-0069).',
-      conferir: 'Reavaliação de fisioterapia lançada por médico (G-2608-0045), mesmo paciente no mesmo dia em duas guias (G-2608-0017), sessão remarcada (G-2608-0034).',
+      ok: '',
+      nao_enviar: 'Ex.: autorização vencida, convênio que não cobre, guia repetida.',
+      corrigir: 'Ex.: CID vazio, código trocado.',
+      conferir: 'Ex.: médico na reavaliação de fisioterapia, sessão remarcada.',
     };
-    const expl = {ok: 'Cumpre todas as regras do convênio.', nao_enviar: 'Se for enviada assim, o convênio recusa. Precisa de autorização nova, ou a guia não deve ir para este convênio.',
-      corrigir: 'Falta um dado ou ele está errado. Dá para arrumar a guia antes de enviar.', conferir: 'A regra escrita não proíbe, mas tem algo estranho. Alguém confirma antes de enviar.'};
+    const expl = {ok: 'Cumpre as regras do convênio.', nao_enviar: 'Se for enviada assim, o convênio recusa.',
+      corrigir: 'Falta um dado ou ele está errado.', conferir: 'A regra não proíbe, mas algo parece errado.'};
     const cont = {ok: 0, nao_enviar: 0, corrigir: 0, conferir: 0}, val = {ok: 0, nao_enviar: 0, corrigir: 0, conferir: 0};
     LOTE.guias.forEach((r) => { cont[r.gravidade]++; val[r.gravidade] += r.valor; });
     $('legendaDecisoes').innerHTML = ['ok', ...ORDEM].map((g) => `
@@ -799,28 +802,30 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
   function textoRegra() {
     const c = conv(), p = proc(); if (!c) return '';
     const exige = c.campos_obrigatorios.map((k) => NOME_CAMPO[k] || k);
-    const cobre = p ? (c.cobertos.includes(p.codigo) ? `Cobre ${esc(p.descricao.toLowerCase())}.` : `<b>Não cobre ${esc(p.descricao.toLowerCase())}.</b>`) : '';
-    return `<div class="bloco"><h2>Regra do ${esc(c.nome)}</h2><div class="regra" style="margin-top:6px">${cobre} Até ${c.limite_sessoes} sessões por autorização. Autorização de até ${c.validade_maxima_dias} dias. Enviar em até ${c.prazo_envio_dias} dias do atendimento. Exige ${exige.slice(0, -1).join(', ')} e ${exige.slice(-1)}.${c.observacao ? ' ' + esc(c.observacao) : ''}</div></div>`;
+    const itens = [p ? (c.cobertos.includes(p.codigo) ? 'cobre este procedimento' : '<b>não cobre este procedimento</b>') : '',
+      `até ${c.limite_sessoes} sessões`, `autorização de até ${c.validade_maxima_dias} dias`, `enviar em ${c.prazo_envio_dias} dias`,
+      `exige ${exige.slice(0, -1).join(', ')} e ${exige.slice(-1)}`].filter(Boolean);
+    return `<div class="bloco"><h2>Regra do ${esc(c.nome)}</h2><div class="regra" style="margin-top:6px">${itens.join(' · ').replace(/^(<b>)?(.)/, (m, t, c) => (t || '') + c.toUpperCase())}.</div></div>`;
   }
   function desenharConf(r, final) {
     conferencia = r;
     if (!r) {
       $('conf').innerHTML = `<div class="estado">Conferência</div><div class="nome vazio" style="font-size:22px">Escolha o convênio para começar</div>
-        <div class="exp">A guia é conferida enquanto você preenche. O que faltar ou estiver errado aparece aqui, com o que fazer.</div>`;
+        <div class="exp">O que faltar aparece aqui, com o que fazer.</div>`;
       return;
     }
     if (r.erro) { $('conf').innerHTML = `<div class="estado">Conferência</div><div class="exp erro" style="margin-top:10px">${esc(r.erro)} A guia não foi conferida: não envie ainda.</div>`; return; }
     const g = r.gravidade;
     $('conf').innerHTML = `
-      <div class="estado">${final ? 'Lançada e conferida' : 'Conferindo enquanto você preenche'}</div>
+      <div class="estado">${final ? 'Lançada e conferida' : 'Conferindo'}</div>
       <div class="nome"><i class="ponto ${g}"></i>${DECISAO[g]}</div>
       <div class="exp">${esc(r.o_que_significa || '')}</div>
-      ${r.decisao === 'PENDENTE' && r.valor_em_risco > 0 ? `<div class="dinheiro"><b>${reais(r.valor_em_risco)}</b> retidos nesta guia</div>` : ''}
+      ${r.decisao === 'PENDENTE' && r.valor_em_risco > 0 ? `<div class="dinheiro"><b>${reais(r.valor_em_risco)}</b> retidos</div>` : ''}
       ${r.pendencias.length ? `<div class="bloco">${pendencias(r)}</div>` : ''}
       ${r.alertas.length ? `<div class="bloco">${r.alertas.map((a) => `<div class="aviso" style="margin:0 0 6px">Aviso: ${esc(a)}</div>`).join('')}</div>` : ''}
       ${r.enviar_ate ? `<div class="bloco regra">Enviar ao convênio até <b>${br(r.enviar_ate)}</b>.</div>` : ''}
       ${textoRegra()}
-      <div class="nota">${final ? `Observação lida por ${esc(r.observacao_lida_por || 'ninguém, estava vazia')}.` : 'Rascunho: a observação é lida só por palavras-chave. Ao lançar, o que elas não reconhecerem vai para a IA, se ela estiver ligada.'}</div>`;
+      <div class="nota">${final ? `Observação lida por ${esc(r.observacao_lida_por || 'ninguém, estava vazia')}.` : 'Sem IA enquanto você preenche. Ao lançar, a IA lê a observação, se estiver ligada.'}</div>`;
   }
 
   $('lancarBtn').addEventListener('click', async () => {

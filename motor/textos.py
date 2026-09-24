@@ -38,10 +38,10 @@ DECISOES = {
 }
 # O que cada nível quer dizer, em uma frase, para quem lê a decisão.
 EXPLICACAO = {
-    "ok": "Cumpre todas as regras do convênio.",
-    "nao_enviar": "Se for enviada assim, o convênio recusa. Precisa de autorização nova, ou a guia não deve ir para este convênio.",
-    "corrigir": "Falta um dado ou ele está errado. Dá para arrumar a guia antes de enviar.",
-    "conferir": "A regra escrita não proíbe, mas tem algo estranho. Alguém confirma antes de enviar.",
+    "ok": "Cumpre as regras do convênio.",
+    "nao_enviar": "Se for enviada assim, o convênio recusa.",
+    "corrigir": "Falta um dado ou ele está errado. Dá para arrumar antes de enviar.",
+    "conferir": "A regra não proíbe, mas algo parece errado. Alguém confirma antes de enviar.",
 }
 GRAVIDADES = {chave: DECISOES[chave] for chave in ("nao_enviar", "corrigir", "conferir")}
 
