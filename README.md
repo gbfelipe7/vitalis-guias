@@ -12,24 +12,27 @@ Etapa técnica do processo da Expert Integrado. Caso fictício da Clínica Vital
 | `motor/` | O motor de regras, em Python puro, sem dependência. É ele que decide. |
 | `dados/` | `guias.csv` e `regras_convenio.json` da prova, sem alteração, mais `regras_extras.json` (ver decisão 3). |
 | `api/` e `web/` | A API publicada na Vercel. `web/rotas.py` tem a lógica; `api/*.py` só recebe o pedido. |
-| `public/index.html` | A página: guias conferidas, conferir guia nova, relatório de terça. |
+| `public/index.html` | A página: visão geral com os gráficos de decisão, as guias de agosto, o formulário de lançamento e o relatório de terça. |
 | `mcp_server/` | O MCP, com quatro ferramentas. |
 | `skills/conferir-guia/` | A Skill para quem opera a clínica. |
-| `tests/` | 67 testes do motor. |
+| `tests/` | 70 testes do motor. |
 
 ## Como uma guia entra e como a decisão sai
 
 1. **Entra** por um de três caminhos, todos no mesmo motor:
    - `POST /api/verificar` com os campos da guia, que é o que o sistema de gestão ou um fluxo no n8n chama a cada guia lançada. É isso que faz a conferência não depender de alguém lembrar;
-   - a página, colando a guia do jeito que a recepção escreveu. Linha do sistema e "campo: valor" são lidos direto. Texto corrido é leitura, não é dado: a página mostra os campos que leu, a pessoa confere e só então a guia é conferida;
+   - a página, num formulário que faz o papel da tela de lançamento do sistema de gestão. A guia é conferida enquanto a pessoa preenche (sem IA, para ser rápido) e de novo ao lançar. Dá para colar o que a recepção escreveu: linha do sistema, "campo: valor" ou texto corrido. O texto só preenche o formulário, e a pessoa confere os campos antes de lançar;
    - o MCP, pela Skill, dentro do Claude.
 2. O motor **lê** a guia como ela veio: data em dia/mês/ano, valor com vírgula, convênio sem acento. "Aguardando", "-" e "N/A" contam como campo vazio. Número que não é claramente um número ("1 1", "11 ou 12") não é adivinhado: a guia fica retida.
 3. A **observação da recepção vira fatos** (quer particular, autorização por telefone, código errado), por palavras-chave, trecho a trecho. Um trecho só é dado como entendido se for exatamente uma frase comum ("chegou 10 min atrasado") ou se virar um fato, e todo fato vira pendência. O que sobrar segura a guia para uma pessoa ler. Com chave de IA, o modelo lê a observação e pode acrescentar fatos que geram pendência. Ele nunca consegue liberar uma guia.
 4. As **regras decidem**: campo obrigatório por convênio, paciente, sessão e valor preenchidos, validade da autorização contra a data do atendimento, limite de sessões, cobertura do procedimento, registro do profissional, prazo de envio contado do atendimento e duplicidade dentro do lote (mesma guia repetida, ou mesma autorização com o mesmo número de sessão).
-5. **Sai** `OK` ou `PENDENTE`, com motivo e o que corrigir. Pendente tem três níveis:
-   - `vai_glosar`: fere regra escrita do convênio;
-   - `corrigir`: falta ou está errado um dado que a recepção resolve;
-   - `conferir`: a regra escrita não proíbe, mas tem cara de erro.
+5. **Sai** a decisão, com o motivo e o que fazer:
+   - **Pode enviar** (`ok`): cumpre todas as regras do convênio;
+   - **Não enviar assim** (`nao_enviar`): se for enviada, o convênio recusa. Precisa de autorização nova, ou a guia não deve ir para este convênio;
+   - **Corrigir antes de enviar** (`corrigir`): falta um dado ou ele está errado, e dá para arrumar a guia;
+   - **Conferir antes de enviar** (`conferir`): a regra escrita não proíbe, mas tem algo estranho. Alguém confirma antes.
+
+   Cada guia segurada também sai com o **próximo passo**, que diz quem resolve: pedir autorização ao convênio, a recepção corrige, cobrar do paciente como particular, decidir com o financeiro, confirmar antes de enviar ou descartar a cópia. É o que a visão geral e o relatório de terça usam para dividir o valor segurado.
 
 ```bash
 curl -X POST https://vitalis-guias.vercel.app/api/verificar \
@@ -82,7 +85,7 @@ Fica em `skills/conferir-guia/SKILL.md`. Para usar, copie a pasta `conferir-guia
 
 ```bash
 python3 servidor_local.py      # página e API em http://localhost:8000, sem instalar nada
-python3 -m unittest            # os 67 testes do motor
+python3 -m unittest            # os 70 testes do motor
 ```
 
 A chave de IA é opcional. Sem ela tudo funciona: a observação é lida por palavras-chave e o texto corrido por expressão regular. Com `GEMINI_API_KEY` no ambiente (veja `.env.example`), o que eles não alcançam é lido pelo Gemini no nível gratuito. Na Vercel a chave fica nas variáveis de ambiente do projeto. Não existe chave nem senha neste repositório.
@@ -122,7 +125,7 @@ O código foi escrito com o Claude Code. Eu li os dados antes, defini a arquitet
 
 ### Como testei
 
-- 67 testes automáticos em `tests/test_motor.py`. Quatro grupos: as guias do lote que têm pegadinha, uma a uma; guias novas chegando tortas (vazia, com lixo nos campos, data em outro formato, convênio que não existe, repetida do lote); e um teste para cada furo que as duas rodadas de auditoria abaixo encontraram.
+- 70 testes automáticos em `tests/test_motor.py`. Os grupos: as guias do lote que têm pegadinha, uma a uma; guias novas chegando tortas (vazia, com lixo nos campos, data em outro formato, convênio que não existe, repetida do lote); e um teste para cada furo que as duas rodadas de auditoria abaixo encontraram.
 - **Auditoria cega.** Pedi para cinco agentes de IA julgarem as 80 guias só com o CSV e as regras, sem ver o meu motor, e comparei. Deu 15 divergências em 80. Em nenhuma o motor tinha decidido errado: 12 eram diferença de vocabulário e 3 eram julgamento, como o recibo para reembolso.
 - **Ataque à guia nova, em duas rodadas.** Outros agentes tentaram fazer uma guia errada sair como OK: campo com lista, `NaN`, sessão "11ª", data 31/02, observação com instrução escondida para a IA, texto corrido com uma "correção" embutida. A primeira rodada achou furos reais: guia repetida sem data de lançamento passava, uma frase comum escondia o resto da observação, sessão ilegível pulava a checagem de limite e a IA conseguia liberar uma guia ficando calada. Corrigi e mandei atacar de novo. A segunda rodada mostrou que a minha primeira correção era frouxa: bastava o trecho CONTER "atrasado" para ser ignorado, e a IA ainda conseguia amolecer uma decisão. Daí saíram as regras de hoje: o trecho tem que SER a frase comum, todo fato vira pendência, a IA só endurece e texto corrido passa por confirmação.
 - `mcp_server/conferir_servidor.py` sobe o MCP de verdade e chama as quatro ferramentas como um cliente faria.

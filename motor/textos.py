@@ -19,13 +19,34 @@ TIPOS = {
     "dado_invalido": "Dado inválido ou divergente",
 }
 
-# Três níveis, do mais grave para o mais leve.
-GRAVIDADES = {
-    "vai_glosar": "Vai glosar se for enviada assim",
-    "corrigir": "A recepção corrige e envia",
-    "conferir": "Precisa de alguém olhar",
+# A decisão sobre a guia. Três níveis de pendência, do mais grave para o mais leve.
+DECISOES = {
+    "ok": "Pode enviar",
+    "nao_enviar": "Não enviar assim",
+    "corrigir": "Corrigir antes de enviar",
+    "conferir": "Conferir antes de enviar",
 }
-ORDEM_GRAVIDADE = ["vai_glosar", "corrigir", "conferir"]
+# O que cada nível quer dizer, em uma frase, para quem lê a decisão.
+EXPLICACAO = {
+    "ok": "Cumpre todas as regras do convênio.",
+    "nao_enviar": "Se for enviada assim, o convênio recusa. Precisa de autorização nova, ou a guia não deve ir para este convênio.",
+    "corrigir": "Falta um dado ou ele está errado. Dá para arrumar a guia antes de enviar.",
+    "conferir": "A regra escrita não proíbe, mas tem algo estranho. Alguém confirma antes de enviar.",
+}
+GRAVIDADES = {chave: DECISOES[chave] for chave in ("nao_enviar", "corrigir", "conferir")}
+
+# O que precisa acontecer para a guia segurada sair do lugar, e quem resolve.
+# É outra forma de olhar as mesmas pendências: a decisão diz se a guia pode ir, o próximo
+# passo diz quem a Carla chama. A ordem vai do mais definitivo para o mais leve.
+PROXIMOS_PASSOS = {
+    "copia": "Descartar a cópia",
+    "particular": "Cobrar do paciente como particular",
+    "financeiro": "Decidir com o financeiro",
+    "convenio": "Pedir autorização ao convênio",
+    "recepcao": "Recepção completa ou corrige a guia",
+    "confirmar": "Confirmar antes de enviar",
+}
+ORDEM_GRAVIDADE = ["nao_enviar", "corrigir", "conferir"]
 
 MOTIVO = {
     "convenio_desconhecido": "O convênio '{convenio}' não está nas regras.",

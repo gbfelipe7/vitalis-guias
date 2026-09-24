@@ -39,6 +39,9 @@ def _enxuto(resultado):
         "id_guia": resultado["id_guia"],
         "decisao": resultado["decisao"],
         "gravidade": resultado["gravidade"],
+        "nome_da_decisao": resultado["nome_da_decisao"],
+        "o_que_significa": resultado["o_que_significa"],
+        "proximo_passo": resultado["proximo_passo_nome"],
         "pendencias": [{"motivo": p["motivo"], "corrigir": p["corrigir"], "gravidade": p["gravidade"]}
                        for p in resultado["pendencias"]],
         "alertas": resultado["alertas"],

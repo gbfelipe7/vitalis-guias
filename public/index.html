@@ -3,322 +3,853 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vitalis · conferência de guias antes do envio</title>
+<title>Vitalis · guias antes do envio</title>
 <meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--fundo:#f4f3ee;--painel:#fff;--linha:#e3e1d9;--tinta:#1d1d1b;--tinta2:#5b5a54;--fraco:#8c8b84;
---ok:#1f6b63;--ok-f:#e3f1ee;--glosa:#b3362b;--glosa-f:#fbe9e6;--corrigir:#9a5b06;--corrigir-f:#fbf0dc;--conferir:#3d5a99;--conferir-f:#e7edf8}
+:root{
+--page:#f0efea;--panel:#fcfcfa;--card:#f6f5f0;--card2:#eeede7;
+--line:rgba(28,28,26,.08);--line2:rgba(28,28,26,.16);
+--ink:#1c1c1a;--ink2:#55544f;--ink3:#6a6963;--muted:#8f8e87;
+--action:#1c1c1a;--action-ink:#f6f5f0;--hover:rgba(28,28,26,.06);
+--good:#1f6b63;--good-soft:rgba(31,107,99,.10);
+--warn:#b56d12;--warn-soft:rgba(241,163,60,.18);
+--bad:#c2453a;--bad-soft:rgba(194,69,58,.10);
+--sans:'Figtree',system-ui,-apple-system,sans-serif;--serif:'EB Garamond',Georgia,serif;
+--seg:0 1px 2px rgba(28,28,26,.10);
+}
+@media (prefers-color-scheme:dark){:root{
+--page:#151514;--panel:#1c1c1b;--card:#242423;--card2:#2c2c2a;
+--line:rgba(236,235,230,.08);--line2:rgba(236,235,230,.18);
+--ink:#ecebe6;--ink2:#b3b2ab;--ink3:#a3a29b;--muted:#7d7c76;
+--action:#ecebe6;--action-ink:#1c1c1a;--hover:rgba(236,235,230,.07);
+--good:#63bfb3;--good-soft:rgba(99,191,179,.12);--warn:#f0b35a;--warn-soft:rgba(240,179,90,.14);
+--bad:#ef8a7d;--bad-soft:rgba(239,138,125,.12);--seg:0 1px 2px rgba(0,0,0,.3)}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--fundo);color:var(--tinta);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
-header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
-h1{font-size:20px;margin:0;font-weight:650}
-.sub{color:var(--tinta2);font-size:13px}
-nav{display:flex;gap:4px;margin:16px 0 14px;flex-wrap:wrap}
-nav button{border:1px solid var(--linha);background:transparent;padding:7px 13px;border-radius:8px;font:inherit;cursor:pointer;color:var(--tinta2)}
-nav button.on{background:var(--tinta);color:#fff;border-color:var(--tinta)}
-section{display:none}section.on{display:block}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
-.kpi{background:var(--painel);border:1px solid var(--linha);border-radius:10px;padding:12px 14px}
-.kpi .r{font-size:12px;color:var(--tinta2)}.kpi .n{font-size:26px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}
-.kpi .d{font-size:12px;color:var(--fraco);margin-top:2px}
-.card{background:var(--painel);border:1px solid var(--linha);border-radius:10px;padding:14px;margin-top:12px}
-.card h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--fraco);margin:0 0 10px;font-weight:600}
-.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-select,input[type=search],textarea,input[type=text]{font:inherit;border:1px solid var(--linha);border-radius:8px;padding:7px 9px;background:#fff;color:var(--tinta);max-width:100%}
-textarea{width:100%;min-height:150px;resize:vertical;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
-.tabela{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:720px}
-th{text-align:left;font-size:12px;color:var(--fraco);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--linha)}
-td{padding:8px;border-bottom:1px solid var(--linha);vertical-align:top}
-tr.g{cursor:pointer}tr.g:hover td{background:#faf9f5}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-tr.g td:first-child{white-space:nowrap}
-.sel{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
-.sel.ok{background:var(--ok-f);color:var(--ok)}.sel.vai_glosar{background:var(--glosa-f);color:var(--glosa)}
-.sel.corrigir{background:var(--corrigir-f);color:var(--corrigir)}.sel.conferir{background:var(--conferir-f);color:var(--conferir)}
-.det td{background:#faf9f5}
-.pend{border-left:3px solid var(--linha);padding:4px 0 4px 10px;margin:6px 0}
-.pend.vai_glosar{border-color:var(--glosa)}.pend.corrigir{border-color:var(--corrigir)}.pend.conferir{border-color:var(--conferir)}
-.pend b{display:block}.pend .c{color:var(--tinta2)}
-.alerta{color:var(--tinta2);font-size:13px;margin:4px 0}
-.mini{font-size:12px;color:var(--fraco)}
-button.acao{border:1px solid var(--tinta);background:var(--tinta);color:#fff;border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}
-button.leve{border:1px solid var(--linha);background:#fff;border-radius:8px;padding:6px 10px;font:inherit;cursor:pointer;color:var(--tinta2)}
-button:disabled{opacity:.5;cursor:default}
-.linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
-.barra{display:grid;grid-template-columns:minmax(0,1fr) 70px 110px;gap:8px;align-items:center;padding:5px 0;font-size:13px}
-.barra .t i{display:block;height:8px;border-radius:3px;background:var(--tinta);margin-top:4px}
-.duas{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
-pre{background:#f7f6f1;border:1px solid var(--linha);border-radius:8px;padding:10px;overflow-x:auto;font-size:12.5px;white-space:pre-wrap;margin:8px 0 0}
-code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
-.erro{color:var(--glosa)}
-.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin-top:10px}
-.campo{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--tinta2)}
-.campo input,.campo textarea{width:100%}.campo.largo{grid-column:1/-1}
-ol,ul{margin:6px 0 0;padding-left:18px}li{margin:3px 0}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--ink);font:13.5px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:2px}
+a:hover{text-decoration-color:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}
+.num,td.n{font-variant-numeric:tabular-nums}
+
+/* casca */
+.app{display:grid;grid-template-columns:212px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;padding:26px 12px 18px;display:flex;flex-direction:column;gap:2px}
+.marca{font-family:var(--serif);font-size:25px;line-height:1;padding:0 10px}
+.marca small{display:block;font-family:var(--sans);font-size:12px;color:var(--ink3);margin-top:6px;letter-spacing:0}
+.navlab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:22px 10px 6px}
+.nav{display:flex;align-items:center;gap:10px;height:36px;padding:0 10px;border-radius:8px;color:var(--ink2);text-decoration:none;font-size:13.5px;white-space:nowrap}
+.nav:hover{background:var(--hover);color:var(--ink)}
+.nav.on{background:var(--action);color:var(--action-ink)}
+.nav .qt{margin-left:auto;font-size:12px;color:inherit;opacity:.7}
+.rodape{margin-top:auto;padding:0 10px;font-size:12px;color:var(--muted);line-height:1.5}
+.folha{margin:10px 10px 10px 0;background:var(--panel);border-radius:16px;padding:36px 40px 56px;min-width:0}
+.vista{display:none;max-width:1180px}.vista.on{display:block}
+h1{font-size:24px;font-weight:500;margin:0;letter-spacing:-.01em}
+.sub{color:var(--ink3);font-size:13.5px;margin-top:4px}
+h2{font-size:12.5px;font-weight:600;letter-spacing:.02em;margin:0}
+.pergunta{font-size:13px;color:var(--ink3);margin:3px 0 12px}
+.secao{margin-top:30px}
+.cartao{background:var(--card);border-radius:12px;padding:18px 20px}
+.nota{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+.grade2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px}
+
+/* frase-resumo e números */
+.frase{background:var(--card);border-radius:14px;padding:22px 24px;font-family:var(--serif);font-size:22px;line-height:1.3;margin-top:22px;letter-spacing:-.005em}
+.frase b{font-weight:500}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:12px}
+.kpi{background:var(--card);border-radius:12px;padding:16px 18px}
+.kpi .r{font-size:12.5px;color:var(--ink3)}
+.kpi .n{font-family:var(--serif);font-size:34px;line-height:1.1;margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi .d{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* decisão */
+.dec{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:2px 8px;border-radius:5px;white-space:nowrap}
+.dec i,.ponto{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
+.dec.ok{background:var(--good-soft);color:var(--good)}.dec.ok i,.ponto.ok{background:var(--good)}
+.dec.nao_enviar{background:var(--bad-soft);color:var(--bad)}.dec.nao_enviar i,.ponto.nao_enviar{background:var(--bad)}
+.dec.corrigir{background:var(--warn-soft);color:var(--warn)}.dec.corrigir i,.ponto.corrigir{background:var(--warn)}
+.dec.conferir{background:var(--hover);color:var(--ink2)}.dec.conferir i,.ponto.conferir{border:1.5px solid var(--ink2);background:none}
+
+/* barras */
+.barras{display:grid;gap:10px}
+.barra{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:end;font-size:13px}
+.barra .v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.barra .v small{color:var(--muted);font-size:12px;margin-left:6px}
+.trilho{grid-column:1/-1;height:9px;border-radius:3px;background:var(--card2);overflow:hidden;display:flex}
+.trilho i{display:block;height:100%}
+.trilho i.tinta{background:var(--ink)}
+.trilho i.nao_enviar{background:var(--bad)}.trilho i.corrigir{background:var(--warn)}.trilho i.conferir{background:var(--ink3)}.trilho i.ok{background:var(--good)}
+.clicavel{cursor:pointer;border-radius:6px;margin:-4px -6px;padding:4px 6px}
+.clicavel:hover{background:var(--hover)}
+.legenda{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink3);margin-top:12px}
+.legenda span{display:inline-flex;align-items:center;gap:6px}
+
+/* home */
+.chamada{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:12px;margin-top:22px}
+.chamada .frase{margin-top:0}
+.emjogo{background:var(--card);border-radius:14px;padding:18px 20px;font-size:12.5px;color:var(--ink2);line-height:1.5}
+.emjogo .n{font-family:var(--serif);font-size:30px;line-height:1.1;color:var(--ink);margin:4px 0 6px}
+.destaque{font-family:var(--serif);font-size:19px;line-height:1.35;margin:14px 0 0;color:var(--ink)}
+.lista{width:100%;border-collapse:collapse;min-width:0;font-size:13px}
+.lista td{padding:8px 6px;border-bottom:1px solid var(--line)}
+.lista tr:last-child td{border-bottom:0}
+.lista .n{text-align:right;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 6px 0 12px;border-radius:999px;background:var(--card2);font-size:12.5px}
+.chip button{border:0;background:transparent;cursor:pointer;color:var(--ink2);font-size:14px;height:24px;width:24px;border-radius:999px}
+.chip button:hover{background:var(--hover)}
+.honesto{font-size:12.5px;color:var(--ink3);margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+@media (max-width:900px){.chamada{grid-template-columns:1fr}}
+
+/* controles */
+.btn{height:34px;padding:0 14px;border-radius:9px;border:0;background:var(--action);color:var(--action-ink);font-weight:500;cursor:pointer;white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:default}
+.btn2{height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:transparent;cursor:pointer;white-space:nowrap}
+.btn2:hover,.quieto:hover{background:var(--hover)}
+.quieto{height:28px;padding:0 8px;border-radius:6px;border:0;background:transparent;color:var(--ink2);cursor:pointer;font-size:12.5px}
+.segmento{display:inline-flex;background:var(--card2);border-radius:10px;padding:2px;gap:2px;flex-wrap:wrap}
+.segmento button{height:30px;padding:0 11px;border:0;border-radius:8px;background:transparent;color:var(--ink2);cursor:pointer;font-size:12.5px;white-space:nowrap}
+.segmento button.on{background:var(--panel);color:var(--ink);box-shadow:var(--seg)}
+.filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:18px 0 12px}
+select,input[type=text],input[type=search],input[type=date],textarea{height:34px;border:1px solid var(--line2);border-radius:9px;background:var(--panel);padding:0 10px;font-size:13.5px;max-width:100%;min-width:0}
+textarea{height:auto;padding:9px 10px;resize:vertical;line-height:1.45}
+select:focus,input:focus,textarea:focus{outline:2px solid var(--ink);outline-offset:-1px}
+
+/* tabela */
+.tabela{overflow-x:auto;border-top:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th{text-align:left;font-size:12px;font-weight:500;color:var(--ink3);padding:10px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.g{cursor:pointer}tr.g:hover td{background:var(--hover)}
+th.n,td.n{text-align:right;white-space:nowrap}
+td.id{white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.det td{background:var(--card);padding:14px 16px}
+.pends{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.pends li{padding-left:14px;border-left:2px solid var(--line2)}
+.pends li.nao_enviar{border-color:var(--bad)}.pends li.corrigir{border-color:var(--warn)}.pends li.conferir{border-color:var(--ink3)}
+.pends b{display:block;font-weight:500}
+.pends span{color:var(--ink2)}
+.aviso{font-size:12.5px;color:var(--ink3);margin-top:8px}
+.contagem{font-size:12.5px;color:var(--ink3);margin-left:auto}
+
+/* lançar guia */
+.lancar{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr);gap:24px;align-items:start;margin-top:22px}
+.colar{background:var(--card);border-radius:12px;padding:0}
+.colar summary{cursor:pointer;padding:14px 18px;font-weight:500;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.colar summary::-webkit-details-marker{display:none}
+.colar summary span{font-weight:400;color:var(--ink3);font-size:12.5px}
+.colar .dentro{padding:0 18px 16px}
+.colar textarea{width:100%;min-height:96px}
+.grupo{margin-top:22px}
+.grupo h2{margin-bottom:10px}
+.campos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+.campo{display:flex;flex-direction:column;gap:4px;min-width:0}
+.campo.largo{grid-column:1/-1}
+.campo label{font-size:12.5px;color:var(--ink2)}
+.campo label em{font-style:normal;color:var(--muted);font-size:11.5px;margin-left:6px}
+.campo label em.exige{color:var(--ink)}
+.campo input,.campo select,.campo textarea{width:100%}
+.dupla{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.dupla span{color:var(--ink3);font-size:12.5px}
+.acoes{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.exemplos{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:12.5px;color:var(--ink3);margin-top:10px}
+.conf{position:sticky;top:20px;background:var(--card);border-radius:12px;padding:20px}
+.conf .estado{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.conf .nome{font-family:var(--serif);font-size:28px;line-height:1.1;margin-top:10px;display:flex;align-items:center;gap:10px}
+.conf .nome .ponto{width:12px;height:12px}
+.conf .exp{color:var(--ink2);margin-top:6px}
+.conf .dinheiro{margin-top:12px;font-size:13px}
+.conf .dinheiro b{font-family:var(--serif);font-size:20px;font-weight:400}
+.conf .bloco{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.conf .regra{font-size:12.5px;color:var(--ink2);line-height:1.55}
+.vazio{color:var(--ink3)}
+.lista-novas{display:grid;gap:8px;margin-top:10px}
+.lista-novas div{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:13px}
+.erro{color:var(--bad)}
+
+/* como funciona */
+.passos{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.passo{background:var(--card);border-radius:12px;padding:16px}
+.passo .k{font-family:var(--serif);font-size:26px;line-height:1;color:var(--ink3)}
+.passo b{display:block;font-weight:500;margin-top:10px}
+.passo p{margin:4px 0 0;color:var(--ink2);font-size:13px}
+.decisoes{display:grid;gap:10px}
+.decisao{display:grid;grid-template-columns:220px minmax(0,1fr) 90px;gap:16px;align-items:start;background:var(--card);border-radius:12px;padding:14px 18px}
+.decisao .q{font-family:var(--serif);font-size:24px;text-align:right;line-height:1}
+.decisao .q small{display:block;font-family:var(--sans);font-size:11.5px;color:var(--muted);margin-top:4px}
+.decisao p{margin:0}
+.decisao .ex{font-size:12.5px;color:var(--ink3);margin-top:4px}
+pre{background:var(--card);border-radius:12px;padding:14px 16px;overflow-x:auto;font:12.5px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;margin:0}
+code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1px 5px;border-radius:5px}
+
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:14px 16px 6px;gap:4px}
+  .marca{font-size:21px;padding:0 10px 0 0;flex:none}
+  .marca small,.navlab,.rodape{display:none}
+  .nav{flex:none;height:32px}
+  .folha{margin:6px 8px 8px;padding:22px 16px 40px}
+  .lancar{grid-template-columns:1fr}
+  .conf{position:static}
+  .campos{grid-template-columns:1fr}
+  .grade2{grid-template-columns:1fr}
+  .decisao{grid-template-columns:1fr}.decisao .q{text-align:left}
+  .frase{font-size:19px;padding:18px}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div><h1>Vitalis · conferência de guias antes do envio</h1>
-      <div class="sub">Lote de agosto, 80 guias. Regras dos convênios na versão <span id="versao">…</span>. Dados fictícios.</div></div>
-    <div class="sub" id="estado">carregando…</div>
-  </header>
+<div class="app">
+  <aside class="side">
+    <div class="marca">Vitalis<small>Guias conferidas antes do envio</small></div>
+    <div class="navlab">Conferência</div>
+    <a class="nav" href="#visao" data-v="visao">Visão geral</a>
+    <a class="nav" href="#guias" data-v="guias">Guias de agosto <span class="qt" id="qtGuias"></span></a>
+    <a class="nav" href="#lancar" data-v="lancar">Lançar guia</a>
+    <a class="nav" href="#terca" data-v="terca">Relatório de terça</a>
+    <div class="navlab">Sobre</div>
+    <a class="nav" href="#como" data-v="como">Como funciona</a>
+    <div class="rodape">Regras dos convênios de <span id="versao">agosto/2026</span> · dados fictícios<br><a href="https://github.com/gbfelipe7/vitalis-guias">Código no GitHub</a></div>
+  </aside>
 
-  <nav id="abas">
-    <button data-aba="guias" class="on">Guias conferidas</button>
-    <button data-aba="nova">Conferir guia nova</button>
-    <button data-aba="relatorio">Relatório de terça</button>
-    <button data-aba="como">Como funciona</button>
-  </nav>
+  <main class="folha">
+    <!-- ================= visão geral ================= -->
+    <section class="vista" id="v-visao">
+      <h1>Visão geral</h1>
+      <div class="sub">Lote de agosto: 80 guias conferidas antes de irem para o convênio.</div>
+      <div id="visao"><div class="nota">Carregando as guias…</div></div>
+    </section>
 
-  <!-- ============ guias ============ -->
-  <section id="s-guias" class="on">
-    <div class="kpis" id="kpis"></div>
-    <div class="card">
-      <h2>As guias e a decisão de cada uma</h2>
+    <!-- ================= guias ================= -->
+    <section class="vista" id="v-guias">
+      <h1>Guias de agosto</h1>
+      <div class="sub">Cada guia com a decisão, o motivo e o que fazer. Clique numa guia para ver tudo.</div>
       <div class="filtros">
-        <select id="fDecisao"><option value="">Todas as decisões</option><option value="OK">Só OK</option><option value="PENDENTE">Só pendentes</option>
-          <option value="vai_glosar">Vai glosar</option><option value="corrigir">Recepção corrige</option><option value="conferir">Alguém precisa olhar</option></select>
-        <select id="fUnidade"><option value="">Todas as unidades</option></select>
-        <select id="fConvenio"><option value="">Todos os convênios</option></select>
-        <select id="fTipo"><option value="">Todos os tipos de problema</option></select>
-        <input type="search" id="fBusca" placeholder="Buscar guia, paciente, profissional">
-        <span class="mini" id="contagem"></span>
+        <div class="segmento" id="fDecisao"></div>
+      </div>
+      <div class="filtros" style="margin-top:0">
+        <select id="fUnidade" aria-label="Unidade"><option value="">Todas as unidades</option></select>
+        <select id="fConvenio" aria-label="Convênio"><option value="">Todos os convênios</option></select>
+        <select id="fTipo" aria-label="Tipo de problema"><option value="">Todos os problemas</option></select>
+        <input type="search" id="fBusca" placeholder="Buscar guia, paciente, profissional" aria-label="Buscar">
+        <span id="fExtra"></span>
+        <button class="quieto" id="fLimpar">Limpar filtros</button>
+        <span class="contagem" id="contagem"></span>
       </div>
       <div class="tabela"><table>
-        <thead><tr><th>Guia</th><th>Unidade</th><th>Convênio</th><th>Procedimento</th><th class="num">Valor</th><th>Decisão</th><th>Motivo principal</th></tr></thead>
+        <thead><tr><th>Guia</th><th>Unidade</th><th>Convênio</th><th>Procedimento</th><th class="n">Valor</th><th>Decisão</th><th>Motivo principal</th></tr></thead>
         <tbody id="linhas"></tbody>
       </table></div>
-      <div class="mini" style="margin-top:8px">Clique numa guia para ver todos os motivos, o que corrigir e o que a recepção escreveu. O lote de agosto é conferido na data de lançamento de cada guia, como se ela tivesse acabado de ser lançada e ainda não tivesse sido enviada. Guia nova é conferida com a data de hoje.</div>
-    </div>
-  </section>
+      <div class="nota">O lote de agosto é conferido na data de lançamento de cada guia, como se ela tivesse acabado de ser lançada e ainda não tivesse ido para o convênio. Guia nova é conferida com a data de hoje.</div>
+    </section>
 
-  <!-- ============ guia nova ============ -->
-  <section id="s-nova">
-    <div class="card">
-      <h2>Cole a guia do jeito que a recepção escreveu</h2>
-      <textarea id="texto" placeholder="Vale linha do sistema, um campo por linha (Convênio: Vitalcard) ou texto corrido."></textarea>
-      <div class="linha">
-        <button class="acao" id="conferir">Conferir</button>
-        <span class="mini">Exemplos:</span>
-        <button class="leve" data-ex="0">guia certa</button>
-        <button class="leve" data-ex="1">campos, com problema</button>
-        <button class="leve" data-ex="2">texto corrido com observação</button>
-        <button class="leve" data-ex="3">repetida do lote</button>
+    <!-- ================= lançar guia ================= -->
+    <section class="vista" id="v-lancar">
+      <h1>Lançar guia</h1>
+      <div class="sub">Faz o papel da tela do sistema de gestão. A guia é conferida enquanto você preenche, e de novo ao lançar.</div>
+      <div class="lancar">
+        <div>
+          <details class="colar" id="colar">
+            <summary>Colar o que a recepção escreveu <span>preenche o formulário para você</span></summary>
+            <div class="dentro">
+              <textarea id="texto" placeholder="Pode ser uma linha do sistema, um campo por linha (Convênio: Vitalcard) ou texto corrido."></textarea>
+              <div class="exemplos" style="margin-top:8px"><button class="btn2" id="ler">Ler e preencher</button><span id="lendo"></span></div>
+              <div id="lido"></div>
+            </div>
+          </details>
+          <div class="exemplos">Exemplos:
+            <button class="quieto" data-ex="certa">guia certa</button>·
+            <button class="quieto" data-ex="problema">com problema</button>·
+            <button class="quieto" data-ex="texto">texto corrido</button>·
+            <button class="quieto" data-ex="repetida">repetida do lote</button>
+          </div>
+          <form id="form" autocomplete="off"></form>
+          <div class="acoes">
+            <button class="btn" id="lancarBtn" type="button">Lançar e conferir</button>
+            <button class="quieto" id="limparForm" type="button">Limpar</button>
+            <span class="aviso" id="lancAviso" style="margin:0"></span>
+          </div>
+        </div>
+        <aside class="conf" id="conf" aria-live="polite"></aside>
       </div>
-      <div id="resultado"></div>
-    </div>
-    <div class="card">
-      <h2>Guias novas conferidas nesta sessão</h2>
-      <div id="novas" class="mini">Nenhuma ainda. As que você conferir entram aqui e no relatório de terça.</div>
-    </div>
-  </section>
+      <div class="secao">
+        <h2>Lançadas nesta sessão</h2>
+        <div class="pergunta">Entram também no relatório de terça.</div>
+        <div id="novas" class="vazio">Nenhuma ainda.</div>
+      </div>
+    </section>
 
-  <!-- ============ relatório ============ -->
-  <section id="s-relatorio">
-    <div class="kpis" id="rkpis"></div>
-    <div class="duas">
-      <div class="card"><h2>Por gravidade</h2><div id="rGravidade"></div></div>
-      <div class="card"><h2>Por tipo de problema</h2><div id="rTipo"></div></div>
-      <div class="card"><h2>Por unidade</h2><div id="rUnidade"></div></div>
-      <div class="card"><h2>Por convênio</h2><div id="rConvenio"></div></div>
-    </div>
-    <div class="card">
-      <h2>Texto para a reunião de terça</h2>
-      <div class="linha" style="margin-top:0"><button class="leve" id="copiar">Copiar texto</button><span class="mini" id="copiado"></span></div>
-      <pre id="rTexto"></pre>
-    </div>
-  </section>
+    <!-- ================= relatório de terça ================= -->
+    <section class="vista" id="v-terca">
+      <h1>Relatório de terça</h1>
+      <div class="sub">O que o Dr. Renato vê na reunião das 7h30. Lote de agosto mais as guias lançadas nesta sessão.</div>
+      <div id="terca"><div class="nota">Montando o relatório…</div></div>
+    </section>
 
-  <!-- ============ como funciona ============ -->
-  <section id="s-como">
-    <div class="card">
-      <h2>O caminho de uma guia</h2>
-      <ol>
-        <li>A guia entra por esta página, pelo endereço <code>POST /api/verificar</code> ou pelo MCP. É o mesmo motor nos três. Linha do sistema e "campo: valor" são lidos direto. Texto corrido é leitura: a página mostra o que leu e pede confirmação antes de conferir.</li>
-        <li>O motor lê a guia como ela veio: data em dia/mês/ano, valor com vírgula, convênio sem acento.</li>
-        <li>A observação da recepção vira fatos: quer particular, autorização por telefone, código errado. Primeiro por palavras-chave, trecho a trecho. Um trecho só é dado como entendido se for exatamente uma frase comum ("chegou 10 min atrasado") ou se virar um fato, e todo fato vira pendência. O que sobrar segura a guia para uma pessoa ler. A IA só pode endurecer: ela acrescenta fatos que geram pendência e nunca consegue liberar uma guia.</li>
-        <li>As regras decidem: campo obrigatório, validade contra a data do atendimento, limite de sessões, cobertura, registro do profissional, prazo de envio contado do atendimento, duplicidade no lote.</li>
-        <li>Sai OK ou PENDENTE, com motivo e o que corrigir. Pendente tem três níveis: vai glosar, recepção corrige, alguém precisa olhar.</li>
-      </ol>
-    </div>
-    <div class="card">
-      <h2>Para o sistema de gestão chamar a cada guia lançada</h2>
-      <pre id="curl"></pre>
-      <div class="mini" style="margin-top:6px">É isso que tira a conferência da memória de alguém: a guia é conferida no lançamento, antes do envio.</div>
-    </div>
-    <div class="card">
-      <h2>MCP, Skill e código</h2>
-      <div>No repositório: <a id="repo" href="https://github.com/gbfelipe7/vitalis-guias">github.com/gbfelipe7/vitalis-guias</a>. O MCP está em <code>mcp_server/</code>, a Skill em <code>skills/conferir-guia/</code> e o motor em <code>motor/</code>.</div>
-    </div>
-  </section>
+    <!-- ================= como funciona ================= -->
+    <section class="vista" id="v-como">
+      <h1>Como funciona</h1>
+      <div class="sub">Uma regra escrita decide. A IA só ajuda a ler texto, e nunca libera uma guia.</div>
+
+      <div class="secao">
+        <h2>O caminho de uma guia</h2>
+        <div class="pergunta">O mesmo conferente atende a página, o endereço de API e o Claude.</div>
+        <div class="passos">
+          <div class="passo"><div class="k">1</div><b>Entra</b><p>Pelo formulário, pelo endereço que o sistema de gestão chama a cada lançamento, ou pelo Claude com a Skill.</p></div>
+          <div class="passo"><div class="k">2</div><b>É arrumada</b><p>Data em dois formatos vira uma só. "Aguardando" e "n/a" contam como vazio. O que não dá para ler segura a guia.</p></div>
+          <div class="passo"><div class="k">3</div><b>A observação vira fato</b><p>Particular, autorização por telefone, código errado. Texto que ninguém entendeu segura a guia para uma pessoa ler.</p></div>
+          <div class="passo"><div class="k">4</div><b>A regra decide</b><p>Campos exigidos, validade, limite de sessões, cobertura, profissional, prazo de envio e guia repetida.</p></div>
+          <div class="passo"><div class="k">5</div><b>Sai a decisão</b><p>Com o motivo e o que fazer. Vai para o relatório de terça.</p></div>
+        </div>
+      </div>
+
+      <div class="secao">
+        <h2>As quatro decisões</h2>
+        <div class="pergunta">Nas 80 guias de agosto.</div>
+        <div class="decisoes" id="legendaDecisoes"></div>
+      </div>
+
+      <div class="secao grade2">
+        <div class="cartao">
+          <h2>Onde entra IA</h2>
+          <p style="margin:8px 0 0">Em dois lugares só: separar os campos de uma guia colada como texto corrido, e ler a observação da recepção. Na observação ela só pode acrescentar pendência. No texto, todo valor que ela devolve tem que estar escrito no texto, e a pessoa confere o formulário antes de lançar. Se a IA estiver fora do ar, tudo funciona igual por palavras-chave. O lote de agosto roda sem IA, para dar sempre o mesmo resultado.</p>
+        </div>
+        <div class="cartao">
+          <h2>MCP, Skill e código</h2>
+          <p style="margin:8px 0 0">Tudo em <a href="https://github.com/gbfelipe7/vitalis-guias">github.com/gbfelipe7/vitalis-guias</a>. O conferente está em <code>motor/</code>, o MCP em <code>mcp_server/</code> com quatro ferramentas (consultar regra, verificar guia, listar pendentes, relatório de terça) e a Skill em <code>skills/conferir-guia/</code>.</p>
+        </div>
+      </div>
+
+      <div class="secao">
+        <h2>Para o sistema de gestão chamar a cada guia lançada</h2>
+        <div class="pergunta">É isso que tira a conferência da memória de alguém: a guia é conferida no lançamento, antes do envio.</div>
+        <pre id="curl"></pre>
+      </div>
+    </section>
+  </main>
 </div>
 
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
   const reais = (v) => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const NOME_GRAVIDADE = {ok: 'OK', vai_glosar: 'Vai glosar', corrigir: 'Recepção corrige', conferir: 'Alguém precisa olhar'};
-  let guias = [], novas = [];
-  try { novas = JSON.parse(sessionStorage.getItem('vitalis-novas') || '[]'); } catch (_) {}
+  const reaisInt = (v) => 'R$ ' + Math.round(Number(v || 0)).toLocaleString('pt-BR');
+  const pct = (a, b) => (b ? Math.round(100 * a / b) : 0) + '%';
+  const br = (iso) => (iso && /^\d{4}-\d{2}-\d{2}$/.test(iso)) ? iso.split('-').reverse().join('/') : (iso || '');
+  const semAcento = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  const DECISAO = {ok: 'Pode enviar', nao_enviar: 'Não enviar assim', corrigir: 'Corrigir antes de enviar', conferir: 'Conferir antes de enviar'};
+  const CURTO = {ok: 'Pode enviar', nao_enviar: 'Não enviar assim', corrigir: 'Corrigir', conferir: 'Conferir'};
+  const ORDEM = ['nao_enviar', 'corrigir', 'conferir'];
+  const selo = (g) => `<span class="dec ${g}"><i></i>${DECISAO[g]}</span>`;
+  const hojeISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 
-  // ---------- abas
-  $('abas').addEventListener('click', (e) => {
-    const b = e.target.closest('button'); if (!b) return;
-    document.querySelectorAll('#abas button').forEach((x) => x.classList.toggle('on', x === b));
-    document.querySelectorAll('section').forEach((s) => s.classList.toggle('on', s.id === 's-' + b.dataset.aba));
-    if (b.dataset.aba === 'relatorio') carregarRelatorio();
-  });
+  let LOTE = null;          // resposta de /api/guias
+  let novas = [];           // [{campos, resultado}] lançadas nesta sessão
+  try { novas = JSON.parse(sessionStorage.getItem('vitalis-lancadas') || '[]'); } catch (_) { novas = []; }
+  const guardarNovas = () => { try { sessionStorage.setItem('vitalis-lancadas', JSON.stringify(novas.slice(0, 30))); } catch (_) {} };
 
-  // ---------- lote
-  function kpis(el, rel) {
-    el.innerHTML = [
-      ['Guias verificadas', rel.verificadas, 'conferidas antes do envio'],
-      ['Prontas para enviar', rel.ok, ''],
-      ['Com problema', rel.pendentes, String(rel.percentual_pendente).replace('.', ',') + '% das guias'],
-      ['Dinheiro em risco', reais(rel.valor_em_risco), String(rel.percentual_em_risco).replace('.', ',') + '% de ' + reais(rel.valor_total)],
-      ['Glosa certa se enviar', reais(rel.por_gravidade.vai_glosar.em_risco), rel.por_gravidade.vai_glosar.guias + ' guias'],
-    ].map(([r, n, d]) => `<div class="kpi"><div class="r">${r}</div><div class="n">${n}</div><div class="d">${d}</div></div>`).join('');
+  /* ---------------- navegação ---------------- */
+  const VISTAS = ['visao', 'guias', 'lancar', 'terca', 'como'];
+  function irPara() {
+    const v = VISTAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'visao';
+    document.querySelectorAll('.vista').forEach((s) => s.classList.toggle('on', s.id === 'v-' + v));
+    document.querySelectorAll('.nav').forEach((a) => a.classList.toggle('on', a.dataset.v === v));
+    if (v === 'terca') carregarTerca();
+    window.scrollTo(0, 0);
   }
+  window.addEventListener('hashchange', irPara);
 
+  /* ---------------- detalhe de uma guia ---------------- */
+  function pendencias(r) {
+    if (!r.pendencias.length) return '<div class="vazio">Nenhuma pendência. Cumpre todas as regras do convênio.</div>';
+    return '<ol class="pends">' + r.pendencias.map((p) =>
+      `<li class="${p.gravidade}"><b>${esc(p.motivo)}</b><span>O que fazer: ${esc(p.corrigir)}</span></li>`).join('') + '</ol>';
+  }
   function detalhe(r) {
-    const pend = r.pendencias.map((p) => `<div class="pend ${p.gravidade}"><b>${esc(p.motivo)}</b><span class="c">O que fazer: ${esc(p.corrigir)}</span> <span class="mini">· ${NOME_GRAVIDADE[p.gravidade]}</span></div>`).join('');
-    const alertas = r.alertas.map((a) => `<div class="alerta">Aviso: ${esc(a)}</div>`).join('');
     const g = r.guia;
-    return `${pend || '<div class="alerta">Nenhuma pendência. Pode enviar.</div>'}${alertas}
-      <div class="mini" style="margin-top:6px">Paciente ${esc(g.paciente)} · atendimento ${esc(g.data_atendimento)} · autorização ${esc(g.numero_autorizacao || 'sem número')} válida até ${esc(g.autorizacao_validade)} · sessão ${esc(g.sessao_numero_na_autorizacao)} · ${esc(g.profissional)} ${esc(g.profissional_registro)} · lançada em ${esc(g.data_lancamento)}${r.enviar_ate ? ' · enviar até ' + r.enviar_ate.split('-').reverse().join('/') : ''}</div>
-      ${g.observacao_recepcao ? `<div class="mini">A recepção escreveu: “${esc(g.observacao_recepcao)}”${r.observacao_lida_por ? ' (lida por ' + esc(r.observacao_lida_por) + ')' : ''}</div>` : ''}`;
+    const alertas = r.alertas.map((a) => `<div class="aviso">Aviso: ${esc(a)}</div>`).join('');
+    return `${pendencias(r)}${alertas}
+      <div class="aviso">Paciente ${esc(g.paciente)} · atendimento ${esc(br(g.data_atendimento))} · autorização ${esc(g.numero_autorizacao || 'sem número')}${g.autorizacao_validade ? ' válida até ' + esc(br(g.autorizacao_validade)) : ''} · sessão ${esc(g.sessao_numero_na_autorizacao)} · ${esc(g.profissional)} ${esc(g.profissional_registro)} · lançada em ${esc(br(g.data_lancamento))}${r.enviar_ate ? ' · enviar até ' + br(r.enviar_ate) : ''}</div>
+      ${g.observacao_recepcao ? `<div class="aviso">A recepção escreveu: “${esc(g.observacao_recepcao)}”</div>` : ''}`;
   }
 
+  /* ---------------- guias de agosto ---------------- */
+  let filtroDecisao = '', filtroExtra = null;   // filtroExtra: {rotulo, passo} ou {rotulo, ids}
+  function desenharSegmento() {
+    const cont = {'': LOTE.guias.length, ok: 0, nao_enviar: 0, corrigir: 0, conferir: 0};
+    LOTE.guias.forEach((r) => { cont[r.gravidade]++; });
+    $('fDecisao').innerHTML = [['', 'Todas'], ['ok', CURTO.ok], ['nao_enviar', CURTO.nao_enviar], ['corrigir', CURTO.corrigir], ['conferir', CURTO.conferir]]
+      .map(([v, t]) => `<button data-d="${v}" class="${v === filtroDecisao ? 'on' : ''}">${t} · ${cont[v]}</button>`).join('');
+  }
+  $('fDecisao').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    filtroDecisao = b.dataset.d; desenharSegmento(); desenharLinhas();
+  });
   function desenharLinhas() {
-    const fd = $('fDecisao').value, fu = $('fUnidade').value, fc = $('fConvenio').value, ft = $('fTipo').value, fb = $('fBusca').value.trim().toLowerCase();
-    const vis = guias.filter((r) => {
-      if (fd && !(r.decisao === fd || r.gravidade === fd)) return false;
-      if (fu && r.guia.unidade !== fu) return false;
-      if (fc && r.guia.convenio !== fc) return false;
-      if (ft && !r.pendencias.some((p) => p.tipo === ft)) return false;
-      if (fb && !JSON.stringify(r.guia).toLowerCase().includes(fb)) return false;
-      return true;
-    });
-    $('contagem').textContent = vis.length + ' de ' + guias.length + ' guias · ' + reais(vis.reduce((s, r) => s + r.valor_em_risco, 0)) + ' em risco';
-    $('linhas').innerHTML = vis.map((r) => `<tr class="g" data-id="${esc(r.id_guia)}"><td>${esc(r.id_guia)}</td><td>${esc(r.guia.unidade)}</td><td>${esc(r.guia.convenio)}</td><td>${esc(r.guia.procedimento_descricao)}</td><td class="num">${reais(r.valor)}</td><td><span class="sel ${r.gravidade}">${NOME_GRAVIDADE[r.gravidade]}</span></td><td>${esc(r.pendencias[0] ? r.pendencias[0].motivo : '')}</td></tr>`).join('');
+    const fu = $('fUnidade').value, fc = $('fConvenio').value, ft = $('fTipo').value, fb = semAcento($('fBusca').value);
+    const vis = LOTE.guias.filter((r) => (!filtroDecisao || r.gravidade === filtroDecisao)
+      && (!filtroExtra || (filtroExtra.passo ? r.proximo_passo === filtroExtra.passo : filtroExtra.ids.includes(r.id_guia)))
+      && (!fu || r.guia.unidade === fu) && (!fc || r.guia.convenio === fc)
+      && (!ft || r.pendencias.some((p) => p.tipo === ft))
+      && (!fb || semAcento(JSON.stringify(r.guia)).includes(fb)));
+    $('contagem').textContent = `${vis.length} de ${LOTE.guias.length} guias · ${reais(vis.reduce((s, r) => s + r.valor_em_risco, 0))} segurados`;
+    $('linhas').innerHTML = vis.map((r) => `<tr class="g" data-id="${esc(r.id_guia)}"><td class="id">${esc(r.id_guia)}</td><td>${esc(r.guia.unidade)}</td><td>${esc(r.guia.convenio)}</td><td>${esc(r.guia.procedimento_descricao)}</td><td class="n">${reais(r.valor)}</td><td>${selo(r.gravidade)}</td><td>${esc(r.pendencias[0] ? r.pendencias[0].motivo : '')}</td></tr>`).join('')
+      || '<tr><td colspan="7" class="vazio">Nenhuma guia com esses filtros.</td></tr>';
   }
-
   $('linhas').addEventListener('click', (e) => {
     const tr = e.target.closest('tr.g'); if (!tr) return;
     const prox = tr.nextElementSibling;
     if (prox && prox.classList.contains('det')) { prox.remove(); return; }
-    const r = guias.find((x) => x.id_guia === tr.dataset.id);
-    const det = document.createElement('tr'); det.className = 'det';
-    det.innerHTML = `<td colspan="7">${detalhe(r)}</td>`; tr.after(det);
+    const r = LOTE.guias.find((x) => x.id_guia === tr.dataset.id);
+    tr.insertAdjacentHTML('afterend', `<tr class="det"><td colspan="7">${detalhe(r)}</td></tr>`);
   });
-  ['fDecisao', 'fUnidade', 'fConvenio', 'fTipo'].forEach((id) => $(id).addEventListener('change', desenharLinhas));
+  ['fUnidade', 'fConvenio', 'fTipo'].forEach((id) => $(id).addEventListener('change', desenharLinhas));
   $('fBusca').addEventListener('input', desenharLinhas);
+  $('fLimpar').addEventListener('click', () => filtrarGuias({}));
 
-  fetch('/api/guias').then((r) => r.json()).then((d) => {
-    guias = d.guias; $('versao').textContent = d.versao_das_regras; $('estado').textContent = '';
-    kpis($('kpis'), d.relatorio);
-    const opcoes = (el, vals) => vals.forEach((v) => el.insertAdjacentHTML('beforeend', `<option>${esc(v)}</option>`));
-    opcoes($('fUnidade'), [...new Set(guias.map((r) => r.guia.unidade))].sort());
-    opcoes($('fConvenio'), [...new Set(guias.map((r) => r.guia.convenio))].sort());
-    d.relatorio.por_tipo.forEach((t) => { const tipo = guias.find((r) => r.id_guia === t.ids[0]).tipo_principal; $('fTipo').insertAdjacentHTML('beforeend', `<option value="${tipo}">${esc(t.nome)}</option>`); });
-    desenharLinhas();
-  }).catch(() => { $('estado').innerHTML = '<span class="erro">Não consegui carregar as guias. Recarregue a página.</span>'; });
-
-  // ---------- guia nova
-  // Datas dos exemplos são sempre recentes, para o prazo de envio não vencer com o tempo.
-  const dia = (atras) => { const d = new Date(Date.now() - atras * 86400000); return {iso: d.toISOString().slice(0, 10), br: d.toLocaleDateString('pt-BR')}; };
-  const d3 = dia(3), d2 = dia(2), mais20 = dia(-20);
-  const EXEMPLOS = [
-    `G-NOVA-0001,Centro,${d3.iso},P-2001,Saúde Interior,445566778,,50000470,Sessão de fisioterapia musculoesquelética,AUT900100,${mais20.iso},20,3,Heitor Salles,CREFITO-3 156740-F,62.00,,${d2.iso}`,
-    `Convênio: Plano Bem\nUnidade: Norte\nPaciente: P-2002\nData: ${d3.br}\nProcedimento: Consulta ortopédica\nCódigo: 20103301\nAutorização: AUT555111\nValidade: ${mais20.br}\nSessão: 1 de 12\nCarteirinha: 998877665\nCID: M54.5\nProfissional: Dra. Marina Lopes\nCRM: CRM-SP 112390\nValor: 90,00`,
-    `Paciente P-2003 do Vitalcard, unidade Sul, fisio neurofuncional dia ${d3.br} com o Felipe Andrade CREFITO-3 198302-F, aut AUT700800 val ${mais20.br}, sessão 4 de 10, carteirinha 123456789, cid G81.9, R$ 70,00. A mãe avisou que ele quer faturar como particular, não quer usar o convênio.`,
-    'G-NOVA-0004,Sul,28/08/2026,P-1036,Vitalcard,884410270,M79.7,50000470,Sessão de fisioterapia musculoesquelética,AUT887507,2026-08-28,10,7,Bruno Castanho,CREFITO-3 204411-F,62.00,,',
-  ];
-  document.querySelectorAll('[data-ex]').forEach((b) => b.addEventListener('click', () => { $('texto').value = EXEMPLOS[+b.dataset.ex]; $('resultado').innerHTML = ''; }));
-
-  function desenharNovas() {
-    $('novas').innerHTML = novas.length ? novas.map((n) => `<div style="margin:4px 0"><span class="sel ${n.gravidade}">${NOME_GRAVIDADE[n.gravidade]}</span> ${esc(n.resumo)}</div>`).join('') + '<div class="linha"><button class="leve" id="limpar">Limpar</button></div>' : 'Nenhuma ainda. As que você conferir entram aqui e no relatório de terça.';
-    const l = $('limpar'); if (l) l.addEventListener('click', () => { novas = []; salvarNovas(); desenharNovas(); });
+  // Os gráficos da visão geral levam para cá já filtrado: a pessoa vê as guias por trás do número.
+  function filtrarGuias(f) {
+    filtroDecisao = f.decisao || '';
+    filtroExtra = (f.passo || f.ids) ? {rotulo: f.rotulo || '', passo: f.passo, ids: f.ids || []} : null;
+    $('fExtra').innerHTML = filtroExtra ? `<span class="chip">${esc(filtroExtra.rotulo)}<button type="button" aria-label="Tirar este filtro" id="tiraExtra">×</button></span>` : '';
+    if (filtroExtra) $('tiraExtra').addEventListener('click', () => filtrarGuias({decisao: filtroDecisao, unidade: $('fUnidade').value, convenio: $('fConvenio').value, tipo: $('fTipo').value}));
+    $('fUnidade').value = f.unidade || ''; $('fConvenio').value = f.convenio || '';
+    $('fTipo').value = f.tipo || ''; $('fBusca').value = f.busca || '';
+    desenharSegmento(); desenharLinhas();
+    if (location.hash !== '#guias') location.hash = 'guias';
   }
-  const salvarNovas = () => { try { sessionStorage.setItem('vitalis-novas', JSON.stringify(novas)); } catch (_) {} };
-  desenharNovas();
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-filtro]'); if (!el) return;
+    e.preventDefault();
+    try { filtrarGuias(JSON.parse(el.dataset.filtro)); } catch (_) {}
+  });
+  const filtro = (f) => `data-filtro='${esc(JSON.stringify(f))}'`;
 
-  const ROTULOS = {id_guia: 'Guia', unidade: 'Unidade', data_atendimento: 'Data do atendimento', paciente: 'Paciente', convenio: 'Convênio', carteirinha: 'Carteirinha', cid: 'CID', procedimento_codigo: 'Código do procedimento', procedimento_descricao: 'Procedimento', numero_autorizacao: 'Número da autorização', autorizacao_validade: 'Validade da autorização', autorizacao_sessoes_limite: 'Sessões autorizadas', sessao_numero_na_autorizacao: 'Número da sessão', profissional: 'Profissional', profissional_registro: 'Registro (CREFITO ou CRM)', valor: 'Valor', observacao_recepcao: 'Observação da recepção'};
+  /* ---------------- barras simples ---------------- */
+  function barras(itens, max) {
+    return '<div class="barras">' + itens.map((i) => `
+      <div class="barra ${i.filtro ? 'clicavel' : ''}" ${i.filtro ? filtro(i.filtro) : ''}>
+        <div>${esc(i.nome)}</div><div class="v">${i.valor}${i.extra ? `<small>${i.extra}</small>` : ''}</div>
+        <div class="trilho">${(i.partes || [{c: 'tinta', v: i.v}]).map((p) => `<i class="${p.c}" style="width:${max ? Math.max(p.v ? 1.5 : 0, 100 * p.v / max) : 0}%"></i>`).join('')}</div>
+      </div>`).join('') + '</div>';
+  }
+  const legendaDecisao = () => '<div class="legenda">' + ORDEM.map((g) => `<span><i class="ponto ${g}"></i>${DECISAO[g]}</span>`).join('') + '</div>';
 
+  /* ---------------- visão geral ---------------- */
+  // Onde cada tipo de problema nasce. A decisão que isso apoia: o que se resolve na guia e o que
+  // só se resolve antes da sessão, conferindo a autorização quando o paciente chega.
+  const ORIGEM = [
+    {nome: 'Antes da sessão: autorização vencida, esgotada ou sem número', tipos: ['autorizacao_vencida', 'sessao_acima_do_limite', 'sem_autorizacao']},
+    {nome: 'No consultório: procedimento que o convênio não cobre ou profissional que não combina', tipos: ['procedimento_nao_coberto', 'profissional_incompativel']},
+    {nome: 'Na hora de lançar: dado faltando, código errado ou guia lançada duas vezes', tipos: ['campo_obrigatorio', 'duplicidade', 'dado_invalido', 'prazo_de_envio']},
+    {nome: 'Anotado pela recepção: particular, sessão remarcada, procedimento trocado', tipos: ['observacao_recepcao']},
+  ];
+  const PASSO_EXPLICA = {
+    convenio: 'Autorização vencida, sessões esgotadas ou sem número. Alguém liga para o convênio.',
+    recepcao: 'Dado que falta ou está errado na guia. A recepção arruma e envia.',
+    particular: 'O convênio não cobre ou o paciente quer pagar. Sai do lote e vai para o paciente.',
+    financeiro: 'O convênio não cobre e não existe regra de particular. O financeiro decide como cobrar.',
+    confirmar: 'A regra não proíbe, mas tem algo estranho. Alguém confirma antes de enviar.',
+    copia: 'A original já está no lote e vai ser paga. Não é dinheiro a receber.',
+  };
+
+  function desenharVisao() {
+    const rel = LOTE.relatorio, guias = LOTE.guias;
+    const passos = Object.entries(rel.por_proximo_passo).filter(([, p]) => p.guias).sort((a, b) => b[1].em_risco - a[1].em_risco);
+    const doConvenio = rel.por_proximo_passo.convenio ? rel.por_proximo_passo.convenio.em_risco : 0;
+    const maxP = Math.max(1, ...passos.map(([, p]) => p.em_risco));
+
+    const pendentes = guias.filter((r) => r.decisao === 'PENDENTE');
+    const origem = ORIGEM.map((o) => { const g = pendentes.filter((r) => o.tipos.includes(r.tipo_principal));
+      return {nome: o.nome, guias: g.length, v: g.reduce((s, r) => s + r.valor_em_risco, 0), ids: g.map((r) => r.id_guia)}; });
+    const maxO = Math.max(1, ...origem.map((o) => o.v)), antes = origem[0];
+
+    const renovar = guias.filter((r) => { const f = r.folga_da_autorizacao || {};
+      return r.decisao === 'OK' && ((f.dias != null && f.dias <= 7) || (f.sessoes != null && f.limite && f.sessoes <= 0.2 * f.limite)); })
+      .sort((a, b) => a.guia.convenio.localeCompare(b.guia.convenio) || (a.folga_da_autorizacao.dias - b.folga_da_autorizacao.dias));
+    // urgência: dias até vencer, ou sessões que sobram contadas como uma semana cada
+    const urgencia = (r) => Math.min(r.folga_da_autorizacao.dias == null ? 99 : r.folga_da_autorizacao.dias, r.folga_da_autorizacao.sessoes == null ? 99 : r.folga_da_autorizacao.sessoes * 7);
+    const porConvRenovar = {};
+    renovar.forEach((r) => { porConvRenovar[r.guia.convenio] = (porConvRenovar[r.guia.convenio] || 0) + 1; });
+    const motivoRenovar = (f) => [f.dias != null && f.dias <= 7 ? (f.dias === 0 ? 'vence no dia do atendimento' : `vence ${f.dias} dia${f.dias > 1 ? 's' : ''} depois do atendimento`) : '',
+      f.sessoes != null && f.limite && f.sessoes <= 0.2 * f.limite ? (f.sessoes <= 0 ? `usou as ${f.limite} sessões` : `restam ${f.sessoes} de ${f.limite} sessões`) : ''].filter(Boolean).join(' e ');
+
+    const recibo = guias.filter((r) => r.decisao === 'OK' && /reembolso/i.test(r.guia.observacao_recepcao || ''));
+    const maxT = Math.max(1, ...rel.por_tipo.map((t) => t.em_risco));
+    const grupos = (o) => Object.entries(o).sort((a, b) => a[0].localeCompare(b[0]));
+    const maxU = Math.max(1, ...Object.values(rel.por_unidade).map((g) => g.guias)), maxC = Math.max(1, ...Object.values(rel.por_convenio).map((g) => g.guias));
+    const tipoDe = (t) => (guias.find((r) => r.id_guia === t.ids[0]) || {}).tipo_principal;
+
+    $('visao').innerHTML = `
+      <div class="chamada">
+        <div class="frase">Das <b>${rel.verificadas}</b> guias lançadas em agosto, <b>${rel.ok}</b> podem ir para o convênio. As outras <b>${rel.pendentes}</b> ficaram seguradas antes do envio e somam <b>${reaisInt(rel.valor_em_risco)}</b>. ${pct(doConvenio, rel.valor_em_risco)} desse valor só sai do lugar se o convênio autorizar.</div>
+        <div class="emjogo">Por mês, na clínica toda
+          <div class="n">~ R$ 14,5 mil</div>
+          de glosa que dá para evitar. É 40% dos 8% glosados sobre os R$ 452 mil de convênio, pela estimativa da Carla. O lote de agosto tem erros de propósito: a taxa dele não vale para a clínica.</div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><div class="r">Guias conferidas</div><div class="n">${rel.verificadas}</div><div class="d">antes do envio</div></div>
+        <div class="kpi"><div class="r">Podem enviar</div><div class="n">${rel.ok}</div><div class="d">${pct(rel.ok, rel.verificadas)} das guias</div></div>
+        <div class="kpi"><div class="r">Seguradas</div><div class="n">${rel.pendentes}</div><div class="d">${pct(rel.pendentes, rel.verificadas)} das guias</div></div>
+        <div class="kpi"><div class="r">Valor segurado</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)} no lote</div></div>
+      </div>
+
+      <div class="secao grade2">
+        <div class="cartao">
+          <h2>O que precisa acontecer com os ${reaisInt(rel.valor_em_risco)}</h2>
+          <div class="pergunta">Quem a Carla chama esta semana, e quanto dinheiro cada um destrava. Clique para ver as guias.</div>
+          ${barras(passos.map(([k, p]) => ({nome: p.nome, valor: reais(p.em_risco), extra: p.guias + (p.guias > 1 ? ' guias' : ' guia'), v: p.em_risco,
+            partes: [{c: k === 'copia' ? 'conferir' : 'tinta', v: p.em_risco}], filtro: {passo: k, rotulo: p.nome}})), maxP)}
+          <div class="honesto">${passos.map(([k]) => `<div style="margin-top:4px"><b style="font-weight:500">${esc(rel.por_proximo_passo[k].nome)}.</b> ${PASSO_EXPLICA[k]}</div>`).join('')}</div>
+        </div>
+        <div class="cartao">
+          <h2>Onde o problema nasce</h2>
+          <div class="pergunta">O que a conferência da guia resolve e o que precisa ser pego antes, no balcão.</div>
+          ${barras(origem.map((o) => ({nome: o.nome, valor: reais(o.v), extra: o.guias + ' guias', v: o.v, filtro: {ids: o.ids, rotulo: o.nome.split(':')[0]}})), maxO)}
+          <div class="destaque">${antes.guias} das ${rel.pendentes} guias seguradas nasceram antes da sessão: o paciente foi atendido com a autorização vencida, esgotada ou sem número. Conferir a guia depois segura o erro, mas não salva a sessão. O que salva é conferir a autorização quando o paciente chega.</div>
+        </div>
+      </div>
+
+      <div class="secao cartao">
+        <h2>Autorizações para renovar antes da próxima sessão</h2>
+        <div class="pergunta">Guias que podem ir, mas de pacientes cuja autorização vence em até 7 dias ou já usou 80% das sessões. Se ninguém pedir a renovação, a próxima guia desse paciente nasce segurada.</div>
+        <div class="legenda" style="margin:0 0 8px">${Object.entries(porConvRenovar).map(([c, n]) => `<span><b style="font-weight:500;color:var(--ink)">${n}</b>&nbsp;no ${esc(c)}</span>`).join('')}<span class="clicavel" ${filtro({ids: renovar.map((r) => r.id_guia), rotulo: 'Autorizações para renovar'})}>ver as ${renovar.length} guias</span></div>
+        <div class="tabela" style="border-top:0"><table class="lista" style="min-width:560px"><tbody>
+          ${renovar.slice().sort((a, b) => urgencia(a) - urgencia(b)).slice(0, 6).map((r) => `<tr><td class="id">${esc(r.id_guia)}</td><td>${esc(r.guia.paciente)}</td><td>${esc(r.guia.convenio)}</td><td>${esc(r.guia.unidade)}</td><td>${esc(motivoRenovar(r.folga_da_autorizacao))}</td></tr>`).join('')}
+        </tbody></table></div>
+        <div class="nota">As 6 mais urgentes. Pedir em lote, por convênio, uma vez por semana, custa menos do que descobrir no balcão. Conta feita a partir da data do atendimento de cada guia.</div>
+      </div>
+
+      <div class="secao grade2">
+        <div class="cartao">
+          <h2>Por tipo de problema</h2>
+          <div class="pergunta">Cada guia conta uma vez, no problema mais grave. Clique para ver as guias.</div>
+          ${barras(rel.por_tipo.map((t) => ({nome: t.nome, valor: reais(t.em_risco), extra: t.guias + (t.guias > 1 ? ' guias' : ' guia'), v: t.em_risco, filtro: {tipo: tipoDe(t)}})), maxT)}
+        </div>
+        <div class="cartao">
+          <h2>Unidades e convênios</h2>
+          <div class="pergunta">Guias seguradas de cada unidade e de cada convênio.</div>
+          ${barras(grupos(rel.por_unidade).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), filtro: {unidade: n}, partes: [{c: 'tinta', v: g.pendentes}, {c: 'ok', v: 0}]})), maxU)}
+          <div style="height:14px"></div>
+          ${barras(grupos(rel.por_convenio).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), filtro: {convenio: n}, partes: [{c: 'tinta', v: g.pendentes}]})), maxC)}
+          <div class="honesto">Com 23 a 40 guias em cada grupo, a diferença entre unidades e entre convênios pode ser acaso. Não dá para dizer que uma unidade erra mais. O que muda de verdade é o tipo de erro: no Plano Bem é consulta que ele não cobre, no Saúde Interior é autorização sem número, no Vitalcard é CID e registro em branco.</div>
+        </div>
+      </div>
+
+      ${recibo.length ? `<div class="secao cartao">
+        <h2>Para confirmar com a Carla</h2>
+        <div class="pergunta" style="margin-bottom:0"><span class="clicavel" ${filtro({ids: recibo.map((r) => r.id_guia), rotulo: 'Pediu recibo para reembolso'})}>${recibo.length} guias prontas para enviar</span> (${reais(recibo.reduce((s, r) => s + r.valor, 0))}) têm a anotação "pediu recibo para reembolso do plano". Se o paciente pagou a sessão do próprio bolso, enviar ao convênio é cobrar duas vezes. Os dados não dizem. Por isso a guia passa com aviso, e a pergunta fica para a Carla.</div>
+      </div>` : ''}`;
+  }
+
+  /* ---------------- relatório de terça ---------------- */
+  function kpisRelatorio(rel) {
+    return `<div class="kpis">
+      <div class="kpi"><div class="r">Guias conferidas</div><div class="n">${rel.verificadas}</div><div class="d">antes do envio</div></div>
+      <div class="kpi"><div class="r">Podem enviar</div><div class="n">${rel.ok}</div><div class="d">${pct(rel.ok, rel.verificadas)} das guias</div></div>
+      <div class="kpi"><div class="r">Seguradas</div><div class="n">${rel.pendentes}</div><div class="d">${pct(rel.pendentes, rel.verificadas)} das guias</div></div>
+      <div class="kpi"><div class="r">Valor segurado</div><div class="n">${reaisInt(rel.valor_em_risco)}</div><div class="d">de ${reaisInt(rel.valor_total)} conferidos</div></div>
+    </div>`;
+  }
+  async function carregarTerca() {
+    try {
+      const resp = await fetch('/api/relatorio', novas.length
+        ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({novas: novas.map((n) => n.campos)})} : undefined);
+      const d = await resp.json(), rel = d.relatorio;
+      const pg = rel.por_gravidade;
+      const maxG = Math.max(1, ...ORDEM.map((g) => pg[g].em_risco));
+      const maxT = Math.max(1, ...rel.por_tipo.map((t) => t.em_risco));
+      const grupo = (o) => Object.entries(o).sort((a, b) => b[1].em_risco - a[1].em_risco);
+      const maxU = Math.max(1, ...Object.values(rel.por_unidade).map((g) => g.guias));
+      const maxC = Math.max(1, ...Object.values(rel.por_convenio).map((g) => g.guias));
+      $('terca').innerHTML = `
+        <div class="frase">Foram conferidas <b>${rel.verificadas}</b> guias. <b>${rel.pendentes}</b> ficaram seguradas antes do envio, somando <b>${reaisInt(rel.valor_em_risco)}</b>. Se fossem enviadas assim, o convênio recusaria com certeza <b>${reaisInt(pg.nao_enviar.em_risco)}</b>.</div>
+        ${kpisRelatorio(rel)}
+        <div class="secao grade2">
+          <div class="cartao"><h2>Por decisão</h2><div class="pergunta">Quanto do valor segurado é perda certa e quanto dá para salvar.</div>
+            ${barras(ORDEM.map((g) => ({nome: DECISAO[g], valor: reais(pg[g].em_risco), extra: pg[g].guias + ' guias', v: pg[g].em_risco, partes: [{c: g, v: pg[g].em_risco}]})), maxG)}</div>
+          <div class="cartao"><h2>Por tipo de problema</h2><div class="pergunta">Cada guia conta uma vez, no problema mais grave.</div>
+            ${barras(rel.por_tipo.map((t) => ({nome: t.nome, valor: reais(t.em_risco), extra: t.guias + ' guias', v: t.em_risco})), maxT)}</div>
+          <div class="cartao"><h2>Por unidade</h2><div class="pergunta">Guias conferidas e quantas ficaram seguradas.</div>
+            ${barras(grupo(rel.por_unidade).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), partes: [{c: 'nao_enviar', v: g.pendentes}, {c: 'ok', v: g.guias - g.pendentes}]})), maxU)}</div>
+          <div class="cartao"><h2>Por convênio</h2><div class="pergunta">Guias conferidas e quantas ficaram seguradas.</div>
+            ${barras(grupo(rel.por_convenio).map(([n, g]) => ({nome: n, valor: `${g.pendentes} de ${g.guias}`, extra: reais(g.em_risco), partes: [{c: 'nao_enviar', v: g.pendentes}, {c: 'ok', v: g.guias - g.pendentes}]})), maxC)}</div>
+        </div>
+        <div class="secao">
+          <h2>Texto para mandar no WhatsApp</h2>
+          <div class="exemplos" style="margin:6px 0 10px"><button class="btn2" id="copiar">Copiar texto</button><span id="copiado"></span></div>
+          <pre id="rTexto">${esc(d.texto)}</pre>
+        </div>`;
+      $('copiar').addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(d.texto); $('copiado').textContent = 'Copiado.'; } catch (_) { $('copiado').textContent = 'Selecione o texto e copie.'; }
+        setTimeout(() => { $('copiado').textContent = ''; }, 2500);
+      });
+    } catch (_) {
+      $('terca').innerHTML = '<div class="nota erro">Não consegui montar o relatório. Recarregue a página.</div>';
+    }
+  }
+
+  /* ---------------- como funciona ---------------- */
+  function desenharLegenda() {
+    const ex = {
+      ok: 'Tudo dentro da regra do convênio.',
+      nao_enviar: 'Autorização vencida (G-2608-0004), sessão acima do limite (G-2608-0006), convênio que não cobre o procedimento (G-2608-0002), guia repetida (G-2608-0057).',
+      corrigir: 'CID vazio (G-2608-0021), autorização nova que o paciente trouxe e não foi lançada (G-2608-0030), código trocado (G-2608-0069).',
+      conferir: 'Reavaliação de fisioterapia lançada por médico (G-2608-0045), mesmo paciente no mesmo dia em duas guias (G-2608-0017), sessão remarcada (G-2608-0034).',
+    };
+    const expl = {ok: 'Cumpre todas as regras do convênio.', nao_enviar: 'Se for enviada assim, o convênio recusa. Precisa de autorização nova, ou a guia não deve ir para este convênio.',
+      corrigir: 'Falta um dado ou ele está errado. Dá para arrumar a guia antes de enviar.', conferir: 'A regra escrita não proíbe, mas tem algo estranho. Alguém confirma antes de enviar.'};
+    const cont = {ok: 0, nao_enviar: 0, corrigir: 0, conferir: 0}, val = {ok: 0, nao_enviar: 0, corrigir: 0, conferir: 0};
+    LOTE.guias.forEach((r) => { cont[r.gravidade]++; val[r.gravidade] += r.valor; });
+    $('legendaDecisoes').innerHTML = ['ok', ...ORDEM].map((g) => `
+      <div class="decisao clicavel" ${filtro({decisao: g})} style="margin:0">
+        <div>${selo(g)}</div>
+        <div><p>${expl[g]}</p><div class="ex">${ex[g]}</div></div>
+        <div class="q">${cont[g]}<small>${reaisInt(val[g])}</small></div>
+      </div>`).join('');
+  }
+
+  /* ---------------- lançar guia ---------------- */
+  const GRUPOS = [
+    ['Atendimento', [
+      ['id_guia', 'Número da guia', 'text'], ['unidade', 'Unidade', 'unidade'],
+      ['data_atendimento', 'Data do atendimento', 'date'], ['paciente', 'Paciente', 'text', 'P-1234'],
+      ['profissional', 'Profissional que atendeu', 'text', 'Nome'], ['profissional_registro', 'Registro do profissional', 'text', 'CREFITO-3 123456-F ou CRM-SP 12345']]],
+    ['Convênio', [
+      ['convenio', 'Convênio', 'convenio'], ['carteirinha', 'Carteirinha', 'text', '9 dígitos'], ['cid', 'CID', 'text', 'M54.5']]],
+    ['Procedimento', [
+      ['procedimento_codigo', 'Procedimento', 'procedimento'], ['valor', 'Valor (R$)', 'text', '62,00']]],
+    ['Autorização', [
+      ['numero_autorizacao', 'Número da autorização', 'text', 'AUT123456'], ['autorizacao_validade', 'Válida até', 'date'],
+      ['sessao', 'Sessão', 'sessao']]],
+    ['Observação da recepção', [['observacao_recepcao', 'O que a recepção anotou', 'textarea', 'Opcional']]],
+  ];
+  const SEMPRE = ['unidade', 'data_atendimento', 'paciente', 'convenio', 'procedimento_codigo', 'valor', 'sessao'];
+  const NOME_CAMPO = {numero_autorizacao: 'número da autorização', autorizacao_validade: 'validade da autorização',
+    profissional_registro: 'registro do profissional', carteirinha: 'carteirinha', cid: 'CID'};
+  let valorEditado = false, conferencia = null, pedidoAtual = null, espera = null;
+
+  const conv = () => LOTE && LOTE.regras.convenios.find((c) => c.nome === $('c_convenio').value);
+  const proc = () => LOTE && LOTE.regras.procedimentos.find((p) => p.codigo === $('c_procedimento_codigo').value);
+
+  function montarForm() {
+    const unidades = [...new Set(LOTE.guias.map((r) => r.guia.unidade))].filter(Boolean).sort();
+    $('form').innerHTML = GRUPOS.map(([titulo, campos]) => `<div class="grupo"><h2>${titulo}</h2><div class="campos">${campos.map(([k, rot, tipo, ph]) => {
+      const lab = `<label for="c_${k === 'sessao' ? 'sessao_numero_na_autorizacao' : k}">${rot}<em id="e_${k}"></em></label>`;
+      let ctl;
+      if (tipo === 'unidade') ctl = `<select id="c_unidade"><option value="">Escolha</option>${unidades.map((u) => `<option>${esc(u)}</option>`).join('')}</select>`;
+      else if (tipo === 'convenio') ctl = `<select id="c_convenio"><option value="">Escolha</option>${LOTE.regras.convenios.map((c) => `<option>${esc(c.nome)}</option>`).join('')}</select>`;
+      else if (tipo === 'procedimento') ctl = `<select id="c_procedimento_codigo"><option value="">Escolha</option></select>`;
+      else if (tipo === 'sessao') ctl = `<div class="dupla"><input type="text" id="c_sessao_numero_na_autorizacao" inputmode="numeric" placeholder="nº"><span>de</span><input type="text" id="c_autorizacao_sessoes_limite" inputmode="numeric" placeholder="autorizadas" aria-label="Sessões autorizadas"></div>`;
+      else if (tipo === 'textarea') ctl = `<textarea id="c_${k}" rows="2" placeholder="${ph}"></textarea>`;
+      else ctl = `<input type="${tipo}" id="c_${k}" ${ph ? `placeholder="${esc(ph)}"` : ''}>`;
+      return `<div class="campo ${tipo === 'textarea' ? 'largo' : ''}">${lab}${ctl}</div>`;
+    }).join('')}</div></div>`).join('');
+    novoNumero();
+    $('form').addEventListener('input', (e) => { if (e.target.id === 'c_valor') valorEditado = true; agendar(); });
+    $('form').addEventListener('change', (e) => {
+      if (e.target.id === 'c_convenio') { opcoesProcedimento(); marcarExigidos(); }
+      if (e.target.id === 'c_procedimento_codigo' && !valorEditado) { const p = proc(); $('c_valor').value = p ? p.valor.toFixed(2).replace('.', ',') : ''; }
+      agendar();
+    });
+    opcoesProcedimento(); marcarExigidos(); desenharConf(null);
+  }
+  function novoNumero() { $('c_id_guia').value = 'G-NOVA-' + String(Date.now()).slice(-5); }
+  function opcoesProcedimento() {
+    const c = conv(), atual = $('c_procedimento_codigo').value;
+    $('c_procedimento_codigo').innerHTML = '<option value="">Escolha</option>' + LOTE.regras.procedimentos.map((p) =>
+      `<option value="${p.codigo}">${esc(p.descricao)} · ${p.codigo}${c && !c.cobertos.includes(p.codigo) ? ' · não coberto' : ''}</option>`).join('');
+    $('c_procedimento_codigo').value = atual;
+  }
+  function marcarExigidos() {
+    const c = conv();
+    GRUPOS.forEach(([, campos]) => campos.forEach(([k]) => {
+      const el = $('e_' + k); if (!el) return;
+      if (c && c.campos_obrigatorios.includes(k)) { el.textContent = 'o ' + c.nome + ' exige'; el.className = 'exige'; }
+      else if (SEMPRE.includes(k)) { el.textContent = 'obrigatório'; el.className = ''; }
+      else { el.textContent = ''; el.className = ''; }
+    }));
+  }
+  function lerForm() {
+    const guia = {};
+    ['id_guia', 'unidade', 'data_atendimento', 'paciente', 'profissional', 'profissional_registro', 'convenio', 'carteirinha', 'cid',
+      'procedimento_codigo', 'valor', 'numero_autorizacao', 'autorizacao_validade', 'sessao_numero_na_autorizacao',
+      'autorizacao_sessoes_limite', 'observacao_recepcao'].forEach((k) => { const v = ($('c_' + k).value || '').trim(); if (v) guia[k] = v; });
+    const p = proc(); if (p) guia.procedimento_descricao = p.descricao;
+    guia.data_lancamento = hojeISO();
+    return guia;
+  }
+  function paraISO(v) {
+    v = String(v || '').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+    const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+    return m ? `${m[3].length === 2 ? '20' + m[3] : m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : '';
+  }
+  function preencherForm(campos) {
+    limparForm(false);
+    const avisos = [];
+    Object.entries(campos || {}).forEach(([k, v]) => {
+      v = String(v == null ? '' : v).trim(); if (!v) return;
+      if (k === 'convenio') {
+        const c = LOTE.regras.convenios.find((x) => semAcento(x.nome) === semAcento(v));
+        if (c) $('c_convenio').value = c.nome; else avisos.push(`O convênio "${v}" não está nas regras.`);
+        opcoesProcedimento(); marcarExigidos();
+      } else if (k === 'unidade') {
+        const u = [...$('c_unidade').options].find((o) => semAcento(o.value) === semAcento(v));
+        if (!u) $('c_unidade').insertAdjacentHTML('beforeend', `<option>${esc(v)}</option>`);
+        $('c_unidade').value = u ? u.value : v;
+      } else if (k === 'data_atendimento' || k === 'autorizacao_validade') {
+        const iso = paraISO(v); if (iso) $('c_' + k).value = iso; else avisos.push(`Não entendi a data "${v}". Preencha no calendário.`);
+      } else if ($('c_' + k)) { $('c_' + k).value = v; if (k === 'valor') valorEditado = true; }
+    });
+    if (!$('c_procedimento_codigo').value && campos && campos.procedimento_descricao) {
+      const alvo = semAcento(campos.procedimento_descricao);
+      const p = LOTE.regras.procedimentos.find((x) => semAcento(x.descricao) === alvo);
+      if (p) $('c_procedimento_codigo').value = p.codigo;
+    }
+    if (campos && campos.procedimento_codigo && !$('c_procedimento_codigo').value) avisos.push(`O código "${campos.procedimento_codigo}" não está na tabela de procedimentos.`);
+    if (!$('c_id_guia').value) novoNumero();
+    agendar(0);
+    return avisos;
+  }
+  function limparForm(tudo = true) {
+    $('form').querySelectorAll('input,select,textarea').forEach((el) => { el.value = ''; });
+    valorEditado = false; opcoesProcedimento(); marcarExigidos(); novoNumero();
+    if (tudo) { $('lido').innerHTML = ''; $('lancAviso').textContent = ''; desenharConf(null); }
+  }
+  $('limparForm').addEventListener('click', () => limparForm());
+
+  function agendar(ms = 450) {
+    clearTimeout(espera);
+    espera = setTimeout(conferirRascunho, ms);
+  }
   async function pedir(corpo) {
     const resp = await fetch('/api/verificar', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(corpo)});
     return {ok: resp.ok, d: await resp.json()};
   }
-
-  function mostrarResultado(d) {
-    const r = d.resultado, campos = Object.entries(d.entrada.campos).map(([k, v]) => `${k}: ${v}`).join('\n');
-    $('resultado').innerHTML = `<div style="margin-top:12px"><span class="sel ${r.gravidade}">${r.decisao === 'OK' ? 'OK, pode enviar' : 'PENDENTE · ' + NOME_GRAVIDADE[r.gravidade]}</span> <span class="mini">${r.valor_em_risco ? reais(r.valor_em_risco) + ' em risco' : ''}</span></div>${detalhe(r)}
-      <details style="margin-top:8px"><summary class="mini">Como a guia foi lida (${esc(d.entrada.lido_por)})</summary><pre>${esc(campos)}</pre></details>`;
-    novas.unshift({campos: d.entrada.campos, gravidade: r.gravidade, resumo: `${r.id_guia} · ${r.guia.convenio || 'sem convênio'} · ${reais(r.valor)} · ${r.pendencias[0] ? r.pendencias[0].motivo : 'pode enviar'}`});
-    novas = novas.slice(0, 20); salvarNovas(); desenharNovas();
+  async function conferirRascunho() {
+    if (!$('c_convenio').value) { desenharConf(null); return; }
+    const guia = lerForm(), meu = pedidoAtual = Symbol('pedido');
+    try {
+      const {ok, d} = await pedir({guia, rascunho: true});
+      if (meu !== pedidoAtual) return;
+      if (ok) desenharConf(d.resultado, false); else desenharConf({erro: d.erro});
+    } catch (_) { if (meu === pedidoAtual) desenharConf({erro: 'Sem resposta do servidor.'}); }
+  }
+  function textoRegra() {
+    const c = conv(), p = proc(); if (!c) return '';
+    const exige = c.campos_obrigatorios.map((k) => NOME_CAMPO[k] || k);
+    const cobre = p ? (c.cobertos.includes(p.codigo) ? `Cobre ${esc(p.descricao.toLowerCase())}.` : `<b>Não cobre ${esc(p.descricao.toLowerCase())}.</b>`) : '';
+    return `<div class="bloco"><h2>Regra do ${esc(c.nome)}</h2><div class="regra" style="margin-top:6px">${cobre} Até ${c.limite_sessoes} sessões por autorização. Autorização de até ${c.validade_maxima_dias} dias. Enviar em até ${c.prazo_envio_dias} dias do atendimento. Exige ${exige.slice(0, -1).join(', ')} e ${exige.slice(-1)}.${c.observacao ? ' ' + esc(c.observacao) : ''}</div></div>`;
+  }
+  function desenharConf(r, final) {
+    conferencia = r;
+    if (!r) {
+      $('conf').innerHTML = `<div class="estado">Conferência</div><div class="nome vazio" style="font-size:22px">Escolha o convênio para começar</div>
+        <div class="exp">A guia é conferida enquanto você preenche. O que faltar ou estiver errado aparece aqui, com o que fazer.</div>`;
+      return;
+    }
+    if (r.erro) { $('conf').innerHTML = `<div class="estado">Conferência</div><div class="exp erro" style="margin-top:10px">${esc(r.erro)} A guia não foi conferida: não envie ainda.</div>`; return; }
+    const g = r.gravidade;
+    $('conf').innerHTML = `
+      <div class="estado">${final ? 'Lançada e conferida' : 'Conferindo enquanto você preenche'}</div>
+      <div class="nome"><i class="ponto ${g}"></i>${DECISAO[g]}</div>
+      <div class="exp">${esc(r.o_que_significa || '')}</div>
+      ${r.decisao === 'PENDENTE' ? `<div class="dinheiro"><b>${reais(r.valor_em_risco)}</b> segurados nesta guia</div>` : ''}
+      ${r.pendencias.length ? `<div class="bloco">${pendencias(r)}</div>` : ''}
+      ${r.alertas.length ? `<div class="bloco">${r.alertas.map((a) => `<div class="aviso" style="margin:0 0 6px">Aviso: ${esc(a)}</div>`).join('')}</div>` : ''}
+      ${r.enviar_ate ? `<div class="bloco regra">Enviar ao convênio até <b>${br(r.enviar_ate)}</b>.</div>` : ''}
+      ${textoRegra()}
+      <div class="nota">${final ? `Observação lida por ${esc(r.observacao_lida_por || 'ninguém, estava vazia')}.` : 'Rascunho: a observação é lida por palavras-chave. Ao lançar, a IA também lê.'}</div>`;
   }
 
-  // Texto corrido é leitura, não é dado: a pessoa confere os campos antes de a guia ser conferida.
-  function pedirConfirmacao(d) {
-    const avisos = (d.entrada.avisos || []).map((a) => `<div class="alerta erro">${esc(a)}</div>`).join('');
-    const faltando = d.entrada.faltando.length ? `<div class="alerta erro">Não achei no texto: ${d.entrada.faltando.map((c) => ROTULOS[c] || c).join(', ')}.</div>` : '';
-    const campos = Object.keys(ROTULOS).map((c) => c === 'observacao_recepcao'
-      ? `<label class="campo largo"><span>${ROTULOS[c]}</span><textarea data-campo="${c}" style="min-height:60px">${esc(d.entrada.campos[c] || '')}</textarea></label>`
-      : `<label class="campo"><span>${ROTULOS[c]}</span><input type="text" data-campo="${c}" value="${esc(d.entrada.campos[c] || '')}"></label>`).join('');
-    $('resultado').innerHTML = `<div class="card" style="background:#faf9f5"><h2>Confira o que eu li do texto (${esc(d.entrada.lido_por)})</h2>
-      <div class="mini">Texto corrido é leitura, não é dado. Corrija o que estiver errado e confirme. Só então a guia é conferida.</div>
-      ${avisos}${faltando}<div class="form">${campos}</div>
-      <div class="linha"><button class="acao" id="confirmar">Confirmar e conferir</button></div></div>`;
-    $('confirmar').addEventListener('click', async () => {
-      const guia = {}; document.querySelectorAll('[data-campo]').forEach((el) => { if (el.value.trim()) guia[el.dataset.campo] = el.value.trim(); });
-      $('confirmar').disabled = true;
-      try { const {ok, d: r} = await pedir({guia}); if (ok) mostrarResultado(r); else $('resultado').insertAdjacentHTML('beforeend', `<div class="alerta erro">${esc(r.erro || 'Erro ao conferir.')}</div>`); }
-      catch (_) { $('resultado').insertAdjacentHTML('beforeend', '<div class="alerta erro">Sem resposta do servidor. A guia não foi conferida: não envie ainda.</div>'); }
-    });
+  $('lancarBtn').addEventListener('click', async () => {
+    if (!$('c_convenio').value) { $('lancAviso').textContent = 'Escolha o convênio.'; return; }
+    const guia = lerForm();
+    $('lancarBtn').disabled = true; $('lancAviso').textContent = 'Conferindo…';
+    try {
+      const {ok, d} = await pedir({guia});
+      if (!ok) { $('lancAviso').innerHTML = `<span class="erro">${esc(d.erro || 'Erro ao conferir.')}</span>`; return; }
+      pedidoAtual = null; clearTimeout(espera);
+      desenharConf(d.resultado, true);
+      novas = novas.filter((n) => (n.campos.id_guia || '').toUpperCase() !== (guia.id_guia || '').toUpperCase());
+      novas.unshift({campos: d.entrada.campos, resultado: {id_guia: d.resultado.id_guia, gravidade: d.resultado.gravidade, valor: d.resultado.valor,
+        convenio: d.resultado.guia.convenio, motivo: d.resultado.pendencias[0] ? d.resultado.pendencias[0].motivo : ''}});
+      guardarNovas(); desenharNovas();
+      $('lancAviso').innerHTML = 'Lançada. <button class="quieto" id="outra" type="button">Lançar outra guia</button>';
+      $('outra').addEventListener('click', () => { limparForm(); $('colar').open = false; $('texto').value = ''; });
+    } catch (_) {
+      $('lancAviso').innerHTML = '<span class="erro">Sem resposta do servidor. A guia não foi conferida: não envie ainda.</span>';
+    } finally { $('lancarBtn').disabled = false; }
+  });
+
+  function desenharNovas() {
+    if (!novas.length) { $('novas').className = 'vazio'; $('novas').innerHTML = 'Nenhuma ainda.'; return; }
+    $('novas').className = '';
+    $('novas').innerHTML = '<div class="lista-novas">' + novas.map((n) => { const r = n.resultado;
+      return `<div>${selo(r.gravidade)}<span class="num">${esc(r.id_guia)}</span><span>${esc(r.convenio || 'sem convênio')}</span><span class="num">${reais(r.valor)}</span><span class="vazio">${esc(r.motivo)}</span></div>`; }).join('')
+      + '</div><button class="quieto" id="apagarNovas" style="margin-top:8px">Apagar as lançadas nesta sessão</button>';
+    $('apagarNovas').addEventListener('click', () => { novas = []; guardarNovas(); desenharNovas(); });
   }
 
-  $('conferir').addEventListener('click', async () => {
+  $('ler').addEventListener('click', async () => {
     const texto = $('texto').value.trim(); if (!texto) return;
-    $('conferir').disabled = true; $('resultado').innerHTML = '<div class="alerta">lendo…</div>';
+    $('ler').disabled = true; $('lendo').textContent = 'Lendo…'; $('lido').innerHTML = '';
     try {
       const {ok, d} = await pedir({texto});
-      if (!ok) $('resultado').innerHTML = `<div class="alerta erro">${esc(d.erro || 'Erro ao conferir.')} ${esc(d.dica || '')}</div>`;
-      else if (d.confirmar) pedirConfirmacao(d);
-      else mostrarResultado(d);
+      if (!ok) { $('lido').innerHTML = `<div class="aviso erro">${esc(d.erro || 'Não consegui ler.')} ${esc(d.dica || '')}</div>`; return; }
+      const avisos = preencherForm(d.entrada.campos).concat(d.entrada.avisos || []);
+      const faltou = (d.entrada.faltando || []).length ? [`Não achei no texto: ${d.entrada.faltando.map((k) => NOME_CAMPO[k] || k.replace(/_/g, ' ')).join(', ')}.`] : [];
+      const como = {'linha do sistema': 'como linha do sistema', "campos 'nome: valor'": 'campo a campo'}[d.entrada.lido_por] || 'por ' + d.entrada.lido_por;
+      $('lido').innerHTML = `<div class="aviso">Li o texto ${esc(como)} e preenchi o formulário abaixo. Confira os campos antes de lançar.</div>`
+        + avisos.concat(faltou).map((a) => `<div class="aviso">${esc(a)}</div>`).join('');
     } catch (_) {
-      $('resultado').innerHTML = '<div class="alerta erro">Sem resposta do servidor. A guia não foi conferida: não envie ainda.</div>';
-    } finally { $('conferir').disabled = false; }
+      $('lido').innerHTML = '<div class="aviso erro">Sem resposta do servidor. Tente de novo.</div>';
+    } finally { $('ler').disabled = false; $('lendo').textContent = ''; }
   });
 
-  // ---------- relatório
-  function barras(el, itens, max) {
-    el.innerHTML = itens.map((i) => `<div class="barra"><div class="t">${esc(i.nome)}<i style="width:${max ? Math.max(2, 100 * i.em_risco / max) : 0}%"></i></div><div class="num">${i.guias} guias</div><div class="num">${reais(i.em_risco)}</div></div>`).join('') || '<div class="mini">Nada aqui.</div>';
-  }
-  async function carregarRelatorio() {
-    try {
-      const resp = await fetch('/api/relatorio', novas.length ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({novas: novas.map((n) => n.campos)})} : undefined);
-      const d = await resp.json(), rel = d.relatorio;
-      kpis($('rkpis'), rel);
-      const max = Math.max(1, ...rel.por_tipo.map((t) => t.em_risco));
-      barras($('rTipo'), rel.por_tipo, max);
-      barras($('rGravidade'), Object.values(rel.por_gravidade), Math.max(1, ...Object.values(rel.por_gravidade).map((g) => g.em_risco)));
-      const grupo = (o) => Object.entries(o).sort().map(([nome, g]) => ({nome: `${nome} (${g.pendentes} de ${g.guias})`, guias: g.pendentes, em_risco: g.em_risco}));
-      barras($('rUnidade'), grupo(rel.por_unidade), Math.max(1, ...Object.values(rel.por_unidade).map((g) => g.em_risco)));
-      barras($('rConvenio'), grupo(rel.por_convenio), Math.max(1, ...Object.values(rel.por_convenio).map((g) => g.em_risco)));
-      $('rTexto').textContent = d.texto;
-    } catch (_) { $('rTexto').textContent = 'Não consegui montar o relatório. Recarregue a página.'; }
-  }
-  $('copiar').addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText($('rTexto').textContent); $('copiado').textContent = 'copiado'; } catch (_) { $('copiado').textContent = 'selecione e copie'; }
-    setTimeout(() => { $('copiado').textContent = ''; }, 2000);
-  });
+  // Exemplos com datas sempre recentes, para o prazo de envio não vencer com o tempo.
+  const dia = (d) => { const x = new Date(Date.now() + d * 86400000); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); };
+  const EXEMPLOS = {
+    certa: {unidade: 'Centro', data_atendimento: dia(-2), paciente: 'P-2001', profissional: 'Heitor Salles', profissional_registro: 'CREFITO-3 156740-F',
+      convenio: 'Saúde Interior', carteirinha: '445566778', procedimento_codigo: '50000470', valor: '62,00',
+      numero_autorizacao: 'AUT900100', autorizacao_validade: dia(20), sessao_numero_na_autorizacao: '3', autorizacao_sessoes_limite: '20'},
+    problema: {unidade: 'Norte', data_atendimento: dia(-2), paciente: 'P-2002', profissional: 'Dra. Marina Lopes', profissional_registro: 'CRM-SP 112390',
+      convenio: 'Plano Bem', carteirinha: '998877665', cid: 'M54.5', procedimento_codigo: '20103301', valor: '90,00',
+      numero_autorizacao: 'AUT555111', autorizacao_validade: dia(20), sessao_numero_na_autorizacao: '1', autorizacao_sessoes_limite: '12'},
+    repetida: {unidade: 'Centro', data_atendimento: '2026-08-28', paciente: 'P-1009', profissional: 'Heitor Salles', profissional_registro: 'CREFITO-3 156740-F',
+      convenio: 'Saúde Interior', carteirinha: '104270271', procedimento_codigo: '50000470', valor: '62,00',
+      numero_autorizacao: 'AUT426195', autorizacao_validade: '2026-10-02', sessao_numero_na_autorizacao: '16', autorizacao_sessoes_limite: '20'},
+  };
+  const TEXTO_CORRIDO = () => `Paciente P-2003 do Vitalcard, unidade Sul, fisio neurofuncional dia ${br(dia(-2))} com o Felipe Andrade CREFITO-3 198302-F, aut AUT700800 val ${br(dia(20))}, sessão 4 de 10, carteirinha 123456789, cid G81.9, R$ 70,00. A mãe avisou que ele quer faturar como particular, não quer usar o convênio.`;
+  document.querySelectorAll('[data-ex]').forEach((b) => b.addEventListener('click', () => {
+    $('lido').innerHTML = ''; $('lancAviso').textContent = '';
+    if (b.dataset.ex === 'texto') { $('colar').open = true; $('texto').value = TEXTO_CORRIDO(); limparForm(); $('texto').focus(); return; }
+    $('colar').open = false; preencherForm(EXEMPLOS[b.dataset.ex]);
+  }));
 
+  /* ---------------- início ---------------- */
   $('curl').textContent = `curl -X POST ${location.origin}/api/verificar \\\n  -H "Content-Type: application/json" \\\n  -d '{"guia": {"convenio": "Vitalcard", "procedimento_codigo": "50000470", "data_atendimento": "2026-09-02",\n       "numero_autorizacao": "AUT1", "autorizacao_validade": "2026-09-20", "sessao_numero_na_autorizacao": "11",\n       "carteirinha": "111222333", "cid": "M54.5", "profissional_registro": "CREFITO-3 204411-F", "valor": "62.00"}}'`;
+  irPara();
+  fetch('/api/guias').then((r) => r.json()).then((d) => {
+    LOTE = d;
+    $('versao').textContent = d.versao_das_regras;
+    $('qtGuias').textContent = d.guias.length;
+    const opcoes = (el, vals) => vals.forEach((v) => el.insertAdjacentHTML('beforeend', `<option>${esc(v)}</option>`));
+    opcoes($('fUnidade'), [...new Set(d.guias.map((r) => r.guia.unidade))].sort());
+    opcoes($('fConvenio'), [...new Set(d.guias.map((r) => r.guia.convenio))].sort());
+    d.relatorio.por_tipo.forEach((t) => {
+      const tipo = d.guias.find((r) => r.id_guia === t.ids[0]).tipo_principal;
+      $('fTipo').insertAdjacentHTML('beforeend', `<option value="${esc(tipo)}">${esc(t.nome)}</option>`);
+    });
+    desenharSegmento(); desenharLinhas(); desenharVisao(); desenharLegenda(); montarForm(); desenharNovas();
+  }).catch(() => {
+    $('visao').innerHTML = '<div class="nota erro">Não consegui carregar as guias. Recarregue a página.</div>';
+  });
 })();
 </script>
 </body>

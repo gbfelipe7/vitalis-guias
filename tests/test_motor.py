@@ -32,7 +32,7 @@ class LoteDeAgosto(unittest.TestCase):
     def test_autorizacao_vencida(self):
         vencidas = [i for i in RESULTADOS if "autorizacao_vencida" in tipos(i)]
         self.assertEqual(len(vencidas), 13)
-        self.assertEqual(RESULTADOS["G-2608-0004"]["gravidade"], "vai_glosar")
+        self.assertEqual(RESULTADOS["G-2608-0004"]["gravidade"], "nao_enviar")
 
     def test_autorizacao_no_ultimo_dia_vale(self):
         # validade 28/08, atendimento 28/08: a regra diz 'inclusive'
@@ -78,6 +78,10 @@ class LoteDeAgosto(unittest.TestCase):
 
     def test_observacao_que_so_gente_entende(self):
         self.assertIn("particular", RESULTADOS["G-2608-0039"]["pendencias"][0]["motivo"])
+        # quer particular e convênio que não cobre pedem a mesma ação, então caem na mesma decisão
+        self.assertEqual(RESULTADOS["G-2608-0039"]["gravidade"], "nao_enviar")
+        self.assertEqual(RESULTADOS["G-2608-0039"]["gravidade"], RESULTADOS["G-2608-0002"]["gravidade"])
+        self.assertEqual(RESULTADOS["G-2608-0039"]["nome_da_decisao"], "Não enviar assim")
         self.assertIn("drenagem", RESULTADOS["G-2608-0069"]["pendencias"][0]["motivo"])
         self.assertEqual(RESULTADOS["G-2608-0034"]["gravidade"], "conferir")
 
@@ -145,7 +149,7 @@ class GuiaNova(unittest.TestCase):
         dentro = verificar_guia(base, REGRAS, referencia=date(2026, 9, 8))    # 5º dia útil
         fora = verificar_guia(base, REGRAS, referencia=date(2026, 9, 9))
         self.assertEqual(dentro["gravidade"], "corrigir")
-        self.assertEqual(fora["gravidade"], "vai_glosar")
+        self.assertEqual(fora["gravidade"], "nao_enviar")
 
     def test_protocolo_por_telefone_onde_nao_vale(self):
         r = self.nova(numero_autorizacao="", observacao_recepcao="Autorizado por telefone, protocolo 998877.")
@@ -233,12 +237,12 @@ class AchadosDaAuditoria(unittest.TestCase):
         for obs in ("Paciente NÃO trouxe autorização nova.", "Precisa pedir nova autorização ao convênio.",
                     "Convênio negou a nova autorização."):
             r = verificar_guia(dict(vencida, observacao_recepcao=obs), REGRAS)
-            self.assertEqual(r["gravidade"], "vai_glosar", obs)
+            self.assertEqual(r["gravidade"], "nao_enviar", obs)
 
     def test_autorizacao_nova_que_tambem_nao_cobre(self):
         r = self.nova(autorizacao_validade="2026-08-20",
                       observacao_recepcao="Paciente trouxe autorização nova, validade 25/08.")
-        self.assertEqual(r["gravidade"], "vai_glosar")
+        self.assertEqual(r["gravidade"], "nao_enviar")
 
     def test_silencio_da_ia_nao_libera_guia(self):
         from unittest import mock
@@ -372,7 +376,7 @@ class SegundaRodadaDeAtaque(unittest.TestCase):
             vencida = verificar_guia(dict(self.BOA, autorizacao_validade="2026-08-20",
                                           observacao_recepcao="Texto que as palavras-chave não conhecem."), REGRAS, usar_ia=True)
             com_numero = verificar_guia(dict(self.BOA, observacao_recepcao="A carteirinha é do marido."), REGRAS, usar_ia=True)
-        self.assertEqual(vencida["gravidade"], "vai_glosar")
+        self.assertEqual(vencida["gravidade"], "nao_enviar")
         self.assertEqual(com_numero["decisao"], "PENDENTE")
         # e quando a IA acha algo que endurece, entra
         with mock.patch("motor.observacao.perguntar_json", return_value={"particular": True, "procedimento_real": "", "remarcada": False}):
@@ -438,3 +442,31 @@ class SegundaRodadaDeAtaque(unittest.TestCase):
         self.assertEqual(RESULTADOS["G-2608-0006"]["tipo_principal"], "sessao_acima_do_limite")
         self.assertEqual(RESULTADOS["G-2608-0056"]["tipo_principal"], "sessao_acima_do_limite")
 
+
+
+class NomesEProximoPasso(unittest.TestCase):
+    """Os nomes que a pessoa lê e a divisão do valor segurado pelo que precisa acontecer."""
+
+    def test_nomes_das_decisoes(self):
+        self.assertEqual(RESULTADOS["G-2608-0001"]["nome_da_decisao"], "Pode enviar")
+        self.assertEqual(RESULTADOS["G-2608-0004"]["nome_da_decisao"], "Não enviar assim")
+        self.assertEqual(RESULTADOS["G-2608-0021"]["nome_da_decisao"], "Corrigir antes de enviar")
+        self.assertEqual(RESULTADOS["G-2608-0045"]["nome_da_decisao"], "Conferir antes de enviar")
+
+    def test_valor_por_proximo_passo_soma_o_total(self):
+        rel = montar_relatorio(list(RESULTADOS.values()))
+        passos = rel["por_proximo_passo"]
+        self.assertAlmostEqual(sum(p["em_risco"] for p in passos.values()), rel["valor_em_risco"])
+        self.assertEqual(sum(p["guias"] for p in passos.values()), rel["pendentes"])
+        self.assertEqual(passos["convenio"]["em_risco"], 1378.0)
+        self.assertEqual(passos["recepcao"]["em_risco"], 382.0)
+        self.assertEqual(sorted(passos["copia"]["ids"]), ["G-2608-0057", "G-2608-0076"])
+        self.assertFalse(passos["copia"]["e_receita"])
+
+    def test_passo_mais_definitivo_vence(self):
+        # sessão acima do limite numa infiltração que o Vitalcard nem cobre: pedir autorização não resolve
+        self.assertEqual(RESULTADOS["G-2608-0006"]["proximo_passo"], "financeiro")
+        # autorização vencida, mas o paciente trouxe uma nova: é a recepção que lança
+        self.assertEqual(RESULTADOS["G-2608-0030"]["proximo_passo"], "recepcao")
+        self.assertEqual(RESULTADOS["G-2608-0039"]["proximo_passo"], "particular")
+        self.assertEqual(RESULTADOS["G-2608-0001"]["proximo_passo"], "")

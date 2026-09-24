@@ -19,23 +19,43 @@ def _so_texto(campos):
             and limpar_texto(campos[c])}
 
 
+def _regras_para_o_formulario(regras):
+    """O que o formulário de guia nova precisa saber para ajudar quem preenche: os convênios,
+    os campos que cada um exige e os procedimentos, com os que cada convênio cobre."""
+    return {
+        "procedimentos": [{"codigo": p["codigo"], "descricao": p["descricao"], "valor": p["valor_referencia"]}
+                          for p in regras["procedimentos"].values()],
+        "convenios": [{"nome": c["nome"], "campos_obrigatorios": c["campos_obrigatorios"],
+                       "cobertos": c["procedimentos_cobertos"],
+                       "limite_sessoes": c["limite_sessoes_por_autorizacao"],
+                       "prazo_envio_dias": c["prazo_envio_dias"],
+                       "validade_maxima_dias": c["validade_maxima_autorizacao_dias"],
+                       "observacao": c.get("observacao", "")}
+                      for c in regras["convenios"].values()],
+    }
+
+
 def rota_guias():
-    """GET /api/guias: as 80 guias de agosto conferidas e o relatório do lote."""
+    """GET /api/guias: as 80 guias de agosto conferidas, o relatório do lote e as regras."""
     regras = carregar_regras()
     resultados = verificar_lote(carregar_guias(), regras)     # sem IA: o lote dá sempre o mesmo resultado
-    return 200, {"versao_das_regras": regras["versao"],
+    return 200, {"versao_das_regras": regras["versao"], "regras": _regras_para_o_formulario(regras),
                  "relatorio": montar_relatorio(resultados), "guias": resultados}
 
 
 def rota_verificar(dados):
-    """POST /api/verificar: confere uma guia nova. Aceita {"guia": {...}} ou {"texto": "..."}."""
+    """POST /api/verificar: confere uma guia nova. Aceita {"guia": {...}} ou {"texto": "..."}.
+
+    Com "rascunho": true a conferência roda sem IA. É o que o formulário usa enquanto a pessoa
+    preenche: rápido, sem gastar a cota do modelo. O botão Conferir manda sem rascunho."""
     regras = carregar_regras()
+    usar_ia = dados.get("rascunho") is not True
     entrada = {"lido_por": "campos enviados", "faltando": [], "avisos": []}
 
     if isinstance(dados.get("guia"), dict):
         campos = _so_texto(dados["guia"])
     elif isinstance(dados.get("texto"), str) and dados["texto"].strip():
-        entrada = interpretar_texto(dados["texto"], regras, usar_ia=True)
+        entrada = interpretar_texto(dados["texto"], regras, usar_ia=usar_ia)
         campos = _so_texto(entrada["campos"])
         if entrada["precisa_confirmar"] and campos:
             # Texto corrido é leitura, não é dado: devolve os campos lidos para a pessoa conferir.
@@ -49,7 +69,7 @@ def rota_verificar(dados):
         return 422, {"erro": "Não consegui separar nenhum campo desse texto.",
                      "dica": "Escreva um campo por linha, como 'Convênio: Vitalcard'."}
 
-    resultado = verificar_nova(campos, carregar_guias(), regras, usar_ia=True)
+    resultado = verificar_nova(campos, carregar_guias(), regras, usar_ia=usar_ia)
     resultado["alertas"] = entrada.get("avisos", []) + resultado["alertas"]
     return 200, {"entrada": {"lido_por": entrada["lido_por"], "campos": campos,
                              "faltando": entrada["faltando"]},

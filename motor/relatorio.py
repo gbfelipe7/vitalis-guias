@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from .textos import GRAVIDADES, ORDEM_GRAVIDADE, TIPOS
+from .textos import GRAVIDADES, ORDEM_GRAVIDADE, PROXIMOS_PASSOS, TIPOS
 
 
 def _reais(valor):
@@ -54,6 +54,15 @@ def montar_relatorio(resultados, gerado_em=None):
         por_gravidade[g] = {"nome": GRAVIDADES[g], "guias": len(do_nivel),
                             "em_risco": sum(r["valor_em_risco"] for r in do_nivel)}
 
+    # O mesmo valor segurado, dividido pelo que precisa acontecer. Soma o total em risco.
+    # Cópia de outra guia entra à parte: não é dinheiro a receber, a original é que vale.
+    por_passo = {}
+    for chave, nome in PROXIMOS_PASSOS.items():
+        do_passo = [r for r in pendentes if r.get("proximo_passo") == chave]
+        por_passo[chave] = {"nome": nome, "guias": len(do_passo), "e_receita": chave != "copia",
+                            "em_risco": sum(r["valor_em_risco"] for r in do_passo),
+                            "ids": [r["id_guia"] for r in do_passo]}
+
     return {
         "gerado_em": (gerado_em or date.today()).isoformat(),
         "verificadas": len(resultados),
@@ -65,6 +74,7 @@ def montar_relatorio(resultados, gerado_em=None):
         "percentual_em_risco": round(100.0 * em_risco / total_valor, 1) if total_valor else 0.0,
         "por_tipo": sorted(por_tipo.values(), key=lambda t: -t["em_risco"]),
         "por_gravidade": por_gravidade,
+        "por_proximo_passo": por_passo,
         "por_unidade": _agrupar(resultados, lambda r: r["guia"]["unidade"].strip().title() or "sem unidade"),
         "por_convenio": _agrupar(resultados, lambda r: r["guia"]["convenio"] or "sem convênio"),
         "guias_pendentes": [
@@ -88,11 +98,16 @@ def relatorio_em_texto(rel):
             _reais(rel["valor_em_risco"]), _reais(rel["valor_total"]),
             str(rel["percentual_em_risco"]).replace(".", ",")),
         "",
-        "Por gravidade",
+        "Por decisão",
     ]
     for g in ORDEM_GRAVIDADE:
         nivel = rel["por_gravidade"][g]
         linhas.append("- %s: %d guias, %s" % (nivel["nome"], nivel["guias"], _reais(nivel["em_risco"])))
+    linhas += ["", "O que precisa acontecer"]
+    for passo in sorted(rel["por_proximo_passo"].values(), key=lambda p: -p["em_risco"]):
+        if passo["guias"]:
+            linhas.append("- %s: %d guias, %s%s" % (passo["nome"], passo["guias"], _reais(passo["em_risco"]),
+                                                   "" if passo["e_receita"] else " (não é dinheiro a receber)"))
     linhas += ["", "Por tipo de problema"]
     for t in rel["por_tipo"]:
         linhas.append("- %s: %d guias, %s" % (t["nome"], t["guias"], _reais(t["em_risco"])))
