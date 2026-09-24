@@ -12,7 +12,7 @@ Etapa técnica do processo da Expert Integrado. Caso fictício da Clínica Vital
 | `motor/` | O motor de regras, em Python puro, sem dependência. É ele que decide. |
 | `dados/` | `guias.csv` e `regras_convenio.json` da prova, sem alteração, mais `regras_extras.json` (ver decisão 3). |
 | `api/` e `web/` | A API publicada na Vercel. `web/rotas.py` tem a lógica; `api/*.py` só recebe o pedido. |
-| `public/index.html` | A página: visão geral com os gráficos de decisão, as guias de agosto, o formulário de lançamento, o relatório de terça (texto e imagem para o WhatsApp) e, em Como funciona, as regras agrupadas pela decisão que dão e a regra de cada convênio. |
+| `public/index.html` | A página. Quatro abas de apresentação (1. O que foi construído, 2. Dados e problemas, 3. Soluções, 4. O que a prova pediu) e o sistema: visão geral com os gráficos de decisão, as guias de agosto, o formulário de lançamento, o relatório de terça (texto e imagem para o WhatsApp) e, em Como funciona, as regras agrupadas pela decisão que dão e a regra de cada convênio. |
 | `mcp_server/` | O MCP, com quatro ferramentas. |
 | `skills/conferir-guia/` | A Skill para quem opera a clínica. |
 | `tests/` | 83 testes do motor. |
@@ -178,10 +178,14 @@ Cerca de 5 horas de trabalho meu, dentro do teto sugerido pela prova.
 
 ### Próximos passos
 
-1. **Lançar a guia no mesmo dia.** Só 19 das 80 guias foram lançadas no dia do atendimento. Lançadas no mesmo dia, 32% ficaram retidas; com 3 dias de atraso, 58%. No mesmo dia, quase todo erro é de autorização, que nasce antes da sessão; com o atraso aparecem os erros de lançamento (dado faltando, código trocado, cópia, particular). Mudar o processo para lançar na hora do atendimento, com a conferência na hora, não custa nada. Com 80 guias é pista forte: vale medir por 4 semanas com essa meta.
-2. **Conferir na chegada do paciente.** O mesmo conferente, chamado no balcão, diz se a autorização vale naquele dia, quantas sessões sobram e se o convênio cobre o procedimento. 21 das 37 guias retidas do lote nasceram antes da sessão, com a autorização vencida, esgotada ou sem número. Conferir a guia depois segura o erro, mas não salva a sessão.
-3. **Ler o retorno do convênio.** Casar cada glosa do demonstrativo com a guia. É o que prova o resultado em dinheiro, e o que o conferente deixou passar vira regra nova.
-4. **Recurso de glosa assistido.** Para cada guia glosada, o texto do recurso pronto a partir do motivo informado pelo convênio, com o prazo de recurso controlado.
+1. **Conferir antes da sessão.** Nenhuma guia de agosto foi lançada antes do atendimento, e 22 das 37 retidas (R$ 1.672) tinham um problema que dava para ver antes da sessão: 17 com a autorização vencida ou esgotada e 5 com procedimento que o convênio não cobre. Conferida depois, a guia fica retida, mas a sessão já aconteceu. A tabela de motivos de glosa da ANS (Tabela 38 da TUSS) tem código próprio para autorização com data posterior ao atendimento (1814 e 1825) e para procedimento feito antes da autorização (1840). Por isso a conferência vem para antes, em três momentos:
+   - **ao marcar**, a consulta de regra diz se o convênio cobre;
+   - **na semana**, a lista mostra quem vai ficar sem autorização (hoje, 18) e a recepção pede antes;
+   - **na chegada**, a última rede: a guia abre com o paciente no balcão e é conferida de novo depois da sessão.
+
+   Não prometo valor salvo. A mudança troca uma glosa descoberta 60 dias depois por uma decisão tomada antes da sessão. Falta combinar com a Carla e testar por 4 semanas numa unidade.
+2. **Avisar na hora quem resolve.** A mensagem e o destinatário já saem prontos, sem nome de paciente nem CID. Falta ligar o envio no WhatsApp, pela API oficial da Meta, Z-API ou Evolution.
+3. **Provar o resultado.** O relatório de terça mede a semana. Ler o retorno do convênio, casando cada glosa do demonstrativo com a guia, mostra se a glosa caiu, e o que o conferente deixou passar vira regra nova. Do mesmo retorno sai o texto do recurso de glosa, com o prazo controlado.
 
 ### Os prompts
 
