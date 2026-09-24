@@ -126,9 +126,10 @@ Alguns minutos entre salvar e conferir não atrapalham: o envio ao convênio é 
 | Entrada da guia | Página, API e Claude | Webhook do sistema de gestão ou n8n lendo a API dele |
 | Histórico | Só na aba do navegador | Postgres, com cada conferência e quando foi resolvida |
 | Proteção da API | Aberta, para a banca testar | Token do sistema de gestão, HTTPS pelo Nginx |
-| Aviso de guia retida | Simulado na tela | WhatsApp oficial, num número da clínica |
+| Aviso de guia retida | Simulado na tela | WhatsApp num número da clínica: pela API oficial da Meta, ou por Z-API ou Evolution API. Para dado de saúde eu prefiro a oficial, que é da Meta e não arrisca o bloqueio do número; Z-API e Evolution são mais rápidas de ligar |
 | Relatório de terça | Copiado na página | Agendado no n8n |
-| IA | Gemini no nível gratuito | Nível pago que não usa o conteúdo para treinar, rodando no Brasil |
+| IA | Gemini no nível gratuito | Um modelo pequeno e barato no plano pago, como um GPT mini ou o Gemini Flash, que não usam o conteúdo da API para treinar. Ela só lê texto, então um modelo pequeno basta |
+| MCP e Skill | O MCP roda na máquina de quem usa o Claude | O MCP roda na VPS e o Claude da recepção se conecta por um endereço, sem instalar nada |
 
 O código do conferente é o mesmo nos dois. Muda onde ele roda e o que fica em volta dele.
 
@@ -165,7 +166,7 @@ Depois de ver a primeira versão, pedi para refazer quatro coisas: a entrada da 
 - **Banco de dados.** As guias novas conferidas na página ficam só na sessão do navegador. Em produção eu gravaria cada conferência no Postgres, e o relatório de terça sairia de lá com histórico semana a semana.
 - **Feriados** na conta de dias úteis da autorização verbal. A prova não traz calendário.
 - **Proteção do endereço da API.** Está aberto, porque a banca precisa testar sem senha. Em produção ele ficaria atrás de um token do sistema de gestão. Na prova o custo de IA é zero, porque a chave é do nível gratuito, e o texto mandado ao modelo é cortado em 2.000 caracteres.
-- **LGPD e dado de saúde.** Na prova os dados são fictícios, por isso usei o Gemini no nível gratuito. Com paciente real ele não serve: os termos do nível gratuito pedem para não mandar dado pessoal e permitem que o conteúdo seja usado e revisado. Em produção seria um nível pago que não usa o conteúdo para treinar, com contrato de operador de dados com a clínica, e rodando no Brasil. O lote e o MCP já funcionam sem IA, e o aviso de WhatsApp sai sem nome de paciente e sem CID.
+- **LGPD e dado de saúde.** Na prova os dados são fictícios, por isso usei o Gemini no nível gratuito. Com paciente real ele não serve: os termos do nível gratuito pedem para não mandar dado pessoal e permitem que o conteúdo seja usado e revisado. Em produção seria um modelo pequeno no plano pago, como um GPT mini ou o Gemini Flash, que não usam o conteúdo da API para treinar, com contrato de operador de dados com a clínica. O lote e o MCP já funcionam sem IA, e o aviso de WhatsApp sai sem nome de paciente e sem CID.
 - **Envio automático do relatório de terça.** O endereço `GET /api/relatorio` está pronto; o agendamento no n8n (toda terça às 7h30, para o WhatsApp do Dr. Renato) não foi montado para a prova.
 - **Recibo para reembolso.** Oito guias têm a observação "Pediu recibo para reembolso do plano". Pode ser sinal de que o paciente pagou particular, e aí faturar o convênio seria cobrança em dobro. Os dados não confirmam, então o motor avisa e não segura. É pergunta para a Carla.
 - **Ligação real com o sistema de gestão.** O endereço está pronto; ler as guias novas e devolver a decisão ao sistema depende da API da clínica. Hoje a conferência informa, mas não impede o envio: em produção, o lote do convênio sairia só com as guias que podem ir.
@@ -173,7 +174,7 @@ Depois de ver a primeira versão, pedi para refazer quatro coisas: a entrada da 
 
 ### Quanto tempo levou
 
-Até 6 horas de trabalho meu, dentro do teto sugerido pela prova.
+Cerca de 5 horas de trabalho meu, dentro do teto sugerido pela prova.
 
 ### Próximos passos
 
