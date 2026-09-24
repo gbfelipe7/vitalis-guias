@@ -75,6 +75,12 @@ def montar_relatorio(resultados, gerado_em=None):
             faixa["guias"] += 1
             faixa["retidas"] += r["decisao"] == "PENDENTE"
 
+    # Retidas com um problema que já dava para ver antes da sessão: autorização vencida ou esgotada
+    # (o convênio resolve), ou procedimento que o convênio não cobre.
+    visiveis_antes = [r["id_guia"] for r in pendentes
+                      if (r.get("proximo_passo") == "convenio" and r["tipo_principal"] in ("autorizacao_vencida", "sessao_acima_do_limite"))
+                      or any(p["tipo"] == "procedimento_nao_coberto" for p in r["pendencias"])]
+
     datas = sorted(r["guia"].get("data_lancamento") or "" for r in resultados)
     datas = [d for d in (ler_data(x) for x in datas) if d]
 
@@ -83,6 +89,7 @@ def montar_relatorio(resultados, gerado_em=None):
         "periodo": [min(datas).isoformat(), max(datas).isoformat()] if datas else [],
         "para_renovar": para_renovar,
         "por_atraso": por_atraso,
+        "visiveis_antes_da_sessao": visiveis_antes,
         "confirmar_recibo": confirmar_recibo,
         "verificadas": len(resultados),
         "ok": len(resultados) - len(pendentes),
@@ -127,12 +134,9 @@ def relatorio_em_texto(rel):
     for t in rel["por_tipo"][:3]:
         linhas.append("- %s: %d" % (t["nome"], t["guias"]))
     decidir = []
-    faixas = [f for f in rel.get("por_atraso", []) if f["guias"]]
-    if len(faixas) > 1 and not rel.get("semana"):
-        taxa = lambda f: round(100.0 * f["retidas"] / f["guias"])
-        if taxa(faixas[-1]) > taxa(faixas[0]):
-            decidir.append("- Lançar as guias no mesmo dia do atendimento: no mesmo dia, %d%% ficam retidas; com %s dias de atraso, %d%%." % (
-                taxa(faixas[0]), faixas[-1]["dias"].replace("+", " ou mais"), taxa(faixas[-1])))
+    if rel.get("visiveis_antes_da_sessao"):
+        decidir.append("- Conferir antes da sessão: %d das %d retidas tinham um problema visível antes dela (autorização vencida ou esgotada, ou procedimento que o convênio não cobre)." % (
+            len(rel["visiveis_antes_da_sessao"]), rel["pendentes"]))
     if rel.get("para_renovar"):
         decidir.append("- Pedir renovação de %d autorizações perto de vencer ou de esgotar." % len(rel["para_renovar"]))
     if rel.get("confirmar_recibo"):

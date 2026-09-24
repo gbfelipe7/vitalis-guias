@@ -863,7 +863,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--card2);padding:1p
             partes: [{c: 'nao_enviar', v: txt(f)}], filtro: f.n ? {ids: f.ids, rotulo: 'Lançadas ' + f.nome.toLowerCase()} : null})), 100)}</div>
           <div>
             <div class="destaque" style="margin-top:0">Só ${primeiro.n} de ${totalAtraso} guias são lançadas no dia do atendimento. No mesmo dia, ${txt(primeiro)}% ficam retidas. Com ${ultimo.nome.toLowerCase().replace(' depois', '')} de atraso, ${txt(ultimo)}%.</div>
-            <div class="honesto" style="border-top:0;padding-top:6px">A recomendação é mudar o processo: lançar a guia no mesmo dia, de preferência na hora do atendimento, com a conferência na hora. No mesmo dia, quase todo erro é de autorização (${primeiro.ret - primeiro.lanc} de ${primeiro.ret}), que nasce antes da sessão. Com o atraso aparecem os erros de lançamento: dado faltando, código trocado, cópia, particular. Com 80 guias é pista forte: vale medir por 4 semanas com essa meta.</div>
+            <div class="honesto" style="border-top:0;padding-top:6px">É pista, não prova: poucas guias em cada faixa. E lançar no mesmo dia não resolve autorização: no mesmo dia, quase todo erro retido é de autorização (${primeiro.ret - primeiro.lanc} de ${primeiro.ret}), que já existia antes da sessão. Por isso a solução é conferir antes da sessão.</div>
           </div>
         </div>
       </div>

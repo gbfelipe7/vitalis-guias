@@ -603,4 +603,5 @@ class TerceiraRodada(unittest.TestCase):
         self.assertEqual((faixas[0]["guias"], faixas[0]["retidas"]), (19, 6))
         self.assertEqual((faixas[-1]["guias"], faixas[-1]["retidas"]), (19, 11))
         from motor.relatorio import relatorio_em_texto
-        self.assertIn("Lançar as guias no mesmo dia", relatorio_em_texto(rel))
+        self.assertEqual(len(rel["visiveis_antes_da_sessao"]), 22)
+        self.assertIn("Conferir antes da sessão: 22 das 37 retidas", relatorio_em_texto(rel))
